@@ -9,7 +9,7 @@ class Path:
         self.CurrRec = 0
         self.MaxRecord = Options.Term.Tols['Iter']+1
 
-        emptyData0 = np.array(Data0)
+        emptyData0 = np.array(Data0) # could use Data = np.empty((self.MaxDataData,)+Data0.shape); Data[:] = np.NaN;
         emptyData0[:] = np.NaN
         Data = np.array([emptyData0 for i in xrange(self.MaxData)])
         Data[0] = Data0
