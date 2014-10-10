@@ -49,15 +49,15 @@ class Sphere(Domain):
         self.Min = 0.0
         self.L = 2.0
         self.F = self.Gradient
-        self.Fun = self.AddDefaultReports({'Value':self.Value,'Gradient':self.Gradient,'Error':self.Error})
+        self.Fun = self.AddDefaultReports({'f':self.f,'F':self.F,'f_Error':self.f_Error})
 
-    def Value(self,Data):
+    def f(self,Data):
         return np.sum(Data**2)
 
-    def Gradient(self,Data):
+    def F(self,Data):
         return 2.0*Data
 
-    def Error(self,Data):
+    def f_Error(self,Data):
         return self.Value(Data)-self.Min
 
 class KojimaShindo(Domain):

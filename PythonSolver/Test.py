@@ -22,15 +22,15 @@ def runTest():
 
 	#Set Options
     Init = Initialization(Step=-0.8)
-    Term = Termination(Tols={'Iter':1000,'Value':1e-3})
-    Repo = Reporting(MaxData=1,Requests=['Value'])
+    Term = Termination(Tols={'Iter':1000,'f_Error':1e-3})
+    Repo = Reporting(MaxData=1,Requests=['f_Error'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
     #Set Method
-    Function = 'Gradient'
+    Function = 'F'
     P = IdentityProjection()
-    Method = HeunEuler(Function='Gradient',P=P,History=0,Delta0=1e-3)
+    Method = HeunEuler(Function=Function,P=P,History=0,Delta0=1e-3)
 
     #Write Options to Output
     params = 'Parameters: '

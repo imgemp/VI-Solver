@@ -8,14 +8,13 @@ class Initialization:
 
 class Termination:
 
-    def __init__(self,Tols={'Iter':10}):
-        self.Tols = Tols
-        if not 'Iter' in Tols: self.Tols['Iter'] = 10
+    def __init__(self,MaxIters=1,Tols=[]):
+        self.Tols = np.append([MaxIters],Tols);
 
     def CheckTols(self,Requests):
-        for tol in self.Tols.keys():
-            if not ((tol in Requests) or tol == 'Iter'):
-                self.Tols.pop(tol,None)
+        for tol in self.Tols[1:]:
+            if not (tol in Requests):
+                self.Tols = self.Tols.pop(tol,None)
                 print(tol+' cannot be used as a terminal condition because it is not tracked during the descent.')
         return self.Tols
 

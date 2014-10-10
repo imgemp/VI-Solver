@@ -40,7 +40,7 @@ def Solve(Start,Method,Domain,Options):
     #Create Path Object for Record Keeping
     Record = Path(Start,Options,Report)
 
-    #Begin Descent
+    #Begin Solving
     while not Options.Term.IsTerminal(Record):
 
         #Compute New Data Using Update Method
