@@ -1,122 +1,165 @@
-# Solver Modules
-from Options import *
-from Domains import *
-from Metrics import *
-from Descent import *
-from ButcherTableaus import *
 import time
+import datetime
 import numpy as np
 
-# Plotting Modules
+from Domains.Sphere import *
+from Domains.Watson import *
+from Domains.KojimaShindo import *
+from Domains.Sun import *
+
+from Solvers.HeunEuler import *
+
+from Solver import Solve
+from Options import *
+from Log import *
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
-# Datetime Module - Output File Names
-import datetime
+def Demo():
 
-def run_demo_DangLan_LS():
+    #__SPHERE__##################################################
 
-	#Set Options
-    Init = Initialization(Step=-0.8)
-    Term = Termination(Tols={'Iter':100,'GenError':1e-3})
-    Repo = Reporting(MaxData=1,Requests=['GenError'])
+    # Define Dimension and Domain
+    Domain = Sphere(Dim=100)
+
+    # Set Method
+    Method = HeunEuler(Function=Domain.F,P=IdentityProjection(),History=0,Delta0=1e-2)
+
+	# Set Options
+    Init = Initialization(Step=-1e-1)
+    Term = Termination(MaxIter=1000,Tols=[[Domain.f_Error,1e-3]])
+    Repo = Reporting(MaxData=1,Requests=[Domain.f_Error])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
-    #Set Method
-    Table = 'Euler'
-    BT = ButcherTableau(Table)
-    Function = 'Gradient'
-    AS = None
-    P = EntropicProjection()
-    LS = DangLan()
-    Metric = Entropy(alpha=10.0)
+    # Initialize Starting Point
+    Start = 100*np.ones(Domain.Dim)
 
-    #Write Options to Output
-    params = 'Table: '+str(Table)+', Parameters: '
-    for tol in Term.Tols.keys():
-        params += tol+': '+str(Term.Tols[tol])+', '
-    print(params[:-2])
+    # Print Stats
+    PrintSimStats(Domain,Method,Options)
 
-    ##################################################
-    print('Kojima-Shindo')
-
-    #Set Delta0
-    Delta0 = 1e-1
-    Method = DescentMethod(BT,Function=Function,AS=AS,Delta0=Delta0,P=P,LS=LS,Metric=Metric)
-    print('Method: '+'F = '+Function+', P = '+P.Name())
-
-    #Define Dimension and Domain
-    Domain = KojimaShindo()
-
-    #Initialize Starting Point
-    Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
-
+    # Start Solver
     tic = time.time()
-    KS_Results = Descend(Start,Method,Domain,Options)
+    SPHERE_Results = Solve(Start,Method,Domain,Options)
     toc = time.time() - tic
-    print('Steps, CPU Time, Error, Min |X_i|, Max |X_i| = '+str(KS_Results.FEvals.shape[0]-1)+','+str(toc)+','+str(KS_Results.Report['GenError'][-1])+\
-        ','+str(max(abs(KS_Results.Data[-1])))+','+str(min(abs(KS_Results.Data[-1]))))
-    print('Num Projections = '+str(Method.Proj.NP))
+
+    # Print Results
+    PrintSimResults(SPHERE_Results,Method,toc)
+
+    # Zero Projections
     Method.Proj.NP = 0
 
-    ##################################################
-    # print('Watson')
+    #__KOJIMA-SHINDO__##################################################
 
-    # #Set Delta0
-    # Delta0 = 1e-1
-    # Method = DescentMethod(BT,Function=Function,AS=AS,Delta0=Delta0,P=P,LS=LS,Metric=Metric)
-    # print('Method: '+'F = '+Function+', P = '+P.Name())
+    # Define Dimension and Domain
+    Domain = KojimaShindo()
 
-    # WAT_Results = [[] for i in xrange(10)]
+    # Set Method
+    Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
 
-    # for p in xrange(10):
+    # Set Options
+    Init = Initialization(Step=-1e-1)
+    Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
+    Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+    Misc = Miscellaneous()
+    Options = DescentOptions(Init,Term,Repo,Misc)
 
-    #     #Define Dimension and Domain
-    #     Domain = Watson(Pos=p)
+    # Initialize Starting Point
+    Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
 
-    #     #Initialize Starting Point
-    #     Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+    # Print Stats
+    PrintSimStats(Domain,Method,Options)
 
-    #     tic = time.time()
-    #     WAT_Results[p] = Descend(Start,Method,Domain,Options)
-    #     toc = time.time() - tic
-    #     print('Steps, CPU Time, Error, Min |X_i|, Max |X_i| ('+str(p+1)+') = '+str(WAT_Results[p].FEvals.shape[0]-1)+','+str(toc)+','+str(WAT_Results[p].Report['GenError'][-1])+\
-    #     ','+str(max(abs(WAT_Results[p].Data[-1])))+','+str(min(abs(WAT_Results[p].Data[-1]))))
-    #     print('Num Projections = '+str(Method.Projections[P][1]))
-    #     Method.Projections[P][1] = 0
+    # Start Solver
+    tic = time.time()
+    KS_Results = Solve(Start,Method,Domain,Options)
+    toc = time.time() - tic
 
-    ##################################################
-    # print('Sun')
+    # Print Results
+    PrintSimResults(KS_Results,Method,toc)
 
-    # #Set Delta0
-    # Delta0 = 1e-1
-    # Method = DescentMethod(BT,Function=Function,AS=AS,Delta0=Delta0,P=P,LS=LS,Metric=Metric)
-    # print('Method: '+'F = '+Function+', P = '+P.Name())
+    # Zero Projections
+    Method.Proj.NP = 0
 
-    # Sun_Results = [[] for i in xrange(8000,30000+1,2000)]
+    #__WATSON__##################################################
 
-    # for n in xrange(8000,30000+1,2000):
+    trials = xrange(10)
+    WAT_Results = [[] for i in trials]
 
-    #     #Define Dimension and Domain
-    #     Domain = Sun(Dim=n)
+    for p in trials:
 
-    #     #Initialize Starting Point
-    #     Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+        #Define Dimension and Domain
+        Domain = Watson(Pos=p)
 
-    #     tic = time.time()
-    #     ind = n/2000-4
-    #     Sun_Results[ind] = Descend(Start,Method,Domain,Options)
-    #     toc = time.time() - tic
-    #     print('Steps, CPU Time, Error, Min |X_i|, Max |X_i| ('+str(n)+') = '+str(Sun_Results[ind].FEvals.shape[0]-1)+','+str(toc)+','+str(Sun_Results[ind].Report['GenError'][-1])+\
-    #     ','+str(max(abs(Sun_Results[ind].Data[-1])))+','+str(min(abs(Sun_Results[ind].Data[-1]))))
-    #     print('Num Projections = '+str(Method.Projections[P][1]))
-    #     Method.Projections[P][1] = 0
+        # Set Method
+        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+
+        # Set Options
+        Init = Initialization(Step=-1e-1)
+        Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
+        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Misc = Miscellaneous()
+        Options = DescentOptions(Init,Term,Repo,Misc)
+    
+        #Initialize Starting Point
+        Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+
+        # Print Stats
+        PrintSimStats(Domain,Method,Options)
+
+        tic = time.time()
+        WAT_Results[p] = Solve(Start,Method,Domain,Options)
+        toc = time.time() - tic
+
+        # Print Results
+        PrintSimResults(WAT_Results[p],Method,toc)
+
+        # Zero Projections
+        Method.Proj.NP = 0
+
+    #__SUN__##################################################
+
+    trials = xrange(8000,10000+1,2000)
+    Sun_Results = [[] for i in trials]
+
+    for n in trials:
+
+        #Define Dimension and Domain
+        Domain = Sun(Dim=n)
+
+        # Set Method
+        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+
+        # Set Options
+        Init = Initialization(Step=-1e-1)
+        Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
+        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Misc = Miscellaneous()
+        Options = DescentOptions(Init,Term,Repo,Misc)
+    
+        #Initialize Starting Point
+        Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+
+        # Print Stats
+        PrintSimStats(Domain,Method,Options)
+
+        tic = time.time()
+        ind = n/2000-4
+        Sun_Results[ind] = Solve(Start,Method,Domain,Options)
+        toc = time.time() - tic
+
+        # Print Results
+        PrintSimResults(Sun_Results[ind],Method,toc)
+
+        # Zero Projections
+        Method.Proj.NP = 0
 
 if __name__ == '__main__':
-  run_demo_DangLan_LS()
+  Demo()
+
 
 
 

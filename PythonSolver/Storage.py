@@ -1,6 +1,6 @@
 import numpy as np
 
-class Path:
+class Storage:
 
     def __init__(self,Data0,Options):
         self.CurrData = 0

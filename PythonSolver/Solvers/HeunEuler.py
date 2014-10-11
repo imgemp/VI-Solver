@@ -1,6 +1,6 @@
 import numpy as np
 
-from Projections import *
+from Projection import *
 from Path import *
 from Utilities import *
 from Solver import Solver
@@ -35,6 +35,7 @@ class HeunEuler(Solver):
         FEvals = 2
 
         Delta = max(abs(NewData-_NewData))
-        Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+        if Delta == 0.: Step = 2.*Step
+        else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
         
         return NewData, Step, FEvals

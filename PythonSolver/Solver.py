@@ -1,10 +1,8 @@
 import numpy as np
 
-from Projections import *
-from Path import *
-from Utilities import *
+from Storage import *
 
-class Solver(object,Projection):
+class Solver(object):
 
     def Update(self,Record,Domain,Step):
 
@@ -26,8 +24,8 @@ def Solve(Start,Method,Domain,Options):
     Options.CheckOptions(Method,Domain)
     Step = Options.Init.Step
 
-    #Create Path Object for Record Keeping
-    Record = Path(Start,Options)
+    #Create Storage Object for Record Keeping
+    Record = Storage(Start,Options)
 
     #Begin Solving
     while not Options.Term.IsTerminal(Record):
@@ -35,7 +33,7 @@ def Solve(Start,Method,Domain,Options):
         #Compute New Data Using Update Method
         Data, Step, FEvals = Method.Update(Record,Domain,Step)
 
-        #Record Path Stats
+        #Record Update Stats
         Record.BookKeeping(Data,Step,FEvals)
 
     #Remove Unused Entries
