@@ -5,7 +5,7 @@ from Domain import Domain
 class KojimaShindo(Domain):
 
     def __init__(self):
-        self.Dim = 4;
+        self.Dim = 4
         self.Min = 0.0
         self.L = 10.0
 

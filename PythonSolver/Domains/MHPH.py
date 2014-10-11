@@ -5,7 +5,7 @@ from Domain import Domain
 class MHPH(Domain):
 
     def __init__(self,Dim=1000):
-        self.Dim = Dim;
+        self.Dim = Dim
         self.Min = 0.0
         self.L = (15.0*np.double(Dim))**2
         M = np.random.uniform(low=-15,high=-12,size=(self.Dim,self.Dim))

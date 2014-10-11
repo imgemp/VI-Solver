@@ -5,7 +5,7 @@ from Domain import Domain
 class Watson(Domain):
 
     def __init__(self,Pos=0):
-        self.Dim = 10;
+        self.Dim = 10
         self.Min = 0.0
         self.L = 10.0
         self.Pos = Pos

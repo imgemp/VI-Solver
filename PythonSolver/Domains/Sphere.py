@@ -5,7 +5,7 @@ from Domain import Domain
 class Sphere(Domain):
 
     def __init__(self,Dim=None):
-        self.Dim = Dim;
+        self.Dim = Dim
         self.Min = 0.0
         self.L = 2.0
 

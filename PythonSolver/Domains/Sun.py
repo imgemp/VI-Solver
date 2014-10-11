@@ -5,7 +5,7 @@ from Domain import Domain
 class Sun(Domain):
 
     def __init__(self,Dim=8000):
-        self.Dim = Dim;
+        self.Dim = Dim
         self.Min = 0.0
         self.L = (2.0*np.double(Dim))**2
         L = np.zeros((self.Dim,self.Dim))
