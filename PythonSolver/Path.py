@@ -1,13 +1,12 @@
 import numpy as np
 
-#Path Stats
 class Path:
 
-    def __init__(self,Data0,Options,Report):
+    def __init__(self,Data0,Options):
         self.CurrData = 0
         self.MaxData = Options.Repo.MaxData
         self.CurrRec = 0
-        self.MaxRecord = Options.Term.Tols['Iter']+1
+        self.MaxRecord = Options.Term.Tols[0]+1
 
         emptyData0 = np.array(Data0) # could use Data = np.empty((self.MaxDataData,)+Data0.shape); Data[:] = np.NaN;
         emptyData0[:] = np.NaN
@@ -23,31 +22,37 @@ class Path:
         FEvals[0] = 0
         self.FEvals = FEvals
 
-        self.Report = dict(Report)
-        for item in self.Report:
-            if isinstance(Report[item],np.ndarray):
-                emptyItem = np.array(Report[item])
-                emptyItem[:] = np.NaN
-            else:
-                emptyItem = np.NaN
-            self.Report[item] = np.array([emptyItem for i in xrange(self.MaxRecord)])
-            self.Report[item][0] = Report[item]
+        self.Report = {}
+        for req in Options.Repo.Requests:
+            report = req(Data0)
+            if isinstance(report,np.ndarray): self.Report[req] = np.zeros((self.MaxRecord,)+report.Shape)
+            else: self.Report[req] = np.zeros((self.MaxRecord,))
+            self.Report[req][:] = np.NaN
+            self.Report[req][0] = report
 
-    def BookKeeping(self,NewData,NewStep,FEvals,Report):
+    def BookKeeping(self,NewData,NewStep,FEvals):
+
+        # Update Data Record
         if self.CurrData < self.MaxData-1:
             self.CurrData += 1
             self.Data[self.CurrData] = NewData
         else:
             self.Data = np.concatenate((self.Data[1:],[NewData]))
+
+        # Update Report Record
         self.CurrRec += 1
         self.Steps[self.CurrRec] = NewStep
         self.FEvals[self.CurrRec] = FEvals
-        for item in self.Report:
-            self.Report[item][self.CurrRec] = Report[item]
+        for req in self.Report:
+            report = req(NewData)
+            self.Report[req][self.CurrRec] = report
 
     def RemoveUnused(self):
         self.Data = self.Data[:min(self.CurrRec+1,self.MaxData)]
         self.Steps = self.Steps[:self.CurrRec+1]
         self.FEvals = self.FEvals[:self.CurrRec+1]
-        for item in self.Report:
-            self.Report[item] = self.Report[item][:self.CurrRec+1]
+        for req in self.Report:
+            self.Report[req] = self.Report[req][:self.CurrRec+1]
+
+
+

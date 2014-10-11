@@ -1,6 +1,5 @@
 import numpy as np
 
-#Domains
 class Domain:
 
     def __init__(self):
@@ -14,42 +13,12 @@ class Domain:
                 print(req+' is not reported by this domain.')
         return Requests
 
-    def Report(self,Data,Requests):
-        Rep = dict()
-        for req in Requests:
-            Rep[req] = self.Fun[req](Data)
-        return Rep
-
-    def AddDefaultReports(self,CustomReports):
-        CustomReports['GenError'] = self.GenError
-        return CustomReports
-
-    def GenError(self,Data):
-        #this is specific to simplex constraint - need to generalize this with max and min of feasible set
-        error = 0.0
-        F = np.ravel(self.F(Data))
-        count = 0
-        z = 1.0
-        for ind in abs(F).argsort()[::-1]:
-            if (F[ind] < 0) or (count == len(F)-1):
-                diff = Data[ind]-z
-                error += F[ind]*diff
-                count += 1
-                z = 0.0
-            else:
-                diff = Data[ind]-0.0
-                error += F[ind]*diff
-                count += 1
-        return error
-
 class Sphere(Domain):
 
     def __init__(self,Dim=None):
         self.Dim = Dim;
         self.Min = 0.0
         self.L = 2.0
-        self.F = self.Gradient
-        self.Fun = self.AddDefaultReports({'f':self.f,'F':self.F,'f_Error':self.f_Error})
 
     def f(self,Data):
         return np.sum(Data**2)
@@ -58,7 +27,7 @@ class Sphere(Domain):
         return 2.0*Data
 
     def f_Error(self,Data):
-        return self.Value(Data)-self.Min
+        return self.f(Data)-self.Min
 
 class KojimaShindo(Domain):
 
@@ -151,3 +120,9 @@ class RG(Domain):
 
     def Gradient(self,Data):
         return np.dot(self.A,Data)+self.b
+
+
+
+
+
+

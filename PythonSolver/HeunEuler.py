@@ -1,15 +1,19 @@
 import numpy as np
+
 from Projections import *
 from Path import *
 from Utilities import *
 from Solver import Solver
 
-
 class HeunEuler(Solver):
 
-    def __init__(self,Function=None,P=IdentityProjection(),History=0,Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
+    def __init__(self,Function,P=IdentityProjection(),History=0,Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
         
-        super(self.__class__,self).__init__(Function=None,P=IdentityProjection(),History=0)
+        self.F = Function
+
+        self.Proj = P
+
+        self.H = History
 
         self.Delta0 = Delta0
 

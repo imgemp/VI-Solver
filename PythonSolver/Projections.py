@@ -1,6 +1,6 @@
-from Utilities import *
-
 import numpy as np
+
+from Utilities import *
 
 class Projection:
 
@@ -73,3 +73,7 @@ class EuclideanSimplexProjection:
 
     def Name(self):
         return self.name
+
+
+
+

@@ -6,14 +6,6 @@ from Utilities import *
 
 class Solver(object,Projection):
 
-    def __init__(self,Function,P=IdentityProjection(),History=None):
-
-        self.Function = Function
-
-        self.Proj = P
-
-        self.H = History
-
     def Update(self,Record,Domain,Step):
 
         print('Every method must define Update(self,Record,Domain,Step) to return' + \
@@ -34,11 +26,8 @@ def Solve(Start,Method,Domain,Options):
     Options.CheckOptions(Method,Domain)
     Step = Options.Init.Step
 
-    #Calculate Initial Additional Stats
-    Report = Domain.Report(Start,Options.Repo.Requests)
-
     #Create Path Object for Record Keeping
-    Record = Path(Start,Options,Report)
+    Record = Path(Start,Options)
 
     #Begin Solving
     while not Options.Term.IsTerminal(Record):
@@ -46,18 +35,13 @@ def Solve(Start,Method,Domain,Options):
         #Compute New Data Using Update Method
         Data, Step, FEvals = Method.Update(Record,Domain,Step)
 
-        #Compute Additional Stats
-        Report = Domain.Report(Data,Options.Repo.Requests)
-
         #Record Path Stats
-        Record.BookKeeping(Data,Step,FEvals,Report)
+        Record.BookKeeping(Data,Step,FEvals)
 
     #Remove Unused Entries
     Record.RemoveUnused()
 
     return Record
-
-
 
 
 
