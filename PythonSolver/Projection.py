@@ -30,6 +30,19 @@ class IdentityProjection:
     def Name(self):
         return self.name
 
+class RPlusProjection:
+
+    def __init__(self,NP=0):
+        self.NP = NP
+        self.name = 'RPlusProjection'
+
+    def P(self,Data,Step,Direc):
+        self.NP += 1
+        return np.maximum(0,Data+Step*Direc)
+
+    def Name(self):
+        return self.name
+
 class EntropicProjection:
 
     def __init__(self,NP=0):
