@@ -26,15 +26,18 @@ def Demo():
     # Set Method
     Method = HeunEuler(Function=Domain.F,P=RPlusProjection(),History=0,Delta0=1e-5)
 
+    # Initialize Starting Point
+    Start = np.zeros(Domain.Dim)
+
+    # Calculate Initial Gap
+    gap_0 = Domain.gap_rplus(Start)
+
 	# Set Options
     Init = Initialization(Step=-1e-10)
-    Term = Termination(MaxIter=10000,Tols=[[Domain.gap_rplus,1e-3]])
+    Term = Termination(MaxIter=10000,Tols=[[Domain.gap_rplus,1e-6*gap_0]])
     Repo = Reporting(MaxData=1,Requests=[Domain.gap_rplus])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
-
-    # Initialize Starting Point
-    Start = np.zeros(Domain.Dim)
 
     # Print Stats
     PrintSimStats(Domain,Method,Options)
@@ -47,7 +50,7 @@ def Demo():
     # Print Results
     PrintSimResults(BloodBank_Results,Method,toc)
 
-    # Zero Projections
+    # Zero Projections for Later Use
     Method.Proj.NP = 0
 
 if __name__ == '__main__':
