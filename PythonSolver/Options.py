@@ -17,7 +17,7 @@ class Termination:
                 self.Tols.remove(tol)
                 print(`tol[0].func_name`+' cannot be used as a terminal condition because it is not tracked during the descent.')
         return self.Tols
-
+    # IsTerminal should really just check the temp report not the long term report
     def IsTerminal(self,Record):
         if (Record.CurrRec>=self.Tols[0]):
             return True
@@ -27,7 +27,7 @@ class Termination:
             
 class Reporting:
 
-    def __init__(self,MaxData=1,Requests=[]):
+    def __init__(self,MaxData=1,Requests=[]): # need short term requests and long term requests
         self.MaxData = MaxData
         self.Requests = Requests
 

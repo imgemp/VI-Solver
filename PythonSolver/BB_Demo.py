@@ -35,7 +35,7 @@ def Demo():
 	# Set Options
     Init = Initialization(Step=-1e-10)
     Term = Termination(MaxIter=10000,Tols=[[Domain.gap_rplus,1e-6*gap_0]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.gap_rplus])
+    Repo = Reporting(MaxData=1,Requests=[Domain.gap_rplus]) #Could use Method.TempReport.[property] for short term report
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 

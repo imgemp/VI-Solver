@@ -31,7 +31,7 @@ def Solve(Start,Method,Domain,Options):
     while not Options.Term.IsTerminal(Record):
 
         #Compute New Data Using Update Method
-        Data, Step, FEvals = Method.Update(Record,Domain,Step)
+        Data, Step, FEvals = Method.Update(Record,Domain,Step) #should also report projections
 
         #Record Update Stats
         Record.BookKeeping(Data,Step,FEvals)

@@ -23,7 +23,7 @@ class HeunEuler(Solver):
 
         self.MaxStep = MaxStep
 
-    def Update(self,Record,Domain,Step):
+    def Update(self,Record,Domain,Step): #Could ask method to store a temp report as a property (Method.TempReport) and then pass Method to bookkeeping and just return Data and Step
 
         Data = Record.Data[Record.CurrData]
         Fs = np.zeros((2,Data.shape[0]))
@@ -32,7 +32,7 @@ class HeunEuler(Solver):
         Fs[1,:] = Domain.F(_NewData)
         NewData = self.Proj.P(Data,Step,0.5*np.sum(Fs,axis=0))
 
-        FEvals = 2
+        FEvals = 2 #Should track number of projections here too
 
         Delta = max(abs(NewData-_NewData))
         if Delta == 0.: Step = 2.*Step

@@ -7,13 +7,13 @@ class Storage:
         self.MaxData = Options.Repo.MaxData
         self.CurrRec = 0
         self.MaxRecord = Options.Term.Tols[0]+1
-
+        # Should make Data be able to store data + anything the user wants (there should be temp storage and long storage)
         emptyData0 = np.array(Data0) # could use Data = np.empty((self.MaxDataData,)+Data0.shape); Data[:] = np.NaN;
         emptyData0[:] = np.NaN
         Data = np.array([emptyData0 for i in xrange(self.MaxData)])
         Data[0] = Data0
         self.Data = Data
-
+        # Should move Steps and FEvals into the Options.Repo.Requests
         Steps = np.array([np.NaN for i in xrange(self.MaxRecord)])
         Steps[0] = Options.Init.Step
         self.Steps = Steps
@@ -44,7 +44,7 @@ class Storage:
         self.Steps[self.CurrRec] = NewStep
         self.FEvals[self.CurrRec] = FEvals
         for req in self.Report:
-            report = req(NewData)
+            report = req(NewData) # only if its a function, otherwise report = req
             self.Report[req][self.CurrRec] = report
 
     def RemoveUnused(self):
