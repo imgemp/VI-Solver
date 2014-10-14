@@ -24,7 +24,7 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F,P=RPlusProjection(),History=0,Delta0=1e-5)
+    Method = HeunEuler(Function=Domain.F,P=RPlusProjection(),History=0,Delta0=1e-5) #don't need history, method should know this itself, maybe just pass Domain instead of Domain.F
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
@@ -35,7 +35,7 @@ def Demo():
 	# Set Options
     Init = Initialization(Step=-1e-10)
     Term = Termination(MaxIter=10000,Tols=[[Domain.gap_rplus,1e-6*gap_0]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.gap_rplus]) #Could use Method.TempReport.[property] for short term report
+    Repo = Reporting(MaxData=1,Requests=[Domain.gap_rplus]) #Could use Method.TempReport.[property] for short term report, should get rid of max data
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
