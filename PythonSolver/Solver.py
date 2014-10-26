@@ -4,7 +4,7 @@ from Storage import *
 
 class Solver(object):
 
-    def Update(self,Record,Domain,Step):
+    def Update(self,Record):
 
         print('Every method must define Update(self,Record,Domain,Step) to return' + \
             'the next iterate, next stepsize, and number of function evaluations used.')
@@ -17,24 +17,23 @@ class Solver(object):
 
 def Solve(Start,Method,Domain,Options):
 
-    #Record Data Dimension
-    Domain.Dim = Start.size
+    #Record Data Dimension 
+    Domain.Dim = Start.size # is this necessary?
 
     #Check Validity of Options
     Options.CheckOptions(Method,Domain)
-    Step = Options.Init.Step
 
     #Create Storage Object for Record Keeping
-    Record = Storage(Start,Options)
+    Record = Storage(Start,Domain,Method,Options)
 
     #Begin Solving
     while not Options.Term.IsTerminal(Record):
 
         #Compute New Data Using Update Method
-        Data, Step, FEvals = Method.Update(Record,Domain,Step) #should also report projections
+        TempStorage = Method.Update(Record) #should also report projections
 
         #Record Update Stats
-        Record.BookKeeping(Data,Step,FEvals)
+        Record.BookKeeping(TempStorage)
 
     #Remove Unused Entries
     Record.RemoveUnused()

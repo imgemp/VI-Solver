@@ -2,57 +2,47 @@ import numpy as np
 
 class Storage:
 
-    def __init__(self,Data0,Options):
-        self.CurrData = 0
-        self.MaxData = Options.Repo.MaxData
-        self.CurrRec = 0
-        self.MaxRecord = Options.Term.Tols[0]+1
-        # Should make Data be able to store data + anything the user wants (there should be temp storage and long storage)
-        emptyData0 = np.array(Data0) # could use Data = np.empty((self.MaxDataData,)+Data0.shape); Data[:] = np.NaN;
-        emptyData0[:] = np.NaN
-        Data = np.array([emptyData0 for i in xrange(self.MaxData)])
-        Data[0] = Data0
-        self.Data = Data
-        # Should move Steps and FEvals into the Options.Repo.Requests
-        Steps = np.array([np.NaN for i in xrange(self.MaxRecord)])
-        Steps[0] = Options.Init.Step
-        self.Steps = Steps
+    def __init__(self,Start,Domain,Method,Options):
+        self.thisTempIndex = 0
+        self.maxTempIndex = len(Method.TempStorage.items()[0][1])
+        self.thisPermIndex = 0
+        self.maxPermIndex = Options.Term.Tols[0]+1
 
-        FEvals = np.array([np.NaN for i in xrange(self.MaxRecord)])
-        FEvals[0] = 0
-        self.FEvals = FEvals
+        self.TempStorage = Method.InitTempStorage(Start,Domain,Options)
+        
+        self.PermStorage = {}
+        for req in Options.Repo.PermRequests:
+            if req in Method.TempStorage:
+                PermItem = Method.TempStorage[req][-1]
+            else:
+                PermItem = req(Start)
+            if isinstance(PermItem,np.ndarray):
+                self.PermStorage[req] = self.maxPermIndex*[np.zeros(PermItem.shape)]
+                self.PermStorage[req][:] = '?'
+            else:
+                self.PermStorage[req] = self.maxPermIndex*['?']
+            self.PermStorage[req][0] = PermItem
 
-        self.Report = {}
-        for req in Options.Repo.Requests:
-            report = req(Data0)
-            if isinstance(report,np.ndarray): self.Report[req] = np.zeros((self.MaxRecord,)+report.Shape)
-            else: self.Report[req] = np.zeros((self.MaxRecord,))
-            self.Report[req][:] = np.NaN
-            self.Report[req][0] = report
+    def BookKeeping(self,TempStorage):
 
-    def BookKeeping(self,NewData,NewStep,FEvals):
+        # Retrieve New Data
+        NewData = TempStorage['Data'][-1]
 
-        # Update Data Record
-        if self.CurrData < self.MaxData-1:
-            self.CurrData += 1
-            self.Data[self.CurrData] = NewData
-        else:
-            self.Data = np.concatenate((self.Data[1:],[NewData]))
+        # Update TempStorage
+        self.TempStorage = TempStorage
 
-        # Update Report Record
-        self.CurrRec += 1
-        self.Steps[self.CurrRec] = NewStep
-        self.FEvals[self.CurrRec] = FEvals
-        for req in self.Report:
-            report = req(NewData) # only if its a function, otherwise report = req
-            self.Report[req][self.CurrRec] = report
+        # Update PermStorage
+        self.thisPermIndex += 1
+        for req in self.PermStorage:
+            if req in Method.TempStorage:
+                PermItem = Method.TempStorage[req][-1]
+            else:
+                PermItem = req(NewData)
+            self.PermStorage[req][self.thisPermIndex] = PermItem
 
     def RemoveUnused(self):
-        self.Data = self.Data[:min(self.CurrRec+1,self.MaxData)]
-        self.Steps = self.Steps[:self.CurrRec+1]
-        self.FEvals = self.FEvals[:self.CurrRec+1]
-        for req in self.Report:
-            self.Report[req] = self.Report[req][:self.CurrRec+1]
+        for req in self.PermStorage:
+            self.PermStorage[req] = self.PermStorage[req][:self.thisPermIndex+1]
 
 
 

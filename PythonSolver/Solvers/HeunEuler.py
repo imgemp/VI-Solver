@@ -7,13 +7,13 @@ from Solver import Solver
 
 class HeunEuler(Solver):
 
-    def __init__(self,Function,P=IdentityProjection(),History=0,Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
+    def __init__(self,Domain,P=IdentityProjection(),Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
         
-        self.F = Function
+        self.F = Domain.F
 
         self.Proj = P
 
-        self.H = History
+        self.TempStorage = {'Data': ['?'], self.F: ['?'], 'Step': ['?'], 'F Evaluations': ['?'], 'Projections': ['?']}
 
         self.Delta0 = Delta0
 
@@ -23,19 +23,53 @@ class HeunEuler(Solver):
 
         self.MaxStep = MaxStep
 
-    def Update(self,Record,Domain,Step): #Could ask method to store a temp report as a property (Method.TempReport) and then pass Method to bookkeeping and just return Data and Step
+    def InitTempStorage(self,Start,Domain,Options):
 
-        Data = Record.Data[Record.CurrData]
+        self.TempStorage['Data'][-1] = Start
+        self.TempStorage[self.F][-1] = self.F(Start)
+        self.TempStorage['Step'][-1] = Options.Init.Step
+        self.TempStorage['F Evaluations'][-1] = 1
+        self.TempStorage['Projections'][-1] = 0
+
+        return self.TempStorage
+
+    def BookKeeping(self,TempData):
+
+        for item in self.TempStorage:
+            self.TempStorage[item].pop(0)
+            self.TempStorage[item].append(TempData[item])
+
+    def Update(self,Record):
+
+        # Retrieve Necessary Data
+        Data = Record.TempStorage['Data'][-1]
         Fs = np.zeros((2,Data.shape[0]))
-        Fs[0,:] = Domain.F(Data)
+        Fs[0,:] = Record.TempStorage[self.F][-1]
+        Step = Record.TempStorage['Step'][-1]
+
+        # Perform Update
         _NewData = self.Proj.P(Data,Step,Fs[0,:])
-        Fs[1,:] = Domain.F(_NewData)
+        Fs[1,:] = self.F(_NewData)
         NewData = self.Proj.P(Data,Step,0.5*np.sum(Fs,axis=0))
 
-        FEvals = 2 #Should track number of projections here too
-
+        # Adjust Stepsize
         Delta = max(abs(NewData-_NewData))
         if Delta == 0.: Step = 2.*Step
         else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+
+        # Store Data
+        TempData = {}
+        TempData['Data'] = NewData
+        TempData[self.F] = self.F(NewData)
+        TempData['Step'] = Step
+        TempData['F Evaluations'] = 2
+        TempData['Projections'] = 2
+        self.BookKeeping(TempData)
         
-        return NewData, Step, FEvals
+        return self.TempStorage
+
+
+
+
+
+
