@@ -23,7 +23,7 @@ def Demo():
     Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
     Domain = BloodBank(Network=Network,alpha=2)
 
-    # Set Method
+    # Set Method # just pass a domain, a projection, and any method specific options (e.g. Delta0)
     Method = HeunEuler(Function=Domain.F,P=RPlusProjection(),History=0,Delta0=1e-5) #don't need history, method should know this itself, maybe just pass Domain instead of Domain.F
 
     # Initialize Starting Point
