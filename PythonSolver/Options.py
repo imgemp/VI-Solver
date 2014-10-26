@@ -36,11 +36,13 @@ class Reporting:
         for req in self.PermRequests:
             inTempStorage = (req in Method.TempStorage)
             inDomainFunctions = False;
-            if hasattr(req,'self'):
-                inDomainFunctions = (req.self === Domain)
+            req_str = req[0]
+            if hasattr(req,'__self__'):
+                inDomainFunctions = (req.self == Domain)
+                req_str = req[0].func_name
             if not (inTempStorage or inDomainFunctions):
                 self.PermRequests.remove(req)
-                print(`req[0]`+' cannot be used as a terminal condition because it is not tracked during the descent.')
+                print(`req_str`+' cannot be used as a terminal condition because it is not tracked during the descent.')
 
 class Miscellaneous:
 

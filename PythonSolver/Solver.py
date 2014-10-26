@@ -4,16 +4,32 @@ from Storage import *
 
 class Solver(object):
 
+    def __init__(self):
+
+        self.TempStorage = {'Data': ['?']}
+
+    def InitTempStorage(self,Start,Domain,Options):
+
+        self.TempStorage['Data'][-1] = Start
+
+        return self.TempStorage
+
+    def BookKeeping(self,TempData):
+
+        for item in self.TempStorage:
+            self.TempStorage[item].pop(0)
+            self.TempStorage[item].append(TempData[item])
+
     def Update(self,Record):
 
-        print('Every method must define Update(self,Record,Domain,Step) to return' + \
-            'the next iterate, next stepsize, and number of function evaluations used.')
+        print('Every method must define Update(self,Record) to return' + \
+            'a data packet containing any information required for subsequent' + \
+            'iterations by the method as well as the work done to obtain that information.')
 
-        Data = None
-        Step = None
-        FEvals = None
+        TempData = Record.TempStorage
+        self.BookKeeping(TempData)
 
-        return Data, Step, FEvals
+        return self.TempStorage
 
 def Solve(Start,Method,Domain,Options):
 

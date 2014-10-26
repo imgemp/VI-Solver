@@ -34,8 +34,8 @@ class Storage:
         # Update PermStorage
         self.thisPermIndex += 1
         for req in self.PermStorage:
-            if req in Method.TempStorage:
-                PermItem = Method.TempStorage[req][-1]
+            if req in self.TempStorage:
+                PermItem = self.TempStorage[req][-1]
             else:
                 PermItem = req(NewData)
             self.PermStorage[req][self.thisPermIndex] = PermItem

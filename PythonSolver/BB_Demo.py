@@ -48,7 +48,7 @@ def Demo():
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(BloodBank_Results,Method,toc)
+    PrintSimResults(Options,BloodBank_Results,Method,toc)
 
     # Zero Projections for Later Use
     Method.Proj.NP = 0
