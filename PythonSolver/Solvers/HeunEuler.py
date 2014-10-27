@@ -59,7 +59,7 @@ class HeunEuler(Solver):
         Delta = max(abs(NewData-_NewData))
         if Delta == 0.: Step = 2.*Step
         else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
-
+        
         # Store Data
         TempData['Data'] = NewData
         TempData[self.F] = self.F(NewData)
