@@ -7,7 +7,7 @@ class BloodBank(Domain):
     def __init__(self,Network,alpha=2):
         self.UnpackNetwork(Network)
         self.Network = (self.nC,self.nB,self.nD,self.nR)
-        self.CalculateNetworkSize()
+        self.Dim = self.CalculateNetworkSize()
         self.alpha = alpha
 
     def F(self,Data):
@@ -50,7 +50,7 @@ class BloodBank(Domain):
         xSize = self.nC*self.nB*self.nD*self.nR
         uSize = gamSize = self.nC+self.nC*self.nB+self.nB+self.nB+self.nB*self.nD+self.nD*self.nR
 
-        self.Dim = xSize+uSize+gamSize
+        return xSize+uSize+gamSize
 
     def F_P2UP(self,Data):
 

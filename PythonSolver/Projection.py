@@ -4,68 +4,30 @@ from Utilities import *
 
 class Projection:
 
-    def __init__(self,NP=0):
-        print('This is a generic projection object.  You need to pick a specific projection operator to use.')
-        self.NP = NP
-        self.name = 'Projection'
-
     def P(self):
         print('This function projects the data.')
-        self.NP += 1
         return None
 
-    def Name(self):
-        return self.name
-
-class IdentityProjection:
-
-    def __init__(self,NP=0):
-        self.NP = NP
-        self.name = 'IdentityProjection'
+class IdentityProjection(Projection):
 
     def P(self,Data,Step,Direc):
-        self.NP += 1
         return Data+Step*Direc
 
-    def Name(self):
-        return self.name
-
-class RPlusProjection:
-
-    def __init__(self,NP=0):
-        self.NP = NP
-        self.name = 'RPlusProjection'
+class RPlusProjection(Projection):
 
     def P(self,Data,Step,Direc):
-        self.NP += 1
         return np.maximum(0,Data+Step*Direc)
 
-    def Name(self):
-        return self.name
-
-class EntropicProjection:
-
-    def __init__(self,NP=0):
-        self.NP = NP
-        self.name = 'EntropicProjection'
+class EntropicProjection(Projection):
 
     def P(self,Data,Step,Direc):
-        self.NP += 1
         ProjectedData = Data*np.exp(MachineLimit_Exp(Step,Direc)*Direc)
         return ProjectedData/np.sum(ProjectedData)
 
-    def Name(self):
-        return self.name
-
-class EuclideanSimplexProjection:
-
-    def __init__(self,NP=0):
-        self.NP = NP
-        self.name = 'EuclideanSimplexProjection'
+class EuclideanSimplexProjection(Projection):
 
     #Taken from: https://gist.github.com/daien/1272551
     def P(self,Data,Step,Direc,s=1):
-        self.NP += 1
         assert s > 0, "Radius s must be strictly positive (%d <= 0)" % s
         Data = Data + Step*Direc
         n, = Data.shape  # will raise ValueError if Data is not 1-D
@@ -83,9 +45,6 @@ class EuclideanSimplexProjection:
         # compute the projection by thresholding Data using theta
         w = (Data - theta).clip(min=0)
         return w
-
-    def Name(self):
-        return self.name
 
 
 

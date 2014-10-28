@@ -2,7 +2,7 @@ import time
 import datetime
 import numpy as np
 
-from Domains.BloodBank import *
+from Domains.Rosenbrock import *
 
 from Solvers.Euler import *
 from Solvers.Extragradient import *
@@ -22,31 +22,27 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 def Demo():
 
-    #__BLOOD_BANK__##################################################
+    #__ROSENBROCK__##################################################
 
-    # Define Network and Domain
-    Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
-    Domain = BloodBank(Network=Network,alpha=2)
+    # Define Domain
+    Domain = Rosenbrock(Dim=1000)
 
     # Set Method
     # Method = Euler(Domain=Domain,P=RPlusProjection())
     # Method = EG(Domain=Domain,P=RPlusProjection())
     # Method = AG(Domain=Domain,P=RPlusProjection())
-    # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = np.zeros(Domain.Dim)
-    
-    # Calculate Initial Gap
-    gap_0 = Domain.gap_rplus(Start)
+    Start = -0.5*np.ones(Domain.Dim)
 
 	# Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
-    Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations','Projections'])
+    Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
+    Repo = Reporting(Requests=[Domain.f_Error,'Step','F Evaluations','Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -55,11 +51,11 @@ def Demo():
 
     # Start Solver
     tic = time.time()
-    BloodBank_Results = Solve(Start,Method,Domain,Options)
+    Rosenbrock_Results = Solve(Start,Method,Domain,Options)
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(Options,BloodBank_Results,Method,toc)
+    PrintSimResults(Options,Rosenbrock_Results,Method,toc)
 
     # Zero Projections for Later Use
     Method.Proj.NP = 0

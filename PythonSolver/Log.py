@@ -14,15 +14,20 @@ def PrintSimStats(Domain,Method,Options):
     print(params[:-2])
     print('-------------------------------------------------------------------')
 
-def PrintSimResults(Results,Method,Time):
+def PrintSimResults(Options,Results,Method,Time):
 
     print('-------------------------------------------------------------------')
     print('CPU Time: '+`Time`)
-    for req in Results.Report:
-        print(`req.func_name`+': '+`Results.Report[req][-1]`)
-    print('Steps: '+`Results.FEvals.shape[0]-1`)
-    print('FEvals: '+`np.sum(Results.FEvals)`)
-    print('NPs: '+`Method.Proj.NP`)
-    print('Min |X*|: '+`min(abs(Results.Data[-1]))`)
-    print('Max |X*|: '+`max(abs(Results.Data[-1]))`)
+    for req in Options.Repo.PermRequests:
+        req_str = req
+        if hasattr(req,'func_name'): req_str = req.func_name
+        if req in Results.TempStorage:
+            print(`req_str`+': '+`Results.TempStorage[req][-1]`)
+        else:
+            print(`req_str`+': '+`Results.PermStorage[req][-1]`)
+    print('Steps: '+`Results.thisPermIndex`)
+    # print('FEvals: '+`np.sum(Results.PermStorage['Function Evaluations'])`)
+    # print('NPs: '+`Method.Proj.NP`)
+    print('Min |X*|: '+`min(abs(Results.TempStorage['Data'][-1]))`)
+    print('Max |X*|: '+`max(abs(Results.TempStorage['Data'][-1]))`)
     print('-------------------------------------------------------------------')
