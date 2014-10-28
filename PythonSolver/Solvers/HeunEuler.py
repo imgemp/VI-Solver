@@ -13,7 +13,7 @@ class HeunEuler(Solver):
 
         self.Proj = P
 
-        self.TempStorage = {'Data': ['?'], self.F: ['?'], 'Step': ['?'], 'F Evaluations': ['?'], 'Projections': ['?']}
+        self.TempStorage = {'Data': [np.NaN], self.F: [np.NaN], 'Step': [np.NaN], 'F Evaluations': [np.NaN], 'Projections': [np.NaN]}
 
         self.Delta0 = Delta0
 

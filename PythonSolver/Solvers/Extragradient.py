@@ -13,7 +13,7 @@ class EG(Solver):
 
         self.Proj = P
 
-        self.TempStorage = {'Data': ['?'], self.F: ['?'], 'scount': ['?'], 's': ['?'], 'Step': ['?'], 'F Evaluations': ['?'], 'Projections': ['?']}
+        self.TempStorage = {'Data': [np.NaN], self.F: [np.NaN], 'scount': [np.NaN], 's': [np.NaN], 'Step': [np.NaN], 'F Evaluations': [np.NaN], 'Projections': [np.NaN]}
 
     def InitTempStorage(self,Start,Domain,Options):
 

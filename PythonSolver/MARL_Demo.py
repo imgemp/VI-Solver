@@ -10,6 +10,7 @@ from Solvers.AcceleratedGradient import *
 from Solvers.HeunEuler import *
 from Solvers.AdamsBashforthEuler import *
 from Solvers.CashKarp import *
+from Solvers.GABE import *
 
 from Solver import Solve
 from Options import *
@@ -31,9 +32,10 @@ def Demo():
     # Method = Euler(Domain=Domain,P=RPlusProjection())
     # Method = EG(Domain=Domain,P=RPlusProjection())
     # Method = AG(Domain=Domain,P=RPlusProjection())
-    # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
+    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = GABE(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = np.array([0,1])

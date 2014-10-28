@@ -17,9 +17,9 @@ class Storage:
             else:
                 PermItem = req(Start)
             if isinstance(PermItem,np.ndarray):
-                self.PermStorage[req] = self.maxPermIndex*[np.reshape(['?' for i in PermItem.flatten()],PermItem.shape)]
+                self.PermStorage[req] = self.maxPermIndex*[np.reshape([np.NaN for i in PermItem.flatten()],PermItem.shape)]
             else:
-                self.PermStorage[req] = self.maxPermIndex*['?']
+                self.PermStorage[req] = self.maxPermIndex*[np.NaN]
             self.PermStorage[req][0] = PermItem
 
     def BookKeeping(self,TempStorage):
