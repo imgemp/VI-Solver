@@ -37,7 +37,7 @@ class Storage:
                 PermItem = self.TempStorage[req][-1]
             else:
                 PermItem = req(NewData)
-            self.PermStorage[req][self.thisPermIndex] = PermItem
+            np.append(self.PermStorage[req],[PermItem])
 
     def RemoveUnused(self):
         for req in self.PermStorage:
