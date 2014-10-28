@@ -17,8 +17,7 @@ class Storage:
             else:
                 PermItem = req(Start)
             if isinstance(PermItem,np.ndarray):
-                self.PermStorage[req] = self.maxPermIndex*[np.zeros(PermItem.shape)]
-                self.PermStorage[req][:] = '?'
+                self.PermStorage[req] = self.maxPermIndex*[np.reshape(['?' for i in PermItem.flatten()],PermItem.shape)]
             else:
                 self.PermStorage[req] = self.maxPermIndex*['?']
             self.PermStorage[req][0] = PermItem

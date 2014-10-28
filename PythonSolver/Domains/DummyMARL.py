@@ -18,5 +18,4 @@ class MARL(Domain):
         return F
 
     def Origin_Error(self,Data):
-        print(np.sum(Data**2))
         return np.sum(Data**2)
