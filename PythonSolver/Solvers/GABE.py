@@ -13,7 +13,9 @@ class GABE(Solver):
 
         self.Proj = P
 
-        self.TempStorage = {'Data': [np.NaN,np.NaN], self.F: [np.NaN,np.NaN], 'Step': [np.NaN,np.NaN], 'F Evaluations': [np.NaN,np.NaN], 'Projections': [np.NaN,np.NaN]}
+        self.StorageSize = 2
+
+        self.TempStorage = {}
 
         self.Delta0 = Delta0
 
@@ -25,19 +27,15 @@ class GABE(Solver):
 
     def InitTempStorage(self,Start,Domain,Options):
 
-        self.TempStorage['Data'][-1] = Start
-        self.TempStorage[self.F][-1] = self.F(Start)
-        self.TempStorage['Step'][-1] = Options.Init.Step
-        self.TempStorage['F Evaluations'][-1] = 1
-        self.TempStorage['Projections'][-1] = 0
+        self.TempStorage['Data'] = self.StorageSize*[Start]
+        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
+        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
+        self.TempStorage['F Evaluations'] = self.StorageSize*[1]
+        self.TempStorage['Projections'] = self.StorageSize*[0]
 
         return self.TempStorage
 
-    def BookKeeping(self,TempData):
-
-        for item in self.TempStorage:
-            self.TempStorage[item].pop(0)
-            self.TempStorage[item].append(TempData[item])
+    # BookKeeping(self,TempData) defined in super class 'Solver'
 
     def Update(self,Record):
 
