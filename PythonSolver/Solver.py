@@ -10,6 +10,10 @@ class Solver(object):
 
     def InitTempStorage(self,Start,Domain,Options):
 
+        print('Every method must define InitTempStorage(self,Start,Domain,Options)' + \
+            'to return a dictionary of information the method will need for later use' + \
+            'plus the work necessary to obtain that information.')
+
         self.TempStorage['Data'][-1] = Start
 
         return self.TempStorage
@@ -50,9 +54,6 @@ def Solve(Start,Method,Domain,Options):
 
         #Record Update Stats
         Record.BookKeeping(TempStorage)
-
-    #Remove Unused Entries
-    Record.RemoveUnused()
 
     return Record
 

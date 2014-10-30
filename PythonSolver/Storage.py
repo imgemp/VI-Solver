@@ -4,9 +4,8 @@ class Storage:
 
     def __init__(self,Start,Domain,Method,Options):
         self.thisTempIndex = 0
-        self.maxTempIndex = len(Method.TempStorage.items()[0][1])
+        self.maxTempIndex = Method.StorageSize
         self.thisPermIndex = 0
-        self.maxPermIndex = Options.Term.Tols[0]+1
 
         self.TempStorage = Method.InitTempStorage(Start,Domain,Options)
         
@@ -16,11 +15,7 @@ class Storage:
                 PermItem = Method.TempStorage[req][-1]
             else:
                 PermItem = req(Start)
-            if isinstance(PermItem,np.ndarray):
-                self.PermStorage[req] = self.maxPermIndex*[np.reshape([np.NaN for i in PermItem.flatten()],PermItem.shape)]
-            else:
-                self.PermStorage[req] = self.maxPermIndex*[np.NaN]
-            self.PermStorage[req][0] = PermItem
+            self.PermStorage[req] = [PermItem]
 
     def BookKeeping(self,TempStorage):
 
@@ -37,11 +32,7 @@ class Storage:
                 PermItem = self.TempStorage[req][-1]
             else:
                 PermItem = req(NewData)
-            self.PermStorage[req][self.thisPermIndex] = PermItem
-
-    def RemoveUnused(self):
-        for req in self.PermStorage:
-            self.PermStorage[req] = self.PermStorage[req][:self.thisPermIndex+1]
+            self.PermStorage[req].append(PermItem)
 
 
 

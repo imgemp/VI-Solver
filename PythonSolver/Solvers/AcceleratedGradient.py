@@ -13,28 +13,26 @@ class AG(Solver):
 
         self.Proj = P
 
-        self.TempStorage = {'Data': [np.NaN], '_Data': [np.NaN], self.F: [np.NaN], 'scount': [np.NaN], 's': [np.NaN], 'Step': [np.NaN], 'F Evaluations': [np.NaN], 'Projections': [np.NaN]}
+        self.StorageSize = 1
+
+        self.TempStorage = {}
 
     def InitTempStorage(self,Start,Domain,Options):
 
-        self.TempStorage['Data'][-1] = Start
-        self.TempStorage['_Data'][-1] = Start
-        self.TempStorage[self.F][-1] = self.F(Start)
-        self.TempStorage['scount'][-1] = 0
-        self.TempStorage['s'][-1] = 1
-        self.TempStorage['Step'][-1] = Options.Init.Step
-        self.TempStorage['F Evaluations'][-1] = 1
-        self.TempStorage['Projections'][-1] = 0
+        self.TempStorage['Data'] = self.StorageSize*[Start]
+        self.TempStorage['_Data'] = self.StorageSize*[Start]
+        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
+        self.TempStorage['scount'] = self.StorageSize*[0]
+        self.TempStorage['s'] = self.StorageSize*[1]
+        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
+        self.TempStorage['F Evaluations'] = self.StorageSize*[1]
+        self.TempStorage['Projections'] = self.StorageSize*[0]
 
         self.InitStep = Options.Init.Step
 
         return self.TempStorage
 
-    def BookKeeping(self,TempData):
-
-        for item in self.TempStorage:
-            self.TempStorage[item].pop(0)
-            self.TempStorage[item].append(TempData[item])
+    # BookKeeping(self,TempData) defined in super class 'Solver'
 
     def Update(self,Record): # A lot of weird things with AG - track gap(_x), x updated with _x, look into these
 

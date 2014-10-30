@@ -33,8 +33,8 @@ def Demo():
     # Method = EG(Domain=Domain,P=RPlusProjection())
     # Method = AG(Domain=Domain,P=RPlusProjection())
     # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
@@ -60,9 +60,6 @@ def Demo():
 
     # Print Results
     PrintSimResults(Options,BloodBank_Results,Method,toc)
-
-    # Zero Projections for Later Use
-    Method.Proj.NP = 0
 
 if __name__ == '__main__':
   Demo()
