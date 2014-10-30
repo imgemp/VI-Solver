@@ -1,4 +1,4 @@
-WIP
+VI-Solver
 ===
 
-Work In Progress
+Variational Inequality Solver in Python
