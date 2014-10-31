@@ -4,6 +4,9 @@ import numpy as np
 
 from Domains.DummyMARL import *
 from Domains.DummyMARL2 import *
+from Domains.Coordination import *
+from Domains.MatchingPennies import *
+from Domains.Tricky import *
 
 from Solvers.Euler import *
 from Solvers.Extragradient import *
@@ -31,7 +34,9 @@ def Demo():
     #__DUMMY_MARL__##################################################
 
     # Define Domain
-    Domain = MARL2()
+    Domain = Coordination()
+    Domain = MatchingPennies()
+    Domain = Tricky()
 
     # Set Method
     # Method = Euler(Domain=Domain,P=RPlusProjection())
@@ -42,7 +47,9 @@ def Demo():
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
     # Method = GABE(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
     # Method = Drift(Domain=Domain)
-    Method = DriftABE(Domain=Domain,P=IdentityProjection(),Delta0=1e-5) #(1e-5)
+    box = np.array([0.,1.])
+    epsilon = np.array([-0.01,0.01])
+    Method = DriftABE(Domain=Domain,P=BoxProjection(box[0],box[1]),Delta0=1e-5) #(1e-5)
     # Method = DriftABE_Exact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
@@ -52,8 +59,8 @@ def Demo():
 	# Set Options
     Init = Initialization(Step=1e-3)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=100000,Tols=[(Domain.Origin_Error,1e-4)]) #(1,000,000)
-    Repo = Reporting(Requests=[Domain.Origin_Error,'Data','Step','F Evaluations','Projections'])
+    Term = Termination(MaxIter=100000,Tols=[(Domain.NE_L2Error,1e-4)]) #(1,000,000)
+    Repo = Reporting(Requests=[Domain.NE_L2Error,'Data','Step','F Evaluations','Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -84,8 +91,8 @@ def Demo():
     #     ax.plot(Data[i:i+2,0],Data[i:i+2,1])
 
     ax.plot(Data[:,0],Data[:,1])
-    ax.set_xlim([-1,1]);
-    ax.set_ylim([-1,1]);
+    ax.set_xlim(box+epsilon);
+    ax.set_ylim(box+epsilon);
     plt.show()
 
 if __name__ == '__main__':

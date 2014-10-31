@@ -24,9 +24,9 @@ class DriftABE(Solver):
 
         self.MaxStep = MaxStep
 
-        self.Mod = 10 #(100)
+        self.Mod = 6 #(100)
 
-        self.Agg = 10 #(10)
+        self.Agg = 1 #(10)
 
         self.agent_i = 0
 
@@ -51,6 +51,8 @@ class DriftABE(Solver):
 
         # Initialize Storage
         TempData = {}
+
+        # May want to use a Finite State Machine approach rather than if statements
 
         if (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 0):
 
@@ -89,20 +91,31 @@ class DriftABE(Solver):
 
         else:
 
-            # Perform Adams Bashforth Update
-            Fs = Record.TempStorage[self.F]
-            NewData = self.Proj.P(Data,Step,-0.5*Fs[-2]+1.5*Fs[-1])
+            if (Record.thisPermIndex%2 == 0):
 
-            # Perform Euler Update
-            _NewData = self.Proj.P(Data,Step,Fs[-1])
+                # Perform Euler Update
+                F = Record.TempStorage[self.F][-1]
+                NewData = self.Proj.P(Data,Step,F)
 
-            # Adjust Stepsize
-            Delta = max(abs(NewData-_NewData))
-            if Delta == 0.: Step = 2.*Step
-            else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+                # Record Projections
+                TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
-            # Record Projections
-            TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
+            else:
+
+                # Perform Adams Bashforth Update
+                Fs = Record.TempStorage[self.F]
+                NewData = self.Proj.P(Data,Step,-0.5*Fs[-2]+1.5*Fs[-1])
+
+                # Perform Euler Update
+                _NewData = self.Proj.P(Data,Step,Fs[-1])
+
+                # Adjust Stepsize
+                Delta = max(abs(NewData-_NewData))
+                if Delta == 0.: Step = 2.*Step
+                else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+
+                # Record Projections
+                TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
 
         # Store Data
         TempData['Data'] = NewData

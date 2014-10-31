@@ -13,6 +13,15 @@ class IdentityProjection(Projection):
     def P(self,Data,Step,Direc):
         return Data+Step*Direc
 
+class BoxProjection(Projection):
+
+    def __init__(self,low,high):
+        self.low = low
+        self.high = high
+
+    def P(self,Data,Step,Direc):
+        return np.minimum(np.maximum(self.low,Data+Step*Direc),self.high)
+
 class RPlusProjection(Projection):
 
     def P(self,Data,Step,Direc):
