@@ -1,7 +1,6 @@
 import numpy as np
 
 from Projection import *
-from Path import *
 from Utilities import *
 from Solver import Solver
 
