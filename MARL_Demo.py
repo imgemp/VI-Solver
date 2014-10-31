@@ -42,9 +42,9 @@ def Demo():
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
     # Method = GABE(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
     # Method = Drift(Domain=Domain)
-    Method = DriftABE(Domain=Domain,P=IdentityProjection(),Delta0=1e-5) #(1e-5)
+    # Method = DriftABE(Domain=Domain,P=IdentityProjection(),Delta0=1e-5) #(1e-5)
     # Method = DriftABE_Exact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
-    # Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
+    Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = np.array([0,1])

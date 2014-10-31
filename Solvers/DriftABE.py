@@ -24,7 +24,7 @@ class DriftABE(Solver):
 
         self.MaxStep = MaxStep
 
-        self.Mod = 100 #(100)
+        self.Mod = 10 #(100)
 
         self.Agg = 10 #(10)
 
@@ -73,7 +73,7 @@ class DriftABE(Solver):
             G_km2 = self.TempStorage['F_2norm'][-3]
             x_km1 = self.TempStorage['Data'][-2][agent_i]
             x_km2 = self.TempStorage['Data'][-3][agent_i]
-            dG_dxi = (G_k-2*G_km1+G_km2)/(x_km1-x_km2)
+            dG_dxi = (-G_k+2*G_km1-G_km2)/(x_km1-x_km2)
 
             # Compute Adjusted F
             F = Record.TempStorage[self.F][-1]

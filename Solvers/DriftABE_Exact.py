@@ -10,7 +10,7 @@ class DriftABE_Exact(Solver):
         
         self.F = Domain.F
 
-        self.F_exact = Domain.F_exact
+        self.F_curl = Domain.F_curl
 
         self.Proj = P
 
@@ -28,7 +28,7 @@ class DriftABE_Exact(Solver):
 
         self.Mod = 10 #(100)
 
-        self.Agg = 100 #(10)
+        self.Agg = 10 #(10)
 
     def InitTempStorage(self,Start,Domain,Options):
 
@@ -52,12 +52,14 @@ class DriftABE_Exact(Solver):
         # Initialize Storage
         TempData = {}
 
+        # Choose Agent for Curl Component
+        agent_i = 0#np.random.randint(Data.shape[0])
+
         if (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 0):
 
             # Compute Curl Component for Agent i
-            agent_i = 0#np.random.randint(Data.shape[0])
             F = Record.TempStorage[self.F][-1]
-            F[agent_i] = self.F_exact(Data)[agent_i]
+            F[agent_i] = F[agent_i] - self.Agg*self.F_curl(Data)[agent_i]
 
             # Perform Euler Update
             NewData = self.Proj.P(Data,Step,F)

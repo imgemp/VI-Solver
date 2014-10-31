@@ -10,7 +10,7 @@ class DriftABE_BothExact(Solver):
         
         self.F = Domain.F
 
-        self.F_exact = Domain.F_exact
+        self.F_curl = Domain.F_curl
 
         self.Proj = P
 
@@ -26,7 +26,7 @@ class DriftABE_BothExact(Solver):
 
         self.MaxStep = MaxStep
 
-        self.Mod = 100 #(100)
+        self.Mod = 10 #(100)
 
         self.Agg = 10 #(10)
 
@@ -55,7 +55,7 @@ class DriftABE_BothExact(Solver):
         if (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 0):
 
             # Perform Euler Update With Curl for All Agents
-            F = self.F_exact(Data)
+            F = self.F(Data)-self.Agg*self.F_curl(Data)
             NewData = self.Proj.P(Data,Step,F)
 
             # Record Projections

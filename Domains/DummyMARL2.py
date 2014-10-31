@@ -17,10 +17,10 @@ class MARL2(Domain):
         F[1] = -Data[0]
         return F
 
-    def F_exact(self,Data):
+    def F_curl(self,Data):
         F = np.zeros(Data.shape)
-        F[0] = Data[1]   -Data[0]
-        F[1] = -Data[0]  -Data[1]
+        F[0] = Data[0]
+        F[1] = Data[1]
         return F
 
     def Origin_Error(self,Data):
