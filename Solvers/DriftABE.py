@@ -28,6 +28,8 @@ class DriftABE(Solver):
 
         self.Agg = 10 #(10)
 
+        self.agent_i = 0
+
     def InitTempStorage(self,Start,Domain,Options):
 
         self.TempStorage['Data'] = self.StorageSize*[Start]
@@ -50,14 +52,14 @@ class DriftABE(Solver):
         # Initialize Storage
         TempData = {}
 
-        # Choose Agent for Curl Component
-        agent_i = 0#np.random.randint(Data.shape[0])
-
         if (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 0):
+
+            # Choose Agent for Curl Component
+            self.agent_i = np.random.randint(Data.shape[0])
 
             # Freeze Agent i's Policy
             F = Record.TempStorage[self.F][-1]
-            F[agent_i] = 0
+            F[self.agent_i] = 0
 
             # Perform Euler Update
             NewData = self.Proj.P(Data,Step,F)
@@ -71,13 +73,13 @@ class DriftABE(Solver):
             G_k = self.TempStorage['F_2norm'][-1]
             G_km1 = self.TempStorage['F_2norm'][-2]
             G_km2 = self.TempStorage['F_2norm'][-3]
-            x_km1 = self.TempStorage['Data'][-2][agent_i]
-            x_km2 = self.TempStorage['Data'][-3][agent_i]
+            x_km1 = self.TempStorage['Data'][-2][self.agent_i]
+            x_km2 = self.TempStorage['Data'][-3][self.agent_i]
             dG_dxi = (-G_k+2*G_km1-G_km2)/(x_km1-x_km2)
 
             # Compute Adjusted F
             F = Record.TempStorage[self.F][-1]
-            F[agent_i] = F[agent_i] - self.Agg*0.5*dG_dxi
+            F[self.agent_i] = F[self.agent_i] - self.Agg*0.5*dG_dxi
 
             # Perform Euler Update
             NewData = self.Proj.P(Data,Step,F)
