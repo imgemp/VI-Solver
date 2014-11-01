@@ -19,6 +19,8 @@ from Solvers.Drift import *
 from Solvers.DriftABE import *
 from Solvers.DriftABE_Exact import *
 from Solvers.DriftABE_BothExact import *
+from Solvers.DriftABE_VIteration import *
+from Solvers.DriftABE2 import *
 
 from Solver import Solve
 from Options import *
@@ -34,8 +36,8 @@ def Demo():
     #__DUMMY_MARL__##################################################
 
     # Define Domain
-    Domain = Coordination()
-    Domain = MatchingPennies()
+    # Domain = Coordination()
+    # Domain = MatchingPennies()
     Domain = Tricky()
 
     # Set Method
@@ -49,23 +51,26 @@ def Demo():
     # Method = Drift(Domain=Domain)
     box = np.array([0.,1.])
     epsilon = np.array([-0.01,0.01])
-    Method = DriftABE(Domain=Domain,P=BoxProjection(box[0],box[1]),Delta0=1e-5) #(1e-5)
+    # Method = DriftABE(Domain=Domain,P=BoxProjection(box[0],box[1]),Delta0=1e-5) #(1e-5)
+    # Method = DriftABE_VIteration(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
+    Method = DriftABE2(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE_Exact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
-    Start = np.array([0,1])
+    # Start = np.array([0,1])
+    Start = np.array([[0.2,0.8],[0.6,0.4]])
 
 	# Set Options
-    Init = Initialization(Step=1e-3)
+    Init = Initialization(Step=2e-3)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=100000,Tols=[(Domain.NE_L2Error,1e-4)]) #(1,000,000)
-    Repo = Reporting(Requests=[Domain.NE_L2Error,'Data','Step','F Evaluations','Projections'])
+    Term = Termination(MaxIter=10000,Tols=[(Domain.NE_L2Error,1e-4)]) #(1,000,000)
+    Repo = Reporting(Requests=[Domain.NE_L2Error,'Policy','Policy Learning Rate','Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
     # Print Stats
-    PrintSimStats(Domain,Method,Options)
+    # PrintSimStats(Domain,Method,Options)
 
     # Start Solver
     tic = time.time()
@@ -75,7 +80,7 @@ def Demo():
     # Print Results
     PrintSimResults(Options,MARL_Results,Method,toc)
 
-    Data = np.array(MARL_Results.PermStorage['Data'])
+    Data = np.array(MARL_Results.PermStorage['Policy'])[:,0] # Just take probabilities for first action
     print('Endpoint:')
     print(Data[-1])
 

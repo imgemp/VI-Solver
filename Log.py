@@ -28,6 +28,6 @@ def PrintSimResults(Options,Results,Method,Time):
     print('Steps: '+`Results.thisPermIndex`)
     # print('FEvals: '+`np.sum(Results.PermStorage['Function Evaluations'])`)
     # print('NPs: '+`Method.Proj.NP`)
-    print('Min |X*|: '+`min(abs(Results.TempStorage['Data'][-1]))`)
-    print('Max |X*|: '+`max(abs(Results.TempStorage['Data'][-1]))`)
+    # print('Min |X*|: '+`min(abs(Results.TempStorage['Data'][-1]))`)
+    # print('Max |X*|: '+`max(abs(Results.TempStorage['Data'][-1]))`)
     print('-------------------------------------------------------------------')

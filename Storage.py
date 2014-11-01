@@ -20,7 +20,8 @@ class Storage:
     def BookKeeping(self,TempStorage):
 
         # Retrieve New Data
-        NewData = TempStorage['Data'][-1]
+        # NewData = TempStorage['Data'][-1]
+        NewData = TempStorage['Policy'][-1]
 
         # Update TempStorage
         self.TempStorage = TempStorage
