@@ -4,7 +4,7 @@ from Projection import *
 from Utilities import *
 from Solver import Solver
 
-class DriftABE2(Solver):
+class DriftABE4(Solver):
 
     def __init__(self,Domain,P=IdentityProjection(),Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
         
@@ -24,9 +24,9 @@ class DriftABE2(Solver):
 
         self.MaxStep = MaxStep
 
-        self.Mod = 1e6 #(100)
+        self.Mod = 10 #(100)
 
-        self.Agg = 1 #(10)
+        self.Agg = .1 #(10)
 
         self.agent_i = 0
 
@@ -34,10 +34,10 @@ class DriftABE2(Solver):
 
         self.TempStorage['Policy'] = self.StorageSize*[Start]
         self.TempStorage['Value Function'] = self.StorageSize*[np.zeros(Domain.r.shape)]
-        self.TempStorage['Temporal Difference (dV)'] = self.StorageSize*[np.zeros(Domain.b.shape)]
+        self.TempStorage['Policy Gradient (dPi)'] = self.StorageSize*[np.zeros(Domain.b.shape)]
         self.TempStorage['Policy Learning Rate'] = self.StorageSize*[Options.Init.Step]
         self.TempStorage['Value Learning Rate'] = self.StorageSize*[0.1]
-        self.TempStorage['dV.dV'] = self.StorageSize*[np.sum(self.TempStorage['Temporal Difference (dV)'][-1]**2)]
+        self.TempStorage['dPi.dPi'] = self.StorageSize*[np.sum(self.TempStorage['Policy Gradient (dPi)'][-1]**2)]
         self.TempStorage['Projections'] = self.StorageSize*[0]
 
         return self.TempStorage
@@ -57,7 +57,7 @@ class DriftABE2(Solver):
         # Retrieve Necessary Data
         Pi = Record.TempStorage['Policy'][-1]
         V = Record.TempStorage['Value Function'][-1]
-        dV = Record.TempStorage['Temporal Difference (dV)'][-1]
+        dPi = Record.TempStorage['Policy Gradient (dPi)'][-1]
         Eta = Record.TempStorage['Policy Learning Rate'][-1]
         Alpha = Record.TempStorage['Value Learning Rate'][-1]
 
@@ -72,11 +72,11 @@ class DriftABE2(Solver):
             self.agent_i = np.random.randint(Pi.shape[0])
 
             # Freeze Agent i's Policy
-            dV[self.agent_i] = 0
+            dPi[self.agent_i] = 0.*dPi[self.agent_i]
 
             # Perform Euler Update on Policies and Project onto Simplex
-            Pi_1 = self.Proj.P(Pi[0],Eta,dV[0]) # Player 1
-            Pi_2 = self.Proj.P(Pi[1],Eta,dV[1]) # Player 2
+            Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
+            Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
             Pi_New = np.array([Pi_1,Pi_2])
 
             # Record Projections
@@ -84,101 +84,111 @@ class DriftABE2(Solver):
 
         elif (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 1):
 
-            # Approximate Gradient of ||dV||^2 with respect to agent i
-            G_k = self.TempStorage['dV.dV'][-1]
-            G_km1 = self.TempStorage['dV.dV'][-2]
-            G_km2 = self.TempStorage['dV.dV'][-3]
+            # Approximate Gradient of ||dPi||^2 with respect to agent i
+            G_k = self.TempStorage['dPi.dPi'][-1]
+            G_km1 = self.TempStorage['dPi.dPi'][-2]
+            G_km2 = self.TempStorage['dPi.dPi'][-3]
             x_km1 = self.TempStorage['Policy'][-2][self.agent_i]
             x_km2 = self.TempStorage['Policy'][-3][self.agent_i]
-            dG_dxi = (-G_k+2*G_km1-G_km2)/np.linalg.norm(x_km1-x_km2) # Policies are multidimensional, not sure what to do
-
-            # Compute Adjusted Temporal Difference
-            dV[self.agent_i] = dV[self.agent_i] - self.Agg*0.5*dG_dxi
-
+            dx = x_km1-x_km2
+            # dx = np.linalg.norm(x_km1-x_km2)
+            # if (dx == 0.):
+            #     dG_dxi = 0.
+            # else:
+            #     dG_dxi = (-G_k+2*G_km1-G_km2)/dx # Policies are multidimensional, not sure what to do
+            dG_dxi = 0.*dPi[self.agent_i]
+            if (dx[0] != 0.):
+                dG_dxi[0] = (-G_k+2*G_km1-G_km2)/dx[0]
+            if (dx[1] != 0.):
+                dG_dxi[1] = (-G_k+2*G_km1-G_km2)/dx[1]
+            print(dPi[self.agent_i])
+            # Compute Adjusted Policy Gradient
+            dPi[self.agent_i][0] = dPi[self.agent_i][0] - self.Agg*0.5*dG_dxi
+            print(dPi[self.agent_i]); print(self.agent_i);
             # Perform Euler Update on Policies and Project onto Simplex
-            Pi_1 = self.Proj.P(Pi[0],Eta,dV[0]) # Player 1
-            Pi_2 = self.Proj.P(Pi[1],Eta,dV[1]) # Player 2
+            Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
+            Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
             Pi_New = np.array([Pi_1,Pi_2])
-
+            print(Pi[self.agent_i]); print(Pi_New[self.agent_i]); print('-----------')
             # Record Projections
             TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
         else:
 
-            # if (Record.thisPermIndex%2 == 0):
+            if (Record.thisPermIndex%2 == 0):
 
                 # Perform Euler Update on Policies and Project onto Simplex
-                Pi_1 = self.Proj.P(Pi[0],Eta,dV[0]) # Player 1
-                Pi_2 = self.Proj.P(Pi[1],Eta,dV[1]) # Player 2
+                Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
+                Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
                 Pi_New = np.array([Pi_1,Pi_2])
 
                 # Record Projections
                 TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
-            # else:
+            else:
 
-            #     # Perform Adams Bashforth Update
-            #     dVs = Record.TempStorage['Temporal Difference (dV)']
-            #     Pi_1 = self.Proj.P(Pi[0],Eta,-0.5*dVs[0][-2]+1.5*dVs[0][-1])
-            #     Pi_2 = self.Proj.P(Pi[1],Eta,-0.5*dVs[1][-2]+1.5*dVs[1][-1])
-            #     Pi_New = np.array([Pi_1,Pi_2])
+                # Perform Adams Bashforth Update
+                dPis = Record.TempStorage['Policy Gradient (dPi)']
+                Pi_1 = self.Proj.P(Pi[0],Eta,-0.5*dPis[-2][0]+1.5*dPis[-1][0])
+                Pi_2 = self.Proj.P(Pi[1],Eta,-0.5*dPis[-2][1]+1.5*dPis[-1][1])
+                Pi_New = np.array([Pi_1,Pi_2])
 
-            #     # Perform Euler Update
-            #     _Pi_1 = self.Proj.P(Pi[0],Eta,dVs[0][-1]) # Player 1
-            #     _Pi_2 = self.Proj.P(Pi[1],Eta,dVs[1][-1]) # Player 2
-            #     _Pi_New = np.array([_Pi_1,_Pi_2])
+                # Perform Euler Update
+                _Pi_1 = self.Proj.P(Pi[0],Eta,dPis[-1][0]) # Player 1
+                _Pi_2 = self.Proj.P(Pi[1],Eta,dPis[-1][1]) # Player 2
+                _Pi_New = np.array([_Pi_1,_Pi_2])
 
-            #     # Adjust Stepsize
-            #     Delta = np.max(abs(Pi_New-_Pi_New))
-            #     if Delta == 0.: Eta = 2.*Eta
-            #     else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+                # Adjust Stepsize
+                Delta = np.max(abs(Pi_New-_Pi_New));
+                if Delta == 0.: Eta = max(min(Eta*2.,self.MaxStep),self.MinStep)
+                else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
 
-            #     # Record Projections
-            #     TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
-        print('Policy'); print(Pi_New[0]); print(Pi_New[1])
+                # Record Projections
+                TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
+        # print('Policy'); print(Pi_New[0]); print(Pi_New[1])
         # Play Game
         # Select Actions According to Policies
         a_1 = self.Action(Pi_New[0]) # Player 1
         a_2 = self.Action(Pi_New[1]) # Player 2
-        print('actions')
-        print(a_1)
-        print(a_2)
+        # print('actions')
+        # print(a_1)
+        # print(a_2)
 
         # Play those actions and observe the resulting rewards
         r_1 = self.R[0][a_1,a_2] # Player 1
         r_2 = self.R[1][a_1,a_2] # Player 2
-        print('rewards')
-        print(r_1)
-        print(r_2)
+        # print('rewards')
+        # print(r_1)
+        # print(r_2)
 
         # Update Value Function
         V_New = np.array(V)
         V_New[0][a_1] = Alpha*r_1 + (1-Alpha)*V[0][a_1] # Player 1
         V_New[1][a_2] = Alpha*r_2 + (1-Alpha)*V[1][a_2] # Player 2
         # V_New = np.array([V_1,V_2])
-        print('V')
-        print(V_New[0])
-        print(V_New[1])
+        # print('V')
+        # print(V_New[0])
+        # print(V_New[1])
 
         # Compute Total Average Reward
         TV_1 = np.sum(V_New[0]/V_New[0].size)
         TV_2 = np.sum(V_New[1]/V_New[1].size)
 
-        # Compute Temporal Differences
-        dV_1 = V_New[0] - TV_1 # Player 1
-        dV_2 = V_New[1] - TV_2 # Player 2
-        dV_New = np.array([dV_1,dV_2])
-        print('dV')
-        print(dV_1)
-        print(dV_2)
-        print('--------------------------------------')
+        # Compute Policy Gradients
+        dPi_1 = V_New[0] - TV_1 # Player 1
+        dPi_2 = V_New[1] - TV_2 # Player 2
+        dPi_New = np.array([dPi_1,dPi_2])
+        # print('dPi')
+        # print(dPi_1)
+        # print(dPi_2)
+        # print('--------------------------------------')
         # Store Data
         TempData['Policy'] = Pi_New
         TempData['Value Function'] = V_New
-        TempData['Temporal Difference (dV)'] = dV_New
+        TempData['Policy Gradient (dPi)'] = dPi_New
         TempData['Policy Learning Rate'] = Eta
         TempData['Value Learning Rate'] = Alpha
-        TempData['dV.dV'] = np.sum(dV_New**2)
+        TempData['dPi.dPi'] = np.sum(dPi_New**2)
         self.BookKeeping(TempData)
         
         return self.TempStorage
