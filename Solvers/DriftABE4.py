@@ -26,9 +26,11 @@ class DriftABE4(Solver):
 
         self.Mod = 10 #(100)
 
-        self.Agg = .1 #(10)
+        self.Agg = 1. #(10)
 
         self.agent_i = 0
+
+        self.goodbad = [0,0]
 
     def InitTempStorage(self,Start,Domain,Options):
 
@@ -69,7 +71,7 @@ class DriftABE4(Solver):
         if (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 0):
 
             # Choose Agent for Curl Component
-            self.agent_i = np.random.randint(Pi.shape[0])
+            self.agent_i = 0#np.random.randint(Pi.shape[0])
 
             # Freeze Agent i's Policy
             dPi[self.agent_i] = 0.*dPi[self.agent_i]
@@ -83,7 +85,7 @@ class DriftABE4(Solver):
             TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
         elif (Record.thisPermIndex>=self.Mod) and (Record.thisPermIndex%self.Mod == 1):
-
+            self.Agg = np.sqrt(Record.thisPermIndex)
             # Approximate Gradient of ||dPi||^2 with respect to agent i
             G_k = self.TempStorage['dPi.dPi'][-1]
             G_km1 = self.TempStorage['dPi.dPi'][-2]
@@ -100,16 +102,24 @@ class DriftABE4(Solver):
             if (dx[0] != 0.):
                 dG_dxi[0] = (-G_k+2*G_km1-G_km2)/dx[0]
             if (dx[1] != 0.):
-                dG_dxi[1] = (-G_k+2*G_km1-G_km2)/dx[1]
-            print(dPi[self.agent_i])
+                dG_dxi[1] = (-G_k+2*G_km1-G_km2)/dx[1] # ////////////////////////////// try using a more accurate backward finite difference method
+            # print(`dPi[self.agent_i]`+'\toriginal dPi of agent_i')
+            # print(`dG_dxi`+'\tdG_dxi')
+            if (np.sign(dG_dxi[0]) == np.sign(Pi[self.agent_i][0]-.5)):
+                self.goodbad[0] += 1
+            else:
+                self.goodbad[1] += 1
             # Compute Adjusted Policy Gradient
-            dPi[self.agent_i][0] = dPi[self.agent_i][0] - self.Agg*0.5*dG_dxi
-            print(dPi[self.agent_i]); print(self.agent_i);
+            dPi_norm = np.linalg.norm(dPi[self.agent_i])
+            dG_dxi_norm = np.linalg.norm(dG_dxi)
+            # print(`self.Agg*0.5*dG_dxi*dPi_norm/dG_dxi_norm`+'\tcurl component')
+            dPi[self.agent_i] = dPi[self.agent_i] - self.Agg*0.5*dG_dxi*dPi_norm/dG_dxi_norm
+            # print(`dPi[self.agent_i]`+'\tnew dPi of agent_i'); print(`self.agent_i`+'\tagent_i');
             # Perform Euler Update on Policies and Project onto Simplex
             Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
             Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
             Pi_New = np.array([Pi_1,Pi_2])
-            print(Pi[self.agent_i]); print(Pi_New[self.agent_i]); print('-----------')
+            # print(`Pi[self.agent_i]`+'\toriginal policy of agent_i'); print(`Pi_New[self.agent_i]`+'\tnew policy of agent_i'); print('-----------')
             # Record Projections
             TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 

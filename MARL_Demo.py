@@ -87,7 +87,7 @@ def Demo():
     Data = np.array(MARL_Results.PermStorage['Policy'])[:,:,0] # Just take probabilities for first action
     print('Endpoint:')
     print(Data[-1])
-
+    print(Method.goodbad)
     fig, ax = plt.subplots(1,1)
 
     # Choose a color map, loop through the colors, and assign them to the color 
