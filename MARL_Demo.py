@@ -2,19 +2,19 @@ import time
 import datetime
 import numpy as np
 
-from Domains.DummyMARL import *
-from Domains.DummyMARL2 import *
+# from Domains.DummyMARL import *
+# from Domains.DummyMARL2 import *
 from Domains.Coordination import *
 from Domains.MatchingPennies import *
 from Domains.Tricky import *
 
-from Solvers.Euler import *
-from Solvers.Extragradient import *
-from Solvers.AcceleratedGradient import *
-from Solvers.HeunEuler import *
-from Solvers.AdamsBashforthEuler import *
-from Solvers.CashKarp import *
-from Solvers.GABE import *
+# from Solvers.Euler import *
+# from Solvers.Extragradient import *
+# from Solvers.AcceleratedGradient import *
+# from Solvers.HeunEuler import *
+# from Solvers.AdamsBashforthEuler import *
+# from Solvers.CashKarp import *
+# from Solvers.GABE import *
 from Solvers.Drift import *
 from Solvers.DriftABE import *
 from Solvers.DriftABE_Exact import *
@@ -23,6 +23,7 @@ from Solvers.DriftABE_VIteration import *
 from Solvers.DriftABE2 import *
 from Solvers.DriftABE3 import *
 from Solvers.DriftABE4 import *
+from Solvers.DriftABE5 import *
 
 from Solver import Solve
 from Options import *
@@ -57,7 +58,8 @@ def Demo():
     # Method = DriftABE_VIteration(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE2(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE3(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
-    Method = DriftABE4(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
+    # Method = DriftABE4(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
+    Method = DriftABE5(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE_Exact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
