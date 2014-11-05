@@ -1,5 +1,5 @@
 
-class Storage:
+class Storage(object):
 
     def __init__(self,Start,Domain,Method,Options):
         self.thisTempIndex = 0
@@ -7,7 +7,7 @@ class Storage:
         self.thisPermIndex = 0
 
         self.TempStorage = Method.InitTempStorage(Start,Domain,Options)
-        
+
         self.PermStorage = {}
         for req in Options.Repo.PermRequests:
             if req in Method.TempStorage:
@@ -32,6 +32,3 @@ class Storage:
             else:
                 PermItem = req(NewData)
             self.PermStorage[req].append(PermItem)
-
-
-

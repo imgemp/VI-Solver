@@ -1,10 +1,11 @@
 
-class Initialization:
+class Initialization(object):
 
     def __init__(self,Step=0):
         self.Step = Step
 
-class Termination:
+
+class Termination(object):
 
     def __init__(self,MaxIter=1,Tols=[]):
         self.Tols = [MaxIter]
@@ -16,7 +17,7 @@ class Termination:
                 self.Tols.remove(tol)
                 print(`tol[0].func_name`+' cannot be used as a terminal condition because it is not tracked during the descent.')
         return self.Tols
-    
+
     def IsTerminal(self,Record):
         if (Record.thisPermIndex>=self.Tols[0]):
             return True
@@ -25,8 +26,9 @@ class Termination:
                 if (Record.TempStorage[tol[0]][-1]<=tol[1]): return True
             else:
                 if (Record.PermStorage[tol[0]][Record.thisPermIndex]<=tol[1]): return True
-            
-class Reporting:
+
+
+class Reporting(object):
 
     def __init__(self,Requests=[]):
         self.PermRequests = Requests
@@ -43,12 +45,14 @@ class Reporting:
                 self.PermRequests.remove(req)
                 print(`req_str`+' cannot be used as a terminal condition because it is not tracked during the descent.')
 
-class Miscellaneous:
+
+class Miscellaneous(object):
 
     def __init__(self,Min=None):
         self.Min = Min
 
-class DescentOptions:
+
+class DescentOptions(object):
 
     def __init__(self,Init=Initialization(),Term=Termination(),Repo=Reporting(),Misc=Miscellaneous()):
         self.Init = Init
@@ -60,7 +64,3 @@ class DescentOptions:
         if not self.Misc.Min == None: Domain.Min = self.Misc.Min
         # check if requests are either tracked in tempstorage or are available as domain functions
         self.Term.Tols = self.Term.CheckTols(self.Repo.PermRequests,Method.TempStorage.keys())
-
-
-
-
