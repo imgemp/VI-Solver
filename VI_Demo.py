@@ -1,22 +1,19 @@
 import time
-import datetime
 import numpy as np
 
-from Domains.Sphere import *
-from Domains.Watson import *
-from Domains.KojimaShindo import *
-from Domains.Sun import *
+from Domains.Sphere import Sphere
+from Domains.Watson import Watson
+from Domains.KojimaShindo import KojimaShindo
+from Domains.Sun import Sun
 
-from Solvers.HeunEuler import *
+from Solvers.HeunEuler import HeunEuler
 
+from Projection import EntropicProjection, IdentityProjection
 from Solver import Solve
-from Options import *
-from Log import *
+from Options import (
+    DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
+from Log import PrintSimResults, PrintSimStats
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 def Demo():
 

@@ -1,6 +1,5 @@
-import numpy as np
 
-from Storage import *
+from Storage import Storage
 
 class Solver(object):
 
