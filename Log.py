@@ -20,18 +20,18 @@ def PrintSimStats(Domain, Method, Options):
 
 def PrintSimResults(Options, Results, Method, Time):
     print('-------------------------------------------------------------------')
-    print('CPU Time: %r' % Time)
+    print('CPU Time: %.3f' % Time)
     for req in Options.Repo.PermRequests:
         req_str = req
         if hasattr(req,'func_name'):
             req_str = req.func_name
         if req in Results.TempStorage:
-            print('%r: %r' % (req_str, Results.TempStorage[req][-1]))
+            print('%s: %g' % (req_str, Results.TempStorage[req][-1]))
         else:
-            print('%r: %r' % (req_str, Results.PermStorage[req][-1]))
-    print('Steps: %r' % Results.thisPermIndex)
+            print('%s: %g' % (req_str, Results.PermStorage[req][-1]))
+    print('Steps: %d' % Results.thisPermIndex)
     # print('FEvals: %r' % np.sum(Results.PermStorage['Function Evaluations']))
     # print('NPs: %r' % Method.Proj.NP)
-    print('Min |X*|: %r' % min(abs(Results.TempStorage['Data'][-1])))
-    print('Max |X*|: %r' % max(abs(Results.TempStorage['Data'][-1])))
+    print('Min |X*|: %.3f' % min(abs(Results.TempStorage['Data'][-1])))
+    print('Max |X*|: %.3f' % max(abs(Results.TempStorage['Data'][-1])))
     print('-------------------------------------------------------------------')
