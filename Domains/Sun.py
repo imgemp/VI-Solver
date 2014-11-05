@@ -2,6 +2,7 @@ import numpy as np
 
 from Domain import Domain
 
+
 class Sun(Domain):
 
     def __init__(self,Dim=8000):

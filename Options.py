@@ -21,13 +21,15 @@ class Termination(object):
         return self.Tols
 
     def IsTerminal(self,Record):
-        if (Record.thisPermIndex>=self.Tols[0]):
+        if Record.thisPermIndex >= self.Tols[0]:
             return True
         for tol in self.Tols[1]:
             if tol[0] in Record.TempStorage:
-                if (Record.TempStorage[tol[0]][-1]<=tol[1]): return True
-            else:
-                if (Record.PermStorage[tol[0]][Record.thisPermIndex]<=tol[1]): return True
+                if Record.TempStorage[tol[0]][-1] <= tol[1]:
+                    return True
+            elif Record.PermStorage[tol[0]][Record.thisPermIndex] <= tol[1]:
+                return True
+        return False
 
 
 class Reporting(object):
@@ -38,7 +40,7 @@ class Reporting(object):
     def CheckRequests(self,Method,Domain):
         for req in self.PermRequests:
             inTempStorage = (req in Method.TempStorage)
-            inDomainFunctions = False;
+            inDomainFunctions = False
             req_str = req[0]
             if hasattr(req,'__self__'):
                 inDomainFunctions = (req.self == Domain)
@@ -58,13 +60,17 @@ class Miscellaneous(object):
 
 class DescentOptions(object):
 
-    def __init__(self,Init=Initialization(),Term=Termination(),Repo=Reporting(),Misc=Miscellaneous()):
+    def __init__(self, Init=Initialization(), Term=Termination(),
+                 Repo=Reporting(), Misc=Miscellaneous()):
         self.Init = Init
         self.Term = Term
         self.Repo = Repo
         self.Misc = Misc
 
     def CheckOptions(self,Method,Domain):
-        if not self.Misc.Min == None: Domain.Min = self.Misc.Min
-        # check if requests are either tracked in tempstorage or are available as domain functions
-        self.Term.Tols = self.Term.CheckTols(self.Repo.PermRequests,Method.TempStorage.keys())
+        if self.Misc.Min is not None:
+            Domain.Min = self.Misc.Min
+        # check if requests are either tracked in tempstorage
+        # or are available as domain functions
+        self.Term.Tols = self.Term.CheckTols(self.Repo.PermRequests,
+                                             Method.TempStorage.keys())

@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from Domains.Rosenbrock import *
+from Domains.Rosenbrock import Rosenbrock
 
 # from Solvers.Euler import Euler
 # from Solvers.Extragradient import EG
@@ -35,11 +35,12 @@ def Demo():
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)
 
-	# Set Options
+    # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
-    Repo = Reporting(Requests=[Domain.f_Error,'Step','F Evaluations','Projections'])
+    Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
+                               'Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -59,10 +60,3 @@ def Demo():
 
 if __name__ == '__main__':
   Demo()
-
-
-
-
-
-
-

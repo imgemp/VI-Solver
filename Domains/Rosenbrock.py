@@ -2,10 +2,11 @@ import numpy as np
 
 from Domain import Domain
 
+
 class Rosenbrock(Domain):
 
     def __init__(self,Dim=2):
-        self.Dim = Dim+Dim%2
+        self.Dim = Dim + Dim % 2
         self.Min = 0.0
 
     def f(self,Data):
@@ -18,4 +19,4 @@ class Rosenbrock(Domain):
         return F
 
     def f_Error(self,Data):
-        return self.f(Data)-self.Min
+        return self.f(Data) - self.Min

@@ -35,15 +35,16 @@ def Demo():
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
-    
+
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
 
-	# Set Options
+    # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
-    Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations','Projections'])
+    Repo = Reporting(Requests=[Domain.gap_rplus, 'Step', 'F Evaluations',
+                               'Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -60,10 +61,3 @@ def Demo():
 
 if __name__ == '__main__':
   Demo()
-
-
-
-
-
-
-
