@@ -15,7 +15,9 @@ class Termination(object):
         for tol in self.Tols[1]:
             if (not (tol[0] in PermRequests)) and (not (tol[0] in TempRequests)):
                 self.Tols.remove(tol)
-                print(`tol[0].func_name`+' cannot be used as a terminal condition because it is not tracked during the descent.')
+                print(repr(tol[0].func_name), 'cannot be used as a',
+                      'terminal condition because it is not tracked',
+                      'during the descent.')
         return self.Tols
 
     def IsTerminal(self,Record):
@@ -33,7 +35,7 @@ class Reporting(object):
     def __init__(self,Requests=[]):
         self.PermRequests = Requests
 
-    def CheckRequests(Method,Domain):
+    def CheckRequests(self,Method,Domain):
         for req in self.PermRequests:
             inTempStorage = (req in Method.TempStorage)
             inDomainFunctions = False;
@@ -43,7 +45,9 @@ class Reporting(object):
                 req_str = req[0].func_name
             if not (inTempStorage or inDomainFunctions):
                 self.PermRequests.remove(req)
-                print(`req_str`+' cannot be used as a terminal condition because it is not tracked during the descent.')
+                print(repr(req_str), 'cannot be used as a',
+                      'terminal condition because it is not tracked',
+                      'during the descent.')
 
 
 class Miscellaneous(object):
