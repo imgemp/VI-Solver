@@ -2,6 +2,7 @@ import numpy as np
 
 from Domain import Domain
 
+
 class BloodBank(Domain):
 
     def __init__(self,Network,alpha=2):
@@ -13,12 +14,11 @@ class BloodBank(Domain):
     def F(self,Data):
         return self.F_P2UP(Data)
 
-    def gap_rplus(self,Data):
-        X    = Data
-        dFdX = self.F(Data)
+    def gap_rplus(self, X):
+        dFdX = self.F(X)
 
-        Y   = np.maximum(0,X - dFdX/self.alpha)
-        Z   = X - Y
+        Y = np.maximum(0,X - dFdX/self.alpha)
+        Z = X - Y
 
         return np.dot(dFdX,Z) - self.alpha/2.*np.dot(Z,Z)
 
@@ -68,7 +68,7 @@ class BloodBank(Domain):
         gam_BP = np.reshape(Data[ptr:ptr+self.nB],(self.nB,)); ptr += self.nB
         gam_PS = np.reshape(Data[ptr:ptr+self.nB],(self.nB,)); ptr += self.nB
         gam_SD = np.reshape(Data[ptr:ptr+self.nB*self.nD],(self.nB,self.nD)); ptr += self.nB*self.nD
-        gam_DR = np.reshape(Data[ptr:ptr+self.nD*self.nR],(self.nD,self.nR)); ptr = 0 
+        gam_DR = np.reshape(Data[ptr:ptr+self.nD*self.nR],(self.nD,self.nR)); ptr = 0
 
         F_unpacked =  self.FX_dX(x,\
         u_1C,u_CB,u_BP,u_PS,u_SD,u_DR,\
@@ -152,12 +152,12 @@ class BloodBank(Domain):
         dz_SD = 2.*self.zhat_SD[self.ind_CBDR_B,self.ind_CBDR_D]*f_SD[self.ind_CBDR_B,self.ind_CBDR_D]
         dz_DR = 2.*self.zhat_DR[self.ind_CBDR_D,self.ind_CBDR_R]*f_DR[self.ind_CBDR_D,self.ind_CBDR_R]
 
-        return np.reshape(dz_1C+\
-                          dz_CB*self.alpha_CBf+\
-                          dz_BP*self.alpha_BPf+\
-                          dz_PS*self.alpha_PSf+\
-                          dz_SD*self.alpha_SDf+\
-                          dz_DR*self.alpha_DRf,\
+        return np.reshape(dz_1C+
+                          dz_CB*self.alpha_CBf+
+                          dz_BP*self.alpha_BPf+
+                          dz_PS*self.alpha_PSf+
+                          dz_SD*self.alpha_SDf+
+                          dz_DR*self.alpha_DRf,
                           x.shape)
 
     def TotalRisk_Rhatx(self,x,f_1C):
@@ -258,12 +258,12 @@ class BloodBank(Domain):
         dChatxdx = self.dTotalOperationalCostdx_dChatxdx(x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR)
         dZhatxdx = self.dTotalDiscardingCostdx_dZhatxdx(x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR)
         Pknuk = np.tile(self.ProbabilityDistributionFunction_Pknuk(x),(self.nC,self.nB,self.nD,1))
-        Gam = np.reshape(gam_1C[self.ind_CBDR_C]+\
-                         gam_CB[self.ind_CBDR_C,self.ind_CBDR_B]+\
-                         gam_BP[self.ind_CBDR_B]+\
-                         gam_PS[self.ind_CBDR_B]+\
-                         gam_SD[self.ind_CBDR_B,self.ind_CBDR_D]+\
-                         gam_DR[self.ind_CBDR_D,self.ind_CBDR_R],\
+        Gam = np.reshape(gam_1C[self.ind_CBDR_C]+
+                         gam_CB[self.ind_CBDR_C,self.ind_CBDR_B]+
+                         gam_BP[self.ind_CBDR_B]+
+                         gam_PS[self.ind_CBDR_B]+
+                         gam_SD[self.ind_CBDR_B,self.ind_CBDR_D]+
+                         gam_DR[self.ind_CBDR_D,self.ind_CBDR_R],
                          (self.nC,self.nB,self.nD,self.nR))
         dRhatxdx = self.dTotalRiskdx_dRhatxdx(x,f_1C)
 
@@ -304,9 +304,10 @@ class BloodBank(Domain):
                du_1C,   du_CB,   du_BP,   du_PS,   du_SD,   du_DR,\
                dgam_1C, dgam_CB, dgam_BP, dgam_PS, dgam_SD, dgam_DR]
 
-def CreateNetworkExample1():
 
-    # Example 1 from Nagurney's Supply Chain Network Design of a Sustainable Blood Banking System
+def CreateNetworkExample1():
+    # Example 1 from Nagurney's Supply Chain Network Design
+    # of a Sustainable Blood Banking System
 
     nC = 2
     nB = 2
@@ -553,24 +554,25 @@ def CreateNetworkExample1():
     #Mu
     mu = np.reshape(alpha_DRf*alpha_DR[ind_CBDR_D,ind_CBDR_R],(nC,nB,nD,nR))
 
-    return [nC,nB,nD,nR,\
-           alpha_CBx,alpha_BPx,alpha_PSx,alpha_SDx,alpha_DRx,\
-           alpha_CBf,alpha_BPf,alpha_PSf,alpha_SDf,alpha_DRf,\
-           mu,\
-           chat_pow1_1C,chat_pow1_CB,chat_pow1_BP,chat_pow1_PS,chat_pow1_SD,chat_pow1_DR,\
-           chat_pow2_1C,chat_pow2_CB,chat_pow2_BP,chat_pow2_PS,chat_pow2_SD,chat_pow2_DR,\
-           zhat_1C,zhat_CB,zhat_BP,zhat_PS,zhat_SD,zhat_DR,\
-           rhat,\
-           pihat_pow1_1C,pihat_pow1_CB,pihat_pow1_BP,pihat_pow1_PS,pihat_pow1_SD,pihat_pow1_DR,\
-           pihat_pow2_1C,pihat_pow2_CB,pihat_pow2_BP,pihat_pow2_PS,pihat_pow2_SD,pihat_pow2_DR,\
-           ubar_1C,ubar_CB,ubar_BP,ubar_PS,ubar_SD,ubar_DR,\
-           ind_C___C,\
-           ind_CB__C,ind_CB__B,\
-           ind_CBD_C,ind_CBD_B,ind_CBD_D,\
-           ind_CBDR_C,ind_CBDR_B,ind_CBDR_D,ind_CBDR_R,\
-           prob_low,prob_high,\
-           theta,\
+    return [nC,nB,nD,nR,
+           alpha_CBx,alpha_BPx,alpha_PSx,alpha_SDx,alpha_DRx,
+           alpha_CBf,alpha_BPf,alpha_PSf,alpha_SDf,alpha_DRf,
+           mu,
+           chat_pow1_1C,chat_pow1_CB,chat_pow1_BP,chat_pow1_PS,chat_pow1_SD,chat_pow1_DR,
+           chat_pow2_1C,chat_pow2_CB,chat_pow2_BP,chat_pow2_PS,chat_pow2_SD,chat_pow2_DR,
+           zhat_1C,zhat_CB,zhat_BP,zhat_PS,zhat_SD,zhat_DR,
+           rhat,
+           pihat_pow1_1C,pihat_pow1_CB,pihat_pow1_BP,pihat_pow1_PS,pihat_pow1_SD,pihat_pow1_DR,
+           pihat_pow2_1C,pihat_pow2_CB,pihat_pow2_BP,pihat_pow2_PS,pihat_pow2_SD,pihat_pow2_DR,
+           ubar_1C,ubar_CB,ubar_BP,ubar_PS,ubar_SD,ubar_DR,
+           ind_C___C,
+           ind_CB__C,ind_CB__B,
+           ind_CBD_C,ind_CBD_B,ind_CBD_D,
+           ind_CBDR_C,ind_CBDR_B,ind_CBDR_D,ind_CBDR_R,
+           prob_low,prob_high,
+           theta,
            lambda_minus,lambda_plus]
+
 
 def CreateRandomNetwork(nC,nB,nD,nR,seed):
 
@@ -693,7 +695,3 @@ def CreateRandomNetwork(nC,nB,nD,nR,seed):
            prob_low,prob_high,\
            theta,\
            lambda_minus,lambda_plus]
-
-
-
-

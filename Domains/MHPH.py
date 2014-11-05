@@ -2,6 +2,7 @@ import numpy as np
 
 from Domain import Domain
 
+
 class MHPH(Domain):
 
     def __init__(self,Dim=1000):

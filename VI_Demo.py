@@ -1,22 +1,19 @@
 import time
-import datetime
 import numpy as np
 
-from Domains.Sphere import *
-from Domains.Watson import *
-from Domains.KojimaShindo import *
-from Domains.Sun import *
+from Domains.Sphere import Sphere
+from Domains.Watson import Watson
+from Domains.KojimaShindo import KojimaShindo
+from Domains.Sun import Sun
 
-from Solvers.HeunEuler import *
+from Solvers.HeunEuler import HeunEuler
 
+from Projection import EntropicProjection, IdentityProjection
 from Solver import Solve
-from Options import *
-from Log import *
+from Options import (
+    DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
+from Log import PrintSimResults, PrintSimStats
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 def Demo():
 
@@ -26,9 +23,10 @@ def Demo():
     Domain = Sphere(Dim=100)
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F,P=IdentityProjection(),History=0,Delta0=1e-2)
+    Method = HeunEuler(Function=Domain.F, P=IdentityProjection(), History=0,
+                       Delta0=1e-2)
 
-	# Set Options
+    # Set Options
     Init = Initialization(Step=-1e-1)
     Term = Termination(MaxIter=1000,Tols=[[Domain.f_Error,1e-3]])
     Repo = Reporting(MaxData=1,Requests=[Domain.f_Error])
@@ -58,7 +56,8 @@ def Demo():
     Domain = KojimaShindo()
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+    Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
+                       Delta0=1e-1)
 
     # Set Options
     Init = Initialization(Step=-1e-1)
@@ -95,7 +94,8 @@ def Demo():
         Domain = Watson(Pos=p)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+        Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
+                           Delta0=1e-1)
 
         # Set Options
         Init = Initialization(Step=-1e-1)
@@ -103,7 +103,7 @@ def Demo():
         Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
         Options = DescentOptions(Init,Term,Repo,Misc)
-    
+
         #Initialize Starting Point
         Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
 
@@ -131,7 +131,8 @@ def Demo():
         Domain = Sun(Dim=n)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+        Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
+                           Delta0=1e-1)
 
         # Set Options
         Init = Initialization(Step=-1e-1)
@@ -139,7 +140,7 @@ def Demo():
         Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
         Options = DescentOptions(Init,Term,Repo,Misc)
-    
+
         #Initialize Starting Point
         Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
 
@@ -159,10 +160,3 @@ def Demo():
 
 if __name__ == '__main__':
   Demo()
-
-
-
-
-
-
-

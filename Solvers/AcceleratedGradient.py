@@ -1,14 +1,11 @@
-import numpy as np
-
-from Projection import *
-from Path import *
-from Utilities import *
+from Projection import IdentityProjection
 from Solver import Solver
+
 
 class AG(Solver):
 
     def __init__(self,Domain,P=IdentityProjection()):
-        
+
         self.F = Domain.F
 
         self.Proj = P
@@ -34,7 +31,9 @@ class AG(Solver):
 
     # BookKeeping(self,TempData) defined in super class 'Solver'
 
-    def Update(self,Record): # A lot of weird things with AG - track gap(_x), x updated with _x, look into these
+    def Update(self,Record):
+        # A lot of weird things with AG
+        # - track gap(_x), x updated with _x, look into these
 
         # Retrieve Necessary Data
         Data = Record.TempStorage['Data'][-1]
@@ -45,9 +44,9 @@ class AG(Solver):
 
         # Use Decreasing Step Size Scheme
         if scount >= s:
-            scount = 0;
-            s += 1;
-        scount += 1;
+            scount = 0
+            s += 1
+        scount += 1
         Step = self.InitStep/s
 
         # Initialize Storage
@@ -68,11 +67,5 @@ class AG(Solver):
         TempData['F Evaluations'] = 1 + self.TempStorage['F Evaluations'][-1]
         TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
         self.BookKeeping(TempData)
-        
+
         return self.TempStorage
-
-
-
-
-
-

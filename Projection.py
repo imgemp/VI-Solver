@@ -1,28 +1,34 @@
 import numpy as np
 
-from Utilities import *
+from Utilities import MachineLimit_Exp
 
-class Projection:
+
+class Projection(object):
 
     def P(self):
-        print('This function projects the data.')
-        return None
+        '''This function projects the data.'''
+        raise NotImplementedError(
+            'Base classes of Projection must override the P method')
+
 
 class IdentityProjection(Projection):
 
     def P(self,Data,Step,Direc):
         return Data+Step*Direc
 
+
 class RPlusProjection(Projection):
 
     def P(self,Data,Step,Direc):
         return np.maximum(0,Data+Step*Direc)
+
 
 class EntropicProjection(Projection):
 
     def P(self,Data,Step,Direc):
         ProjectedData = Data*np.exp(MachineLimit_Exp(Step,Direc)*Direc)
         return ProjectedData/np.sum(ProjectedData)
+
 
 class EuclideanSimplexProjection(Projection):
 
@@ -45,7 +51,3 @@ class EuclideanSimplexProjection(Projection):
         # compute the projection by thresholding Data using theta
         w = (Data - theta).clip(min=0)
         return w
-
-
-
-

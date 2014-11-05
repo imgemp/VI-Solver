@@ -1,14 +1,11 @@
-import numpy as np
-
-from Projection import *
-from Path import *
-from Utilities import *
+from Projection import IdentityProjection
 from Solver import Solver
+
 
 class Euler(Solver):
 
     def __init__(self,Domain,P=IdentityProjection()):
-        
+
         self.F = Domain.F
 
         self.Proj = P
@@ -43,9 +40,9 @@ class Euler(Solver):
 
         # Use Decreasing Step Size Scheme
         if scount >= s:
-            scount = 0;
-            s += 1;
-        scount += 1;
+            scount = 0
+            s += 1
+        scount += 1
         Step = self.InitStep/s
 
         # Initialize Storage
@@ -63,11 +60,4 @@ class Euler(Solver):
         TempData['F Evaluations'] = 1 + self.TempStorage['F Evaluations'][-1]
         TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
         self.BookKeeping(TempData)
-        
         return self.TempStorage
-
-
-
-
-
-

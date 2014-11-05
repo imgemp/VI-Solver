@@ -2,6 +2,7 @@ import numpy as np
 
 from Domain import Domain
 
+
 class Sphere(Domain):
 
     def __init__(self,Dim=None):
@@ -16,4 +17,4 @@ class Sphere(Domain):
         return 2.0*Data
 
     def f_Error(self,Data):
-        return self.f(Data)-self.Min
+        return self.f(Data) - self.Min

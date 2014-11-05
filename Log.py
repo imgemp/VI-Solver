@@ -1,33 +1,37 @@
-import numpy as np
+from __future__ import print_function
 
-def PrintSimStats(Domain,Method,Options):
-    
+
+def PrintSimStats(Domain, Method, Options):
     print('-------------------------------------------------------------------')
-    domain_info = ' '
-    for arg in Domain.__init__.func_code.co_varnames[:Domain.__init__.func_code.co_argcount]:
-        if arg != 'self': domain_info += '('+arg+','+`getattr(Domain,arg)`+'), '
-    print('Domain: '+`Domain.__class__.__name__`+domain_info[:-2])
-    print('Method: '+'Function = '+`Method.F.func_name`+', Projection = '+`Method.Proj.P.func_name`)
-    params = 'Convergence Criteria: MaxIter: '+`Options.Term.Tols[0]`+', '
+    domain_info = []
+    domain_init_func = Domain.__init__.func_code
+    domain_args = domain_init_func.co_varnames[:domain_init_func.co_argcount]
+    domain_info = ['(%s,%r)' % (arg, getattr(Domain,arg))
+                   for arg in domain_args if arg != 'self']
+    print('Domain: %r %s' % (Domain.__class__.__name__, ', '.join(domain_info)))
+    print('Method: Function = %r, Projection = %r' % (Method.F.func_name,
+                                                      Method.Proj.P.func_name))
+    params = ['Convergence Criteria: MaxIter: %r' % Options.Term.Tols[0]]
     for tol in Options.Term.Tols[1:][0]:
-        params += `tol[0].func_name`+': '+`tol[1]`+', '
-    print(params[:-2])
+        params.append('%r: %r' % (tol[0].func_name, tol[1]))
+    print(*params, sep=', ')
     print('-------------------------------------------------------------------')
 
-def PrintSimResults(Options,Results,Method,Time):
 
+def PrintSimResults(Options, Results, Method, Time):
     print('-------------------------------------------------------------------')
-    print('CPU Time: '+`Time`)
+    print('CPU Time: %.3f' % Time)
     for req in Options.Repo.PermRequests:
         req_str = req
-        if hasattr(req,'func_name'): req_str = req.func_name
+        if hasattr(req,'func_name'):
+            req_str = req.func_name
         if req in Results.TempStorage:
-            print(`req_str`+': '+`Results.TempStorage[req][-1]`)
+            print('%s: %g' % (req_str, Results.TempStorage[req][-1]))
         else:
-            print(`req_str`+': '+`Results.PermStorage[req][-1]`)
-    print('Steps: '+`Results.thisPermIndex`)
-    # print('FEvals: '+`np.sum(Results.PermStorage['Function Evaluations'])`)
-    # print('NPs: '+`Method.Proj.NP`)
-    print('Min |X*|: '+`min(abs(Results.TempStorage['Data'][-1]))`)
-    print('Max |X*|: '+`max(abs(Results.TempStorage['Data'][-1]))`)
+            print('%s: %g' % (req_str, Results.PermStorage[req][-1]))
+    print('Steps: %d' % Results.thisPermIndex)
+    # print('FEvals: %r' % np.sum(Results.PermStorage['Function Evaluations']))
+    # print('NPs: %r' % Method.Proj.NP)
+    print('Min |X*|: %.3f' % min(abs(Results.TempStorage['Data'][-1])))
+    print('Max |X*|: %.3f' % max(abs(Results.TempStorage['Data'][-1])))
     print('-------------------------------------------------------------------')

@@ -1,14 +1,12 @@
-import numpy as np
-
-from Projection import *
-from Path import *
-from Utilities import *
+from Projection import IdentityProjection
 from Solver import Solver
+
 
 class ABEuler(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection(),Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
-        
+    def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-2,
+                 GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
+
         self.F = Domain.F
 
         self.Proj = P
@@ -46,7 +44,7 @@ class ABEuler(Solver):
         # Initialize Storage
         TempData = {}
 
-        if (Record.thisPermIndex%2 == 0):
+        if Record.thisPermIndex % 2 == 0:
 
             # Perform Euler Update
             F = Record.TempStorage[self.F][-1]
@@ -66,8 +64,11 @@ class ABEuler(Solver):
 
             # Adjust Stepsize
             Delta = max(abs(NewData-_NewData))
-            if Delta == 0.: Step = 2.*Step
-            else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+            if Delta == 0:
+                Step = 2.*Step
+            else:
+                growth = min(self.GrowthLimit, (self.Delta0/Delta)**0.5)
+                Step = max(min(Step*growth, self.MaxStep), self.MinStep)
 
             # Record Projections
             TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
@@ -78,11 +79,4 @@ class ABEuler(Solver):
         TempData['Step'] = Step
         TempData['F Evaluations'] = 1 + self.TempStorage['F Evaluations'][-1]
         self.BookKeeping(TempData)
-        
         return self.TempStorage
-
-
-
-
-
-
