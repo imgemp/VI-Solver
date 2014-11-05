@@ -6,8 +6,9 @@ from Utilities import MachineLimit_Exp
 class Projection(object):
 
     def P(self):
-        print('This function projects the data.')
-        return None
+        '''This function projects the data.'''
+        raise NotImplementedError(
+            'Base classes of Projection must override the P method')
 
 
 class IdentityProjection(Projection):
