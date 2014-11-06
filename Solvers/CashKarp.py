@@ -58,19 +58,17 @@ class CashKarp(Solver):
         # Initialize Storage
         TempData = {}
 
-        # Perform Update
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[0,:1],Fs[:1],axes=(0,0)))
-        Fs[1,:] = self.F(_NewData)
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[1,:2],Fs[:2],axes=(0,0)))
-        Fs[2,:] = self.F(_NewData)
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[2,:3],Fs[:3],axes=(0,0)))
-        Fs[3,:] = self.F(_NewData)
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[3,:4],Fs[:4],axes=(0,0)))
-        Fs[4,:] = self.F(_NewData)
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[4,:5],Fs[:5],axes=(0,0)))
-        Fs[5,:] = self.F(_NewData)
-        _NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[6,:6],Fs[:6],axes=(0,0)))
-        NewData = self.Proj.P(Data,Step,np.tensordot(self.BT[5,:6],Fs[:6],axes=(0,0)))
+        # Calculate k values (gradients)
+        for i in xrange(5):
+            direction = np.einsum('i,i...', self.BT[i,:i+1], Fs[:i+1])
+            _NewData = self.Proj.P(Data, Step, direction)
+            Fs[i+1,:] = self.F(_NewData)
+
+        # Compute order-p, order-p+1 data points
+        direction = np.einsum('i,i...', self.BT[6,:6], Fs[:6])
+        _NewData = self.Proj.P(Data, Step, direction)
+        direction = np.einsum('i,i...', self.BT[5,:6], Fs[:6])
+        NewData = self.Proj.P(Data, Step, direction)
 
         # Adjust Stepsize
         Delta = max(abs(NewData-_NewData))
