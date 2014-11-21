@@ -4,9 +4,9 @@ import numpy as np
 
 # from Domains.DummyMARL import *
 # from Domains.DummyMARL2 import *
-from Domains.Coordination import *
-from Domains.MatchingPennies import *
-from Domains.Tricky import *
+from Domains.Coordination import Coordination
+from Domains.MatchingPennies import MatchingPennies
+from Domains.Tricky import Tricky
 
 # from Solvers.Euler import *
 # from Solvers.Extragradient import *
@@ -15,19 +15,22 @@ from Domains.Tricky import *
 # from Solvers.AdamsBashforthEuler import *
 # from Solvers.CashKarp import *
 # from Solvers.GABE import *
-from Solvers.Drift import *
-from Solvers.DriftABE import *
-from Solvers.DriftABE_Exact import *
-from Solvers.DriftABE_BothExact import *
-from Solvers.DriftABE_VIteration import *
-from Solvers.DriftABE2 import *
-from Solvers.DriftABE3 import *
-from Solvers.DriftABE4 import *
-from Solvers.DriftABE5 import *
+# from Solvers.Drift import *
+# from Solvers.DriftABE import *
+# from Solvers.DriftABE_Exact import *
+# from Solvers.DriftABE_BothExact import *
+# from Solvers.DriftABE_VIteration import *
+# from Solvers.DriftABE2 import *
+# from Solvers.DriftABE3 import *
+# from Solvers.DriftABE4 import *
+from Solvers.DriftABE5 import DriftABE5
+from Solvers.DriftABE6 import DriftABE6
 
+from Projection import EntropicProjection
 from Solver import Solve
-from Options import *
-from Log import *
+from Options import (
+    DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
+from Log import PrintSimResults, PrintSimStats
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -59,7 +62,8 @@ def Demo():
     # Method = DriftABE2(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE3(Domain=Domain,P=EntropicProjection(),Delta0=1e-5,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE4(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
-    Method = DriftABE5(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
+    Method = DriftABE5(Domain=Domain,P=EntropicProjection(),Delta0=1e-7,MaxStep=1e-2) #(1e-5)
+    # Method = DriftABE6(Domain=Domain,P=EntropicProjection(),Delta0=1e-6,MaxStep=1e-2) #(1e-5)
     # Method = DriftABE_Exact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = DriftABE_BothExact(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
@@ -68,10 +72,10 @@ def Demo():
     Start = np.array([[0.6,0.4],[0.6,0.4]])
 
 	# Set Options
-    Init = Initialization(Step=2e-3)
+    Init = Initialization(Step=2e-4)
     # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=100000,Tols=[(Domain.NE_L2Error,1e-4)]) #(1,000,000)
-    Repo = Reporting(Requests=[Domain.NE_L2Error,'Policy','Policy Learning Rate','Projections'])
+    Repo = Reporting(Requests=[Domain.NE_L2Error,'Policy','Policy Learning Rate','Value Learning Rate','Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
