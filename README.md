@@ -1,4 +1,5 @@
-VI-Solver (A Variational Inequality Solver in Python)
+VI-Solver
+(A Variational Inequality Solver in Python)
 ===
 Ian Gemp
 ---
