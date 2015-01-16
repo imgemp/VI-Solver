@@ -1,8 +1,6 @@
 #VI-Solver
-#**A Variational Inequality Solver in Python**
-===
-Ian Gemp
----
+##**A Variational Inequality Solver in Python**
+##Ian Gemp
 
 ##Description
 VI-Solver, as the name suggests, is a package that can be used to solve variational inequality problems, VI(F,K), defined as: find x\* such that  \<F(x\*),x-x\*\> >= 0 for all x in K.  This package currently focuses on greedy (local search, gradient methods, etc.) approaches to the problem which take the form x\_k+1 = x\_k + alpha*G(x\_k) where G(x) captures information of F(x) in some way.
