@@ -23,13 +23,12 @@ def Demo():
     Domain = Sphere(Dim=100)
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F, P=IdentityProjection(), History=0,
-                       Delta0=1e-2)
+    Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
 
     # Set Options
     Init = Initialization(Step=-1e-1)
     Term = Termination(MaxIter=1000,Tols=[[Domain.f_Error,1e-3]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.f_Error])
+    Repo = Reporting(Requests=[Domain.f_Error])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -45,7 +44,7 @@ def Demo():
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(SPHERE_Results,Method,toc)
+    PrintSimResults(Options,SPHERE_Results,Method,toc)
 
     # Zero Projections
     Method.Proj.NP = 0
@@ -56,13 +55,12 @@ def Demo():
     Domain = KojimaShindo()
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
-                       Delta0=1e-1)
+    Method = HeunEuler(Domain=Domain,P=EntropicProjection(),Delta0=1e-1)
 
     # Set Options
     Init = Initialization(Step=-1e-1)
     Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+    Repo = Reporting(Requests=[Domain.gap_simplex])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -78,7 +76,7 @@ def Demo():
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(KS_Results,Method,toc)
+    PrintSimResults(Options,KS_Results,Method,toc)
 
     # Zero Projections
     Method.Proj.NP = 0
@@ -94,13 +92,12 @@ def Demo():
         Domain = Watson(Pos=p)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
-                           Delta0=1e-1)
+        Method = HeunEuler(Domain=Domain,P=EntropicProjection(),Delta0=1e-1)
 
         # Set Options
         Init = Initialization(Step=-1e-1)
         Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Repo = Reporting(Requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
         Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -115,7 +112,7 @@ def Demo():
         toc = time.time() - tic
 
         # Print Results
-        PrintSimResults(WAT_Results[p],Method,toc)
+        PrintSimResults(Options,WAT_Results[p],Method,toc)
 
         # Zero Projections
         Method.Proj.NP = 0
@@ -131,13 +128,12 @@ def Demo():
         Domain = Sun(Dim=n)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F, P=EntropicProjection(), History=0,
-                           Delta0=1e-1)
+        Method = HeunEuler(Domain=Domain,P=EntropicProjection(),Delta0=1e-1)
 
         # Set Options
         Init = Initialization(Step=-1e-1)
         Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Repo = Reporting(Requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
         Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -153,7 +149,7 @@ def Demo():
         toc = time.time() - tic
 
         # Print Results
-        PrintSimResults(Sun_Results[ind],Method,toc)
+        PrintSimResults(Options,Sun_Results[ind],Method,toc)
 
         # Zero Projections
         Method.Proj.NP = 0
