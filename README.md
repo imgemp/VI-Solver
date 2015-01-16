@@ -6,13 +6,13 @@ Ian Gemp
 ---
 
 ##Description
-VI-Solver, as the name suggests, is a package that can be used to solve variational inequality problems, VI(F,K), defined as: find x\* such that  \<F(x\*),x-x\*\> >= 0 for all x in K.  This package currently focuses on greedy (local search, gradient methods, etc.) approaches to the problem which take the form x_k+1 = x_k + alpha *G(x_k) where G(x) captures information of F(x) in some way.
+VI-Solver, as the name suggests, is a package that can be used to solve variational inequality problems, VI(F,K), defined as: find x\* such that  \<F(x\*),x-x\*\> >= 0 for all x in K.  This package currently focuses on greedy (local search, gradient methods, etc.) approaches to the problem which take the form x\_k+1 = x\_k + alpha*G(x\_k) where G(x) captures information of F(x) in some way.
 
 ##Requirements
 This package requires python (2.7 or later) and numpy (1.9.1 or later).
 
 ##Usage
-There are three main objects that are used to implement the solution to the VI(F,K). One, the domain which provides the mapping F(x).  Two, the solver that performs the update x_k+1 = x_k + alpha*G(x_k).  And three, a storage object that maintains all data that is either required by the solver or requested by the user.
+There are three main objects that are used to implement the solution to the VI(F,K). One, the domain which provides the mapping F(x).  Two, the solver that performs the update x\_k+1 = x\_k + alpha*G(x\_k).  And three, a storage object that maintains all data that is either required by the solver or requested by the user.
 
 A general template for running the code is as follows.  Please see the *_Demo.py files for more specific examples.
 ```python
