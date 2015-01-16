@@ -23,7 +23,7 @@ from Solvers.Euler import Euler
 from Projection import IdentityProjection
 from Solver import Solve
 ```
-Various VI solvers are available in the Solvers folder - Euler's method is used in this case.  A projection method can also be specified in order to project back onto the feasible set K after an update.  The syntax we use is actually an abuse of notation.  Typically, one would expect the projection operator to be specified as x\_k+1 = P\_K(x\_k).  Instead, we use a different format to allow the possibility of efficient mirror maps between primal and dual spaces (see EntropicProjection).  For this reason, the projection function is expected to take as input the data, x\_k, a stepsize, alpha, and the update direction, F(x\_k) and return x\_k+1.  From Solver we import Solve which is the general method shich drives the updates.
+Various VI solvers are available in the Solvers folder - Euler's method is used in this case.  A projection method can also be specified in order to project back onto the feasible set K after an update.  The syntax we use is actually an abuse of notation.  Typically, one would expect the projection operator to be specified as x\_k+1 = P\_K(x\_k).  Instead, we use a different format to allow the possibility of efficient mirror maps between primal and dual spaces (see EntropicProjection).  For this reason, the projection function is expected to take as input the data, x\_k, a stepsize, alpha, and the update direction, F(x\_k) and return x\_k+1.  From Solver we import Solve which is the general method that drives the updates.
 ```python
 from Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
