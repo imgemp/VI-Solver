@@ -47,7 +47,9 @@ def Demo():
 
     # Calculate Initial Gap
     gap_0 = Domain.gap(Start)
-
+```
+To start, the user initializes their domain according to how they defined their constructor.  Next, the method is initialized by passing both the domain (which contains the function defining the F mapping) and specific projection operator to be used (IdentityProjection by default).  In this example, we calculate the initial value of the gap function for use later.
+```python
     # Set Options
     Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=1000,Tols=[(Domain.gap,1e-3*gap_0)])
@@ -55,7 +57,13 @@ def Demo():
                                'Projections'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
-
+```
+- Initialization: As of now, it only sets the initial stepsize.
+- Termination: This is used to specifiy convergence criteria.  MaxIter is required and alternate tolerances can be specified as a list of (criterium,value) tuples.  The criteria can be anything that is tracked by the solver itself or has been requested to be tracked by the user.
+- Reporting: Here, the user may specify information that they wish to be tracked throughout the solver's approach to the solution.  These can either be pieces of information that are tracked by the solver itself (see the solver's TempStorage object) or any other additional information that may be reported by the Domain object (such as a gap function).
+- Miscellaneous: As of now, this only sets the minimum of a function, f, assuming F is the gradient of f and is only used when the VI has an equivalent optimization formulation.  This has been left blank in this example.
+The entire options object is constructed using each of the predefined options above.
+```python
     # Print Stats
     PrintSimStats(Domain,Method,Options)
 
@@ -70,3 +78,4 @@ def Demo():
 if __name__ == '__main__':
   Demo()
 ```
+The rest of the demo is straightforward.  For convenience, PrintSimStats prints out various information about the current experiment.  A timer is then started, afterwhich, the Solve mechanism begins iteratively cranking away at the solution to the VI using the prescribed starting point, x\_0, as well as the defined method, domain, and options.  Upon completion, information on the results is printed.
