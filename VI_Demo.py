@@ -46,9 +46,6 @@ def Demo():
     # Print Results
     PrintSimResults(Options,SPHERE_Results,Method,toc)
 
-    # Zero Projections
-    Method.Proj.NP = 0
-
     #__KOJIMA-SHINDO__##################################################
 
     # Define Dimension and Domain
@@ -77,9 +74,6 @@ def Demo():
 
     # Print Results
     PrintSimResults(Options,KS_Results,Method,toc)
-
-    # Zero Projections
-    Method.Proj.NP = 0
 
     #__WATSON__##################################################
 
@@ -114,9 +108,6 @@ def Demo():
         # Print Results
         PrintSimResults(Options,WAT_Results[p],Method,toc)
 
-        # Zero Projections
-        Method.Proj.NP = 0
-
     #__SUN__##################################################
 
     trials = xrange(8000,10000+1,2000)
@@ -150,9 +141,6 @@ def Demo():
 
         # Print Results
         PrintSimResults(Options,Sun_Results[ind],Method,toc)
-
-        # Zero Projections
-        Method.Proj.NP = 0
 
 if __name__ == '__main__':
     Demo()
