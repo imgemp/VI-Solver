@@ -1,6 +1,6 @@
 import numpy as np
 
-from Utilities import MachineLimit_Exp
+from VISolver.Utilities import MachineLimit_Exp
 
 
 class Projection(object):

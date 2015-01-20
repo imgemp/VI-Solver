@@ -1,5 +1,5 @@
 
-from Storage import Storage
+from VISolver.Storage import Storage
 
 
 class Solver(object):

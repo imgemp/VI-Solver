@@ -1,18 +1,18 @@
 import time
 import numpy as np
 
-from Domains.Sphere import Sphere
-from Domains.Watson import Watson
-from Domains.KojimaShindo import KojimaShindo
-from Domains.Sun import Sun
+from VISolver.Domains.Sphere import Sphere
+from VISolver.Domains.Watson import Watson
+from VISolver.Domains.KojimaShindo import KojimaShindo
+from VISolver.Domains.Sun import Sun
 
-from Solvers.HeunEuler import HeunEuler
+from VISolver.Solvers.HeunEuler import HeunEuler
 
-from Projection import EntropicProjection, IdentityProjection
-from Solver import Solve
-from Options import (
+from VISolver.Projection import EntropicProjection, IdentityProjection
+from VISolver.Solver import Solve
+from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
-from Log import PrintSimResults, PrintSimStats
+from VISolver.Log import PrintSimResults, PrintSimStats
 
 
 def Demo():

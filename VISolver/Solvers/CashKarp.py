@@ -1,7 +1,7 @@
 import numpy as np
 
-from Projection import IdentityProjection
-from Solver import Solver
+from VISolver.Projection import IdentityProjection
+from VISolver.Solver import Solver
 
 
 class CashKarp(Solver):

@@ -1,20 +1,20 @@
 import time
 import numpy as np
 
-from Domains.Rosenbrock import Rosenbrock
+from VISolver.Domains.Rosenbrock import Rosenbrock
 
-# from Solvers.Euler import Euler
-# from Solvers.Extragradient import EG
-# from Solvers.AcceleratedGradient import AG
-# from Solvers.HeunEuler import HeunEuler
-# from Solvers.AdamsBashforthEuler import ABEuler
-from Solvers.CashKarp import CashKarp
+# from VISolver.Solvers.Euler import Euler
+# from VISolver.Solvers.Extragradient import EG
+# from VISolver.Solvers.AcceleratedGradient import AG
+# from VISolver.Solvers.HeunEuler import HeunEuler
+# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
+from VISolver.Solvers.CashKarp import CashKarp
 
-from Projection import RPlusProjection
-from Solver import Solve
-from Options import (
+from VISolver.Projection import RPlusProjection
+from VISolver.Solver import Solve
+from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
-from Log import PrintSimResults, PrintSimStats
+from VISolver.Log import PrintSimResults, PrintSimStats
 
 
 def Demo():

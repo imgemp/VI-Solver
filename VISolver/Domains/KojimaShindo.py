@@ -1,6 +1,6 @@
 import numpy as np
 
-from Domain import Domain
+from VISolver.Domain import Domain
 
 
 class KojimaShindo(Domain):
