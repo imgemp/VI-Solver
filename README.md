@@ -10,26 +10,32 @@ This package requires python (2.7 or later) and numpy (1.9.1 or later).
 ##Domains
 A number of domains are included in the VISolver python package including:
 *Networks*
-- BloodBank: A blood banking network as described in Nagurney & Masoumi 2012.
+- BloodBank: A blood banking network as described in [1].
 *Optimization*
 - Sphere: Simply represents L2 distance from the origin.  Minimum is the origin.
 - Rosenbrock: A non-convex objective function with a global minimum for performance tests.
-*Standard VI Domains*
-- Kojima Shindo^1^: F: R4 --> R4
+*Standard VI Domains* (as described in [2])
+- Kojima Shindo: F: R4 --> R4
 - Watson: F: R10 --> R10
 - Sun: F: Rn --> Rn, F(x) = Ax + b
 - Modified HP Hard (MHPH): F: Rn --> Rn, F(x) = Ax + b, A is randomly generated as M*MT (VI is monotone)
 - Randomly Generated (RG): F: Rn --> Rn, F(x) = Ax + b, A is uniformly generated (monotinicity of VI not guaranteed)
-^1^ Dang & Lan 2013.
+
+[1] Nagurney & Masoumi 2012. Supply Chain Network Design of a Sustainable Blood Banking System.
+[2] Dang & Lan 2013. On the Convergence Properties of Non-Euclidean Extragradient Methods for Variational Inequalities with Generalized Monotone Operators.
 
 ##Demos
 A few demos are included in the package.
+
 - Demo_BloodBank.py
 - Demo_DangLan.py
 - Demo_Rosenbrock.py
+- 
 To run one of the demos after cloning this repository, open up a command line interface (Terminal on a Mac) and enter the following commands.
+
 1) cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]
 2) python Demo_[e.g. BloodBank].py
+
 That's it! Assuming you have PYTHON setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
 
 ##Usage
