@@ -44,7 +44,7 @@ To run one of the demos after cloning this repository, open up a command line in
 
 2) `python Demo_[e.g. BloodBank].py`
 
-That's it! Assuming you have PYTHON setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
+That's it! Assuming you have python setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
 
 ##Usage
 There are three main objects that are used to implement the solution to the VI(F,K). One, the domain which provides the mapping F(x).  Two, the solver that performs the update x\_k+1 = x\_k + alpha*G(x\_k).  And three, a storage object that maintains all data that is either required by the solver or requested by the user.
