@@ -13,12 +13,12 @@ A number of domains are included in the VISolver python package including:
 *Networks*
 
 - BloodBank: A blood banking network as described in [1].
-- 
+
 *Optimization*
 
 - Sphere: Simply represents L2 distance from the origin.  Minimum is the origin.
 - Rosenbrock: A non-convex objective function with a global minimum for performance tests.
-- 
+
 *Standard VI Domains* (as described in [2])
 
 - Kojima Shindo: F: R4 --> R4
@@ -28,6 +28,7 @@ A number of domains are included in the VISolver python package including:
 - Randomly Generated (RG): F: Rn --> Rn, F(x) = Ax + b, A is uniformly generated (monotinicity of VI not guaranteed)
 
 [1] Nagurney & Masoumi 2012. Supply Chain Network Design of a Sustainable Blood Banking System.
+
 [2] Dang & Lan 2013. On the Convergence Properties of Non-Euclidean Extragradient Methods for Variational Inequalities with Generalized Monotone Operators.
 
 ##Demos
