@@ -40,10 +40,8 @@ A few demos are included in the package.
 
 To run one of the demos after cloning this repository, open up a command line interface (Terminal on a Mac) and enter the following commands.
 
-```bash
-cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]
-python Demo_[e.g. BloodBank].py
-```
+1) `cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]`
+2) `python Demo_[e.g. BloodBank].py`
 
 That's it! Assuming you have PYTHON setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
 
