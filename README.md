@@ -49,7 +49,7 @@ That's it! Assuming you have python setup correctly and your PYTHON path is set,
 ##Usage
 There are three main objects that are used to implement the solution to the VI(F,K). One, the domain which provides the mapping F(x).  Two, the solver that performs the update x\_k+1 = x\_k + alpha*G(x\_k).  And three, a storage object that maintains all data that is either required by the solver or requested by the user.
 
-A general template for writing a script is as follows.  Please see the *_Demo.py files for more specific examples.
+A general template for writing a script is as follows.  Please see the Demo_*.py files for more specific examples.
 ```python
 import time
 import numpy as np
@@ -113,4 +113,4 @@ The entire options object is constructed using each of the predefined options ab
 if __name__ == '__main__':
   Demo()
 ```
-The rest of the demo is straightforward.  For convenience, PrintSimStats prints out various information about the current experiment.  A timer is then started, afterwhich, the Solve mechanism begins iteratively cranking away at the solution to the VI using the prescribed starting point, x\_0, as well as the defined method, domain, and options.  Upon completion, information on the results is printed.
+The rest of the file is straightforward.  For convenience, PrintSimStats prints out various information about the current experiment.  A timer is then started, afterwhich, the Solve mechanism begins iteratively cranking away at the solution to the VI using the prescribed starting point, x\_0, as well as the defined method, domain, and options.  Upon completion, information on the results is printed.
