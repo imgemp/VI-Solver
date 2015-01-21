@@ -24,7 +24,7 @@ A number of domains are included in the VISolver python package including:
 - Kojima Shindo: F: R4 --> R4
 - Watson: F: R10 --> R10
 - Sun: F: Rn --> Rn, F(x) = Ax + b
-- Modified HP Hard (MHPH): F: Rn --> Rn, F(x) = Ax + b, A is randomly generated as M*MT (VI is monotone)
+- Modified HP Hard (MHPH): F: Rn --> Rn, F(x) = Ax + b, A is randomly generated as M*M' (VI is monotone)
 - Randomly Generated (RG): F: Rn --> Rn, F(x) = Ax + b, A is uniformly generated (monotinicity of VI not guaranteed)
 
 [1] Nagurney & Masoumi 2012. Supply Chain Network Design of a Sustainable Blood Banking System.
