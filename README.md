@@ -40,7 +40,7 @@ A few demos are included in the package.
 
 To run one of the demos after cloning this repository, open up a command line interface (Terminal on a Mac) and enter the following commands.
 
-```shell
+```bash
 cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]
 python Demo_[e.g. BloodBank].py
 ```
