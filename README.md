@@ -52,7 +52,7 @@ The current solvers included in the package all draw from numerical methods for 
 - Euler: The simplest method with a decreasing stepsize designed for strongly monotone VIs
 - Extragradient: A simple method with a decreasing stepsize for monotone VIs
 - HeunEuler: A 2nd order embedded Runge-Kutta method with an adaptive stepsize
-- AdamsBashforthEuler: A 2nd order Multi Step method with an adaptive stepsize
+- AdamsBashforthEuler: A 2nd order Multi-Step method with an adaptive stepsize
 - CashKarp: A 5th order embedded Runge-Kutta method with an adaptive stepsize
 - AcceleratedGradient: Nesterov's accelerated gradient descent
 
