@@ -49,8 +49,8 @@ A number of domains are included in the VISolver python package:
 ##Solvers
 The current solvers included in the package all draw from numerical methods for ODEs.  The motivation behind this is the connection between VIs and Projected Dynamical Systems [3].
 
-- Euler: The simplest method with a decreasing stepsize designed for monotone VIs
-- Extragradient: A simple method with a decreasing stepsize for pseudo-monotone VIs
+- Euler: The simplest method with a decreasing stepsize designed for strongly monotone VIs
+- Extragradient: A simple method with a decreasing stepsize for monotone VIs
 - HeunEuler: A 2nd order embedded Runge-Kutta method with an adaptive stepsize
 - AdamsBashforthEuler: A 2nd order Multi Step method with an adaptive stepsize
 - CashKarp: A 5th order embedded Runge-Kutta method with an adaptive stepsize
