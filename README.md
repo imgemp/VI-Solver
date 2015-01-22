@@ -7,8 +7,23 @@ VI-Solver, as the name suggests, is a package that can be used to solve variatio
 ##Requirements
 This package requires python (2.7 or later) and numpy (1.9.1 or later).
 
+##Demos
+A few demos are included in the package.
+
+- Demo_BloodBank.py
+- Demo_DangLan.py
+- Demo_Rosenbrock.py
+
+To run one of the demos after cloning this repository, open up a command line interface (Terminal on a Mac) and enter the following commands.
+
+1) `cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]`
+
+2) `python Demo_[e.g. BloodBank].py`
+
+That's it! Assuming you have python setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
+
 ##Domains
-A number of domains are included in the VISolver python package including:
+A number of domains are included in the VISolver python package:
 
 *Networks*
 
@@ -31,22 +46,19 @@ A number of domains are included in the VISolver python package including:
 
 [2] Dang & Lan 2013. On the Convergence Properties of Non-Euclidean Extragradient Methods for Variational Inequalities with Generalized Monotone Operators.
 
-##Demos
-A few demos are included in the package.
+##Solvers
+The current solvers included in the package all draw from numerical methods for ODEs.  The motivation behind this is the connection between VIs and Projected Dynamical Systems [3].
 
-- Demo_BloodBank.py
-- Demo_DangLan.py
-- Demo_Rosenbrock.py
+- Euler: The simplest method with a decreasing stepsize designed for monotone VIs
+- Extragradient: A simple method with a decreasing stepsize for pseudo-monotone VIs
+- HeunEuler: A 2nd order embedded Runge-Kutta method with an adaptive stepsize
+- AdamsBashforthEuler: A 2nd order Multi Step method with an adaptive stepsize
+- CashKarp: A 5th order embedded Runge-Kutta method with an adaptive stepsize
+- AcceleratedGradient: Nesterov's accelerated gradient descent
 
-To run one of the demos after cloning this repository, open up a command line interface (Terminal on a Mac) and enter the following commands.
+[3] Nagurney & Zhang 1995. Projected Dynamical Systems and Variational Inequalities with Applications.
 
-1) `cd [path to your local cloned repository (e.g. /Users/username/Desktop/VI-Solver)]`
-
-2) `python Demo_[e.g. BloodBank].py`
-
-That's it! Assuming you have python setup correctly and your PYTHON path is set, the Demo should run and print alerts and results out to the command line.
-
-##Usage
+##Solving Your Own VI(F,K)
 There are three main objects that are used to implement the solution to the VI(F,K). One, the domain which provides the mapping F(x).  Two, the solver that performs the update x\_k+1 = x\_k + alpha*G(x\_k).  And three, a storage object that maintains all data that is either required by the solver or requested by the user.
 
 A general template for writing a script is as follows.  Please see the Demo_*.py files for more specific examples.
@@ -54,21 +66,21 @@ A general template for writing a script is as follows.  Please see the Demo_*.py
 import time
 import numpy as np
 
-from Domains.YourDomain import YourDomain
+from YourDomain import YourDomain
 ```
-You, the user, creates the file YourDomain.py located in the Domains folder.  This file contains the class YourDomain which has at the very least, an init function to construct the domain and a function F(self,data) to compute and return the mapping F given the data, x.  In this example, YourDomain also has a function, gap, used to judge convergence to the solution x\*.
+You, the user, creates the file YourDomain.py.  This file contains the class YourDomain which has at the very least, an init function to construct the domain and a function F(self,data) to compute and return the mapping F given the data (x\_k).  In this example, YourDomain also has a function, gap, used to judge convergence to the solution x\*.  Predefined domains can be imported from VISolver.Domains.
 ```python
-from Solvers.Euler import Euler
-from Projection import IdentityProjection
-from Solver import Solve
+from VISolver.Solvers.Euler import Euler
+from VISolver.Projection import IdentityProjection
+from VISolver.Solver import Solve
 ```
-Various VI solvers are available in the Solvers folder - Euler's method is used in this case.  A projection method can also be specified in order to project back onto the feasible set K after an update.  The syntax we use is actually an abuse of notation.  Typically, one would expect the projection operator to be specified as x\_k+1 = P\_K(x\_k).  Instead, we use a different format to allow the possibility of efficient mirror maps between primal and dual spaces (see EntropicProjection).  For this reason, the projection function is expected to take as input the data, x\_k, a stepsize, alpha, and the update direction, F(x\_k) and return x\_k+1.  From Solver we import Solve which is the general method that drives the updates.
+Various VI solvers are available in VISolver.Solvers - Euler's method is used in this case.  A projection method can also be specified in order to project back onto the feasible set K after an update.  The syntax we use is actually an abuse of notation.  Typically, one would expect the projection operator to be specified as x\_k+1 = P\_K(x\_k).  Instead, we use a different format to allow the possibility of efficient mirror maps between primal and dual spaces (see EntropicProjection).  For this reason, the projection function is expected to take as input the data, x\_k, a stepsize, alpha, and the update direction, F(x\_k) and return x\_k+1.  From VISolver.Solver we import Solve which is the general method that drives the updates.
 ```python
-from Options import (
+from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
-from Log import PrintSimResults, PrintSimStats
+from VISolver.Log import PrintSimResults, PrintSimStats
 ```
-Options will be explained in more detail below.  The Log objects are simply used for printing out properties of the experiment being run and the results.
+Options will be explained in more detail below.  The Log package is simply used for printing out properties of the experiment being run and the results.
 ```python
 def Demo():
 
