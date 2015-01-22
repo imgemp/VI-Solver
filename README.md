@@ -123,6 +123,6 @@ The entire options object is constructed using each of the predefined options ab
     PrintSimResults(Options,Results,Method,toc)
 
 if __name__ == '__main__':
-  Demo()
+    Demo()
 ```
 The rest of the file is straightforward.  For convenience, PrintSimStats prints out various information about the current experiment.  A timer is then started, afterwhich, the Solve mechanism begins iteratively cranking away at the solution to the VI using the prescribed starting point, x\_0, as well as the defined method, domain, and options.  Upon completion, information on the results is printed.
