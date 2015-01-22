@@ -7,7 +7,8 @@ VI-Solver, as the name suggests, is a package that can be used to solve variatio
 ##Requirements
 This package requires python (2.7 or later) and numpy (1.9.1 or later).
 
-Don't have either? Have a Mac? Read [this](http://www.lowindata.com/2013/installing-scientific-python-on-mac-os-x/).
+Don't have either? Have a Mac? Read [this](https://github.com/fonnesbeck/ScipySuperpack)
+<!--(http://www.lowindata.com/2013/installing-scientific-python-on-mac-os-x/).-->
 
 ##Demos
 A few demos are included in the package (see explanations for domains in next section).
