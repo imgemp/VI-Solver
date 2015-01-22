@@ -8,7 +8,7 @@ VI-Solver, as the name suggests, is a package that can be used to solve variatio
 This package requires python (2.7 or later) and numpy (1.9.1 or later).
 
 ##Demos
-A few demos are included in the package.
+A few demos are included in the package (see explanations for domains in next section).
 
 - Demo_BloodBank.py
 - Demo_DangLan.py
