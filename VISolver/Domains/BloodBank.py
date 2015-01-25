@@ -1,4 +1,10 @@
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import collections  as mc
+
+import matplotlib as mpl
+mpl.use("Agg")
+import matplotlib.cm as cm
 
 from VISolver.Domain import Domain
 
@@ -51,6 +57,151 @@ class BloodBank(Domain):
         uSize = gamSize = self.nC+self.nC*self.nB+self.nB+self.nB+self.nB*self.nD+self.nD*self.nR
 
         return xSize+uSize+gamSize
+
+    def BuildSkeleton(self,ax,Data,mxRed):
+
+        # Unpack Data
+        x = np.reshape(Data[0:self.nC*self.nB*self.nD*self.nR],(self.nC,self.nB,self.nD,self.nR))
+        f_1C, f_CB, f_BP, f_PS, f_SD, f_DR = self.PathFlow2LinkFlow_x2f(x)
+
+        Ox = (max([self.nC,self.nB,self.nD,self.nR]) - 1.)/2.; Oy = 6.
+        Cx = np.linspace(Ox-(self.nC-1.)/2.,Ox+(self.nC-1.)/2.,self.nC); Cy = 5.
+        Bx = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); By = 4.
+        Px = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); Py = 3.
+        Sx = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); Sy = 2.
+        Dx = np.linspace(Ox-(self.nD-1.)/2.,Ox+(self.nD-1.)/2.,self.nD); Dy = 1.
+        Rx = np.linspace(Ox-(self.nR-1.)/2.,Ox+(self.nR-1.)/2.,self.nR); Ry = 0.
+
+        # mnflat = np.array([np.min(f_1C),np.min(f_CB),np.min(f_BP),np.min(f_PS),np.min(f_SD),np.min(f_DR),1e10]); print(np.min(mnflat))
+
+        # flat = np.array([np.max(f_1C),np.max(f_CB),np.max(f_BP),np.max(f_PS),np.max(f_SD),np.max(f_DR),1e-10]); print(np.max(flat))
+        # mxRed = np.max(flat);
+
+        norm = mpl.colors.Normalize(vmin=0., vmax=mxRed)
+        cmap = cm.Reds
+
+        m = cm.ScalarMappable(norm=norm, cmap=cmap)
+        m.to_rgba(x)
+
+        od = []
+        colors = []
+        for c in xrange(self.nC):
+            od.append([(Ox,Oy),(Cx[c],Cy)])
+            colors.append(m.to_rgba(f_1C[c]))
+        for c in xrange(self.nC):
+            for b in xrange(self.nB):
+                od.append([(Cx[c],Cy),(Bx[b],By)])
+                colors.append(m.to_rgba(f_CB[c,b]))
+        for b in xrange(self.nB):
+            od.append([(Bx[b],By),(Px[b],Py)])
+            colors.append(m.to_rgba(f_BP[b]))
+        for p in xrange(self.nB):
+            od.append([(Px[p],Py),(Sx[p],Sy)])
+            colors.append(m.to_rgba(f_PS[p]))
+        for s in xrange(self.nB):
+            for d in xrange(self.nD):
+                od.append([(Sx[s],Sy),(Dx[d],Dy)])
+                colors.append(m.to_rgba(f_SD[s,d]))
+        for d in xrange(self.nD):
+            for r in xrange(self.nR):
+                od.append([(Dx[d],Dy),(Rx[r],Ry)])
+                colors.append(m.to_rgba(f_DR[d,r]))
+
+
+
+        # od = []
+        # colors = []
+        # for c in xrange(self.nC):
+        #     od.append([(Ox,Oy),(Cx[c],Cy)])
+        #     colors.append((f_1C[c]/mxRed,0,0,1))
+        # for c in xrange(self.nC):
+        #     for b in xrange(self.nB):
+        #         od.append([(Cx[c],Cy),(Bx[b],By)])
+        #         colors.append((f_CB[c,b]/mxRed,0,0,1))
+        # for b in xrange(self.nB):
+        #     od.append([(Bx[b],By),(Px[b],Py)])
+        #     colors.append((f_BP[b]/mxRed,0,0,1))
+        # for p in xrange(self.nB):
+        #     od.append([(Px[p],Py),(Sx[p],Sy)])
+        #     colors.append((f_PS[p]/mxRed,0,0,1))
+        # for s in xrange(self.nB):
+        #     for d in xrange(self.nD):
+        #         od.append([(Sx[s],Sy),(Dx[d],Dy)])
+        #         colors.append((f_SD[s,d]/mxRed,0,0,1))
+        # for d in xrange(self.nD):
+        #     for r in xrange(self.nR):
+        #         od.append([(Dx[d],Dy),(Rx[r],Ry)])
+        #         colors.append((f_DR[d,r]/mxRed,0,0,1))
+
+        lc = mc.LineCollection(od, colors=colors, linewidths=4)
+        # print(dir(lc))
+        # lc.set_marker('o')
+        ax.add_collection(lc)
+        ax.set_xlim((0,2*Ox))
+        ax.set_ylim((0,6))
+
+        self.skeleton = lc
+
+    def UpdateFlowColors(self,ax,Data,mxRed):
+
+        # Unpack Data
+        x = np.reshape(Data[0:self.nC*self.nB*self.nD*self.nR],(self.nC,self.nB,self.nD,self.nR))
+        f_1C, f_CB, f_BP, f_PS, f_SD, f_DR = self.PathFlow2LinkFlow_x2f(x)
+
+
+
+        # mnflat = np.array([np.min(f_1C),np.min(f_CB),np.min(f_BP),np.min(f_PS),np.min(f_SD),np.min(f_DR),1e10]); print(np.min(mnflat))
+
+        # flat = np.array([np.max(f_1C),np.max(f_CB),np.max(f_BP),np.max(f_PS),np.max(f_SD),np.max(f_DR),1e-10]); print(np.max(flat))
+        # mxRed = np.max(flat)
+
+
+        norm = mpl.colors.Normalize(vmin=0., vmax=mxRed)
+        cmap = cm.Reds
+
+        m = cm.ScalarMappable(norm=norm, cmap=cmap)
+        m.to_rgba(x)
+
+        od = []
+        colors = []
+        for c in xrange(self.nC):
+            colors.append(m.to_rgba(f_1C[c]))
+        for c in xrange(self.nC):
+            for b in xrange(self.nB):
+                colors.append(m.to_rgba(f_CB[c,b]))
+        for b in xrange(self.nB):
+            colors.append(m.to_rgba(f_BP[b]))
+        for p in xrange(self.nB):
+            colors.append(m.to_rgba(f_PS[p]))
+        for s in xrange(self.nB):
+            for d in xrange(self.nD):
+                colors.append(m.to_rgba(f_SD[s,d]))
+        for d in xrange(self.nD):
+            for r in xrange(self.nR):
+                colors.append(m.to_rgba(f_DR[d,r]))
+
+
+
+        # colors = []
+        # for c in xrange(self.nC):
+        #     colors.append((f_1C[c]/mxRed,0,0,1))
+        # for c in xrange(self.nC):
+        #     for b in xrange(self.nB):
+        #         colors.append((f_CB[c,b]/mxRed,0,0,1))
+        # for b in xrange(self.nB):
+        #     colors.append((f_BP[b]/mxRed,0,0,1))
+        # for p in xrange(self.nB):
+        #     colors.append((f_PS[p]/mxRed,0,0,1))
+        # for s in xrange(self.nB):
+        #     for d in xrange(self.nD):
+        #         colors.append((f_SD[s,d]/mxRed,0,0,1))
+        # for d in xrange(self.nD):
+        #     for r in xrange(self.nR):
+        #         colors.append((f_DR[d,r]/mxRed,0,0,1))
+
+        ax.collections.remove(self.skeleton)
+        self.skeleton.set_color(colors)
+        ax.add_collection(self.skeleton)
 
     def F_P2UP(self,Data):
 
