@@ -139,7 +139,7 @@ def Demo():
     writer = FFMpegWriter(fps=fps, metadata=metadata)
 
     # Collect Frames
-    frame_skip = 25
+    frame_skip = 5
     freeze = 5
     Frames = np.concatenate((BloodBank_Results_Phase1.PermStorage['Data'],
                              [BloodBank_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
