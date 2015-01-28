@@ -1,5 +1,10 @@
 import numpy as np
 
+import matplotlib as mpl; mpl.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.collections  as mc
+import matplotlib.cm as cm
+
 from VISolver.Domain import Domain
 
 
@@ -11,6 +16,9 @@ class BloodBank(Domain):
         self.Dim = self.CalculateNetworkSize()
         self.alpha = alpha
 
+        norm = mpl.colors.Normalize(vmin=0.,vmax=1.)
+        self.to_rgba = [cm.ScalarMappable(norm=norm, cmap=cm.Reds).to_rgba]*6
+
     def F(self,Data):
         return self.F_P2UP(Data)
 
@@ -21,6 +29,103 @@ class BloodBank(Domain):
         Z = X - Y
 
         return np.dot(dFdX,Z) - self.alpha/2.*np.dot(Z,Z)
+
+    # Functions Used to Animate and Save Network Run to Movie File
+
+    def FlowNormalizeColormap(self,Data,cmap):
+        maxFlows = [0]*6
+        for data in Data:
+            newFlows = [np.max(flow) for flow in list(self.PathFlow2LinkFlow_x2f(self.UnpackPathFlows(data)))]
+            maxFlows = np.max([maxFlows,newFlows],axis=0)
+        norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
+        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=cmap).to_rgba for n in norm]
+
+    def InitVisual(self):
+
+        ax = plt.gca()
+        fig = plt.gcf()
+
+        # Add Colorbar
+        cax = fig.add_axes([0.95, 0.2, 0.02, 0.6])
+        plt.axis('off')
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=cm.Reds, spacing='proportional')
+        cb.set_label('Blood Flow')
+
+        plt.sca(ax)
+
+        # Create Network Skeleton
+        Ox = (max([self.nC,self.nB,self.nD,self.nR]) - 1.)/2.; Oy = 6.
+        Cx = np.linspace(Ox-(self.nC-1.)/2.,Ox+(self.nC-1.)/2.,self.nC); Cy = 5.
+        Bx = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); By = 4.
+        Px = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); Py = 3.
+        Sx = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB); Sy = 2.
+        Dx = np.linspace(Ox-(self.nD-1.)/2.,Ox+(self.nD-1.)/2.,self.nD); Dy = 1.
+        Rx = np.linspace(Ox-(self.nR-1.)/2.,Ox+(self.nR-1.)/2.,self.nR); Ry = 0.
+        od = []
+        for c in xrange(self.nC):
+            od.append([(Ox,Oy),(Cx[c],Cy)])
+        for c in xrange(self.nC):
+            for b in xrange(self.nB):
+                od.append([(Cx[c],Cy),(Bx[b],By)])
+        for b in xrange(self.nB):
+            od.append([(Bx[b],By),(Px[b],Py)])
+        for p in xrange(self.nB):
+            od.append([(Px[p],Py),(Sx[p],Sy)])
+        for s in xrange(self.nB):
+            for d in xrange(self.nD):
+                od.append([(Sx[s],Sy),(Dx[d],Dy)])
+        for d in xrange(self.nD):
+            for r in xrange(self.nR):
+                od.append([(Dx[d],Dy),(Rx[r],Ry)])
+        lc = mc.LineCollection(od, colors=(0,0,0,0), linewidths=10)
+        ax.add_collection(lc)
+        ax.set_xlim((0,2*Ox))
+        ax.set_ylim((-.5,6.5))
+        ax.add_collection(lc)
+
+        # Annotate Plot
+        plt.box('off')
+        plt.yticks([0,1,2,3,4,5,6],['Hospitals', 'Distribution', 'Storage', 'Labs', 'Blood Centers', 'Collection', 'Organization'], rotation=45)
+        plt.xticks(Rx,['Hospital\n'+str(r+1) for r in xrange(self.nR)])
+        plt.tick_params(axis='y',right='off')
+        plt.tick_params(axis='x',top='off')
+
+        return ax.collections
+
+    def UpdateVisual(self,num,ax,Frames,annotations):
+
+        Data = Frames[num]
+
+        # Check for Next Annotation
+        if len(annotations) > 0:
+            ann = annotations[-1]
+            if num >= ann[0]:
+                ann[1](ann[2])
+                annotations.pop()
+
+        # Unpack Data
+        f_1C, f_CB, f_BP, f_PS, f_SD, f_DR = self.PathFlow2LinkFlow_x2f(self.UnpackPathFlows(Data))
+
+        colors = []
+        for c in xrange(self.nC):
+            colors.append(self.to_rgba[0](f_1C[c]))
+        for c in xrange(self.nC):
+            for b in xrange(self.nB):
+                colors.append(self.to_rgba[1](f_CB[c,b]))
+        for b in xrange(self.nB):
+            colors.append(self.to_rgba[2](f_BP[b]))
+        for p in xrange(self.nB):
+            colors.append(self.to_rgba[3](f_PS[p]))
+        for s in xrange(self.nB):
+            for d in xrange(self.nD):
+                colors.append(self.to_rgba[4](f_SD[s,d]))
+        for d in xrange(self.nD):
+            for r in xrange(self.nR):
+                colors.append(self.to_rgba[5](f_DR[d,r]))
+
+        ax.collections[0].set_color(colors)
+
+        return ax.collections
 
     # Functions used to Initialize the BloodBank Network and Calculate F
 
@@ -44,6 +149,10 @@ class BloodBank(Domain):
         self.prob_low,self.prob_high,\
         self.theta,\
         self.lambda_minus,self.lambda_plus = Network
+
+    def UnpackPathFlows(self,Data):
+
+        return np.reshape(Data[0:self.nC*self.nB*self.nD*self.nR],(self.nC,self.nB,self.nD,self.nR))
 
     def CalculateNetworkSize(self):
 
@@ -305,7 +414,7 @@ class BloodBank(Domain):
                dgam_1C, dgam_CB, dgam_BP, dgam_PS, dgam_SD, dgam_DR]
 
 
-def CreateNetworkExample1():
+def CreateNetworkExample(ex=1):
     # Example 1 from Nagurney's Supply Chain Network Design
     # of a Sustainable Blood Banking System
 
@@ -492,6 +601,20 @@ def CreateNetworkExample1():
     prob_high[1] = 50.
     prob_low[2]  = 25.
     prob_high[2] = 40.
+    if ex==2:
+        prob_low[0]  = 25.
+        prob_high[0] = 30.
+        prob_low[1]  = 25.
+        prob_high[1] = 40.
+        prob_low[2]  = 20.
+        prob_high[2] = 30.
+    elif ex==3:
+        prob_low[0]  = 35.
+        prob_high[0] = 50.
+        prob_low[1]  = 20.
+        prob_high[1] = 30.
+        prob_low[2]  = 15.
+        prob_high[2] = 20.
 
     lambda_minus = np.zeros((nR,))
     lambda_plus  = np.zeros((nR,))
