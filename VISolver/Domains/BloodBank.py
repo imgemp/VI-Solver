@@ -601,7 +601,6 @@ def CreateNetworkExample(ex=1):
     prob_high[1] = 50.
     prob_low[2]  = 25.
     prob_high[2] = 40.
-
     if ex==2:
         prob_low[0]  = 25.
         prob_high[0] = 30.
@@ -609,8 +608,6 @@ def CreateNetworkExample(ex=1):
         prob_high[1] = 40.
         prob_low[2]  = 20.
         prob_high[2] = 30.
-        # prob_low[0] = 35
-        # prob_high[0] = 45
     elif ex==3:
         prob_low[0]  = 35.
         prob_high[0] = 50.
@@ -618,8 +615,6 @@ def CreateNetworkExample(ex=1):
         prob_high[1] = 30.
         prob_low[2]  = 15.
         prob_high[2] = 20.
-        # prob_low[0] = 80
-        # prob_high[0] = 90
 
     lambda_minus = np.zeros((nR,))
     lambda_plus  = np.zeros((nR,))
@@ -630,12 +625,6 @@ def CreateNetworkExample(ex=1):
     lambda_plus[1]  = 60.
     lambda_minus[2] = 3100.
     lambda_plus[2]  = 50.
-
-    # if ex==2:
-    #     lambda_minus *= 10.
-    # elif ex==3:
-    #     lambda_minus /= 100.
-        # lambda_plus *= 10.
 
     rhat = np.zeros((nC,))
 
