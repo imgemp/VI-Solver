@@ -138,6 +138,23 @@ class SupplyChain(Domain):
 
     def UnpackData(self,Data):
         # not implemented yet
+        x        = 10.*np.ones((I,Nm,Nd,Nr));
+        gam_IM   = np.ones((I,Nm));
+        gam_MD1  = np.ones((I,Nm,Nd));
+        gam_D1D2 = np.ones((I,Nd));
+        gam_D2R  = np.ones((I,Nd,Nr));
+        lam_IM   = np.zeros((I,Nm));
+        lam_MD1  = np.zeros((I,Nm,Nd));
+        lam_D1D2 = np.zeros((I,Nd));
+        lam_D2R  = np.zeros((I,Nd,Nr));
+
+        x_shape = [self.Network]
+        lam_shapes = gam_shapes = [(self.I,self.Nm),
+                                   (self.I,self.Nm,self.Nd),
+                                   (self.I,self.Nd),
+                                   (self.I,self.Nd,self.Nr)]
+        
+        x = np.reshape(Data[:np.product(self.Network)],self.Network)
         return [np.reshape(Data[s:s+self.Dim//3],(self.m,self.n,self.o)) for s in xrange(0,self.Dim,self.Dim//3)]
 
     def CalculateNetworkSize(self):
