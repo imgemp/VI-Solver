@@ -159,12 +159,12 @@ def Demo():
     t4 = t3 + len(BloodBank_Results_Phase2.PermStorage['Data']) // frame_skip
     t5 = t4 + fps*freeze
     t6 = t5 + len(BloodBank_Results_Phase3.PermStorage['Data']) // frame_skip
-    anns = sorted([(t1, plt.title, '$Demand_{A}$ $<$ $Demand_{B}$ & $Demand_{C}$\n(Equilibrating)'),
-                   (t2, plt.title, '$Demand_{A}$ $<$ $Demand_{B}$ & $Demand_{C}$\n(Converged)'),
-                   (t3, plt.title, '$Demand_{A}$ ~= $Demand_{B}$ & $Demand_{C}$\n(Equilibrating)'),
-                   (t4, plt.title, '$Demand_{A}$ ~= $Demand_{B}$ & $Demand_{C}$\n(Converged)'),
-                   (t5, plt.title, '$Demand_{A}$ $>$ $Demand_{B}$ & $Demand_{C}$\n(Equilibrating)'),
-                   (t6, plt.title, '$Demand_{A}$ $>$ $Demand_{B}$ & $Demand_{C}$\n(Converged)')],
+    anns = sorted([(t1, plt.title, '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
+                   (t2, plt.title, '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'),
+                   (t3, plt.title, '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
+                   (t4, plt.title, '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Converged)'),
+                   (t5, plt.title, '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
+                   (t6, plt.title, '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Converged)')],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File

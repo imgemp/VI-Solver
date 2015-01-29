@@ -16,8 +16,9 @@ class BloodBank(Domain):
         self.Dim = self.CalculateNetworkSize()
         self.alpha = alpha
 
+        self.cmap = cm.Reds
         norm = mpl.colors.Normalize(vmin=0.,vmax=1.)
-        self.to_rgba = [cm.ScalarMappable(norm=norm, cmap=cm.Reds).to_rgba]*6
+        self.to_rgba = [cm.ScalarMappable(norm=norm, cmap=self.cmap).to_rgba]*6
 
     def F(self,Data):
         return self.F_P2UP(Data)
@@ -33,12 +34,13 @@ class BloodBank(Domain):
     # Functions Used to Animate and Save Network Run to Movie File
 
     def FlowNormalizeColormap(self,Data,cmap):
+        self.cmap = cmap
         maxFlows = [0]*6
         for data in Data:
             newFlows = [np.max(flow) for flow in list(self.PathFlow2LinkFlow_x2f(self.UnpackPathFlows(data)))]
             maxFlows = np.max([maxFlows,newFlows],axis=0)
         norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
-        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=cmap).to_rgba for n in norm]
+        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba for n in norm]
 
     def InitVisual(self):
 
@@ -48,7 +50,7 @@ class BloodBank(Domain):
         # Add Colorbar
         cax = fig.add_axes([0.95, 0.2, 0.02, 0.6])
         plt.axis('off')
-        cb = mpl.colorbar.ColorbarBase(cax, cmap=cm.Reds, spacing='proportional')
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=self.cmap, spacing='proportional')
         cb.set_label('Blood Flow')
 
         plt.sca(ax)
