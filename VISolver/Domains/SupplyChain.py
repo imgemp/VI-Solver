@@ -10,7 +10,8 @@ from VISolver.Domain import Domain
 
 
 class SupplyChain(Domain):
-
+    '''Current representation does not allow for different modes of
+    transportation nor 'factory-direct' distribution.'''
     def __init__(self,Network,alpha=2):
         self.UnpackNetwork(Network)
         self.Network = (self.I,self.Nm,self.Nd,self.Nr)
@@ -428,6 +429,8 @@ def CreateNetworkExample(ex=1):
     coeff_rho_d[1,0,1] = 2.
     coeff_rho_d[1,0,0] = .5
     coeff_rho_const[1,0] = 400.
+    if ex == 2:
+        coeff_rho_const[1,0] = 500.
 
     coeff_c_pow1_IM = np.zeros((I,Nm))
     coeff_c_pow2_IM = np.zeros((I,Nm))

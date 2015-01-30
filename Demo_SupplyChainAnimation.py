@@ -2,7 +2,7 @@ import time
 import numpy as np
 
 from VISolver.Domains.SupplyChain import (
-    SupplyChain, CreateRandomNetwork)
+    SupplyChain, CreateNetworkExample)
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 
@@ -21,8 +21,12 @@ def Demo():
 
     #__SUPPLY_CHAIN__##################################################
 
+    #############################################################
+    # Example 1 from Nagurney's Paper
+    #############################################################
+
     # Define Network and Domain
-    Network = CreateRandomNetwork(I=2,Nm=2,Nd=2,Nr=1,seed=0)
+    Network = CreateNetworkExample(ex=1)
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
@@ -50,11 +54,47 @@ def Demo():
 
     # Start Solver
     tic = time.time()
-    SupplyChain_Results = Solve(Start,Method,Domain,Options)
+    SupplyChain_Results_Phase1 = Solve(Start,Method,Domain,Options)
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(Options,SupplyChain_Results,Method,toc)
+    PrintSimResults(Options,SupplyChain_Results_Phase1,Method,toc)
+
+    #############################################################
+    # Increased Demand of Firm 2's Product
+    #############################################################
+
+    # Define Network and Domain
+    Network = CreateNetworkExample(ex=2)
+    Domain = SupplyChain(Network=Network,alpha=2)
+
+    # Set Method
+    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
+
+    # Initialize Starting Point
+    Start = SupplyChain_Results_Phase1.PermStorage['Data'][-1]
+
+    # Calculate Initial Gap
+    gap_0 = Domain.gap_rplus(Start)
+
+    # Set Options
+    Init = Initialization(Step=-1e-10)
+    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
+    Repo = Reporting(Requests=[Domain.gap_rplus, 'Step', 'F Evaluations',
+                               'Projections','Data'])
+    Misc = Miscellaneous()
+    Options = DescentOptions(Init,Term,Repo,Misc)
+
+    # Print Stats
+    PrintSimStats(Domain,Method,Options)
+
+    # Start Solver
+    tic = time.time()
+    SupplyChain_Results_Phase2 = Solve(Start,Method,Domain,Options)
+    toc = time.time() - tic
+
+    # Print Results
+    PrintSimResults(Options,SupplyChain_Results_Phase2,Method,toc)
 
     ########################################################
     # Animate Network
@@ -69,27 +109,25 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    Frames = SupplyChain_Results.PermStorage['Data'][::frame_skip]
-    # Frames = np.concatenate((SupplyChain_Results_Phase1.PermStorage['Data'],
-    #                          [SupplyChain_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
-    #                          SupplyChain_Results_Phase2.PermStorage['Data'],
-    #                          [SupplyChain_Results_Phase2.PermStorage['Data'][-1]]*fps*frame_skip*freeze),
-    #                         axis=0)[::frame_skip]
+    Frames = np.concatenate((SupplyChain_Results_Phase1.PermStorage['Data'],
+                             [SupplyChain_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
+                             SupplyChain_Results_Phase2.PermStorage['Data'],
+                             [SupplyChain_Results_Phase2.PermStorage['Data'][-1]]*fps*frame_skip*freeze),
+                            axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
     Domain.FlowNormalizeColormap(Frames,cm.rainbow)
 
     # Mark Annotations
-    # t1 = 0
-    # t2 = t1 + len(SupplyChain_Results_Phase1.PermStorage['Data']) // frame_skip
-    # t3 = t2 + fps*freeze
-    # t4 = t3 + len(SupplyChain_Results_Phase2.PermStorage['Data']) // frame_skip
-    # anns = sorted([(t1, plt.title, 'Control Network\n(Equilibrating)'),
-    #                (t2, plt.title, 'Control Network\n(Converged)'),
-    #                (t3, plt.title, 'Market 1 Increases Demand for Service 1 by Provider 1\n(Equilibrating)'),
-    #                (t4, plt.title, 'Market 1 Increases Demand for Service 1 by Provider 1\n(Converged)')],
-    #               key=lambda x:x[0], reverse=True)
-    anns = []
+    t1 = 0
+    t2 = t1 + len(SupplyChain_Results_Phase1.PermStorage['Data']) // frame_skip
+    t3 = t2 + fps*freeze
+    t4 = t3 + len(SupplyChain_Results_Phase2.PermStorage['Data']) // frame_skip
+    anns = sorted([(t1, plt.title, 'Control Network\n(Equilibrating)'),
+                   (t2, plt.title, 'Control Network\n(Converged)'),
+                   (t3, plt.title, 'Market Increases Demand for Firm 2''s Product\n(Equilibrating)'),
+                   (t4, plt.title, 'Market Increases Demand for Firm 2''s Product\n(Converged)')],
+                  key=lambda x:x[0], reverse=True)
 
     # Save Animation to File
     fig, ax = plt.subplots()
