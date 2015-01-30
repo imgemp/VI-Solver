@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from VISolver.Domains.SOI import SOI, CreateRandomNetwork, CreateNetworkExample
+from VISolver.Domains.SOI import SOI, CreateNetworkExample
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 

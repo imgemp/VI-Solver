@@ -1,7 +1,8 @@
 import time
 import numpy as np
 
-from VISolver.Domains.SupplyChain import SupplyChain, CreateRandomNetwork, CreateNetworkExample
+from VISolver.Domains.SupplyChain import (
+    SupplyChain, CreateRandomNetwork)
 
 # from VISolver.Solvers.Euler import Euler
 # from VISolver.Solvers.Extragradient import EG
@@ -16,18 +17,13 @@ from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimResults, PrintSimStats
 
-import matplotlib.animation as animation
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-
 
 def Demo():
 
-    #__SERVICE_ORIENTED_INTERNET__##################################################
+    #__SUPPLY_CHAIN__##################################################
 
     # Define Network and Domain
-    # Network = CreateRandomNetwork(m=3,n=2,o=2,seed=0)
-    Network = CreateNetworkExample()
+    Network = CreateRandomNetwork(I=2,Nm=2,Nd=2,Nr=1,seed=0)
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
@@ -39,7 +35,10 @@ def Demo():
     Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
-    Start = np.zeros(Domain.Dim)
+    x = 10*np.ones(np.product(Domain.x_shape))
+    gam = np.ones(np.sum([np.product(g) for g in Domain.gam_shapes]))
+    lam = np.zeros(np.sum([np.product(l) for l in Domain.lam_shapes]))
+    Start = np.concatenate((x,gam,lam))
 
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
@@ -47,7 +46,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus, 'Step', 'F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
