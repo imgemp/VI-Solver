@@ -1,0 +1,103 @@
+from VISolver.Projection import IdentityProjection
+from VISolver.Solver import Solver
+
+
+class CloudSolver(Solver):
+
+    def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-2,
+                 GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
+
+        self.Domain = Domain
+
+        self.F = Domain.F
+
+        self.Proj = P
+
+        self.StorageSize = 2
+
+        self.TempStorage = {}
+
+        self.Delta0 = Delta0
+
+        self.GrowthLimit = GrowthLimit
+
+        self.MinStep = MinStep
+
+        self.MaxStep = MaxStep
+
+    def InitTempStorage(self,Start,Domain,Options):
+
+        self.TempStorage['Data'] = self.StorageSize*[Start]
+        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
+        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
+        self.TempStorage['F Evaluations'] = self.StorageSize*[1]
+        self.TempStorage['Projections'] = self.StorageSize*[0]
+
+        return self.TempStorage
+
+    # BookKeeping(self,TempData) defined in super class 'Solver'
+
+    def FiniteDifferences(self,Data,Step,F):
+        Q_L = self.Domain.QL_Cloud(Data)
+        Q_S = self.Domain.QS_Cloud(Data)
+        p_L = self.Domain.pL_Cloud(Data)
+        p_S = self.Domain.pS_Cloud(Data)
+
+        nFDs = Q_L.shape[0]
+
+        FDs = []
+        for c in xrange(nFDs):
+            
+            dqs = self.Domain.dBizProfits(Data)
+            
+
+    def Update(self,Record):
+
+        # Retrieve Necessary Data
+        Data = Record.TempStorage['Data'][-1]
+        Step = Record.TempStorage['Step'][-1]
+
+        # Initialize Storage
+        TempData = {}
+
+        if Record.thisPermIndex % 2 == 0:
+
+            # Perform Euler Update
+            F = Record.TempStorage[self.F][-1]
+            NewData = self.Proj.P(Data,Step,F)
+
+            # Record Projections
+            TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
+
+        else:
+
+            # Perform Adams Bashforth Update
+            Fs = Record.TempStorage[self.F]
+            NewData = self.Proj.P(Data,Step,-0.5*Fs[-2]+1.5*Fs[-1])
+
+            # Perform Euler Update
+            _NewData = self.Proj.P(Data,Step,Fs[-1])
+
+            # Adjust Stepsize
+            Delta = max(abs(NewData-_NewData))
+            if Delta == 0:
+                Step = 2.*Step
+            else:
+                growth = min(self.GrowthLimit, (self.Delta0/Delta)**0.5)
+                Step = max(min(Step*growth, self.MaxStep), self.MinStep)
+
+            # Record Projections
+            TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
+
+        # Compute F Mapping
+        Fprev = Record.TempStorage[self.F][-1]
+        FDs = self.FiniteDifferences(Data,Step,Fprev)
+        F = self.F(NewData,FDs)
+
+        # Store Data
+        TempData['Data'] = NewData
+        TempData[self.F] = F
+        TempData['Step'] = Step
+        TempData['F Evaluations'] = 1 + self.TempStorage['F Evaluations'][-1]
+        self.BookKeeping(TempData)
+        return self.TempStorage
