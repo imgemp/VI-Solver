@@ -1,58 +1,50 @@
-import numpy as np
-
-from Projection import *
-from Utilities import *
+from VISolver.Projection import *
 from Solver import Solver
+
 
 class EG(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection()):
-        
-        self.F = Domain.F
-
+    def __init__(self, Domain, P=IdentityProjection()):
+        self.F = Domain.f
         self.Proj = P
-
         self.StorageSize = 1
+        self.temp_storage = {}
 
-        self.TempStorage = {}
-
-    def InitTempStorage(self,Start,Domain,Options):
-
-        self.TempStorage['Data'] = self.StorageSize*[Start]
-        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
-        self.TempStorage['scount'] = self.StorageSize*[0]
-        self.TempStorage['s'] = self.StorageSize*[1]
-        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
-        self.TempStorage['F Evaluations'] = self.StorageSize*[1]
-        self.TempStorage['Projections'] = self.StorageSize*[0]
+    def init_temp_storage(self, Start, Domain, Options):
+        self.temp_storage['Data'] = self.StorageSize * [Start]
+        self.temp_storage[self.F] = self.StorageSize * [self.F(Start)]
+        self.temp_storage['scount'] = self.StorageSize * [0]
+        self.temp_storage['s'] = self.StorageSize * [1]
+        self.temp_storage['Step'] = self.StorageSize * [Options.Init.Step]
+        self.temp_storage['f Evaluations'] = self.StorageSize * [1]
+        self.temp_storage['Projections'] = self.StorageSize * [0]
 
         self.InitStep = Options.Init.Step
 
-        return self.TempStorage
+        return self.temp_storage
 
-    # BookKeeping(self,TempData) defined in super class 'Solver'
+    # book_keeping(self,TempData) defined in super class 'Solver'
 
-    def Update(self,Record):
-
+    def update(self, record):
         # Retrieve Necessary Data
-        Data = Record.TempStorage['Data'][-1]
-        F = Record.TempStorage[self.F][-1]
-        scount = self.TempStorage['scount'][-1]
-        s = self.TempStorage['s'][-1]
+        Data = record.TempStorage['Data'][-1]
+        F = record.TempStorage[self.F][-1]
+        scount = self.temp_storage['scount'][-1]
+        s = self.temp_storage['s'][-1]
 
         # Use Decreasing Step Size Scheme
         if scount >= s:
-            scount = 0;
-            s += 1;
-        scount += 1;
-        Step = self.InitStep/s
+            scount = 0
+            s += 1
+        scount += 1
+        Step = self.InitStep / s
 
         # Initialize Storage
         TempData = {}
 
-        # Perform Update
-        _NewData = self.Proj.P(Data,Step,F)
-        NewData = self.Proj.P(Data,Step,self.F(_NewData))
+        # Perform update
+        _NewData = self.Proj.P(Data, Step, F)
+        NewData = self.Proj.P(Data, Step, self.F(_NewData))
 
         # Store Data
         TempData['Data'] = NewData
@@ -60,14 +52,8 @@ class EG(Solver):
         TempData['scount'] = scount
         TempData['s'] = s
         TempData['Step'] = Step
-        TempData['F Evaluations'] = 2 + self.TempStorage['F Evaluations'][-1]
-        TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
-        self.BookKeeping(TempData)
-        
-        return self.TempStorage
+        TempData['f Evaluations'] = 2 + self.temp_storage['f Evaluations'][-1]
+        TempData['Projections'] = 2 + self.temp_storage['Projections'][-1]
+        self.book_keeping(TempData)
 
-
-
-
-
-
+        return self.temp_storage

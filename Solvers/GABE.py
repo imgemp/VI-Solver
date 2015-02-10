@@ -4,17 +4,25 @@ from Projection import *
 from Utilities import *
 from Solver import Solver
 
+
 class GABE(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection(),Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
-        
-        self.F = Domain.F
+    def __init__(
+            self,
+            Domain,
+            P=IdentityProjection(),
+            Delta0=1e-2,
+            GrowthLimit=2,
+            MinStep=-1e10,
+            MaxStep=1e10):
+
+        self.F = Domain.f
 
         self.Proj = P
 
         self.StorageSize = 2
 
-        self.TempStorage = {}
+        self.temp_storage = {}
 
         self.Delta0 = Delta0
 
@@ -24,74 +32,76 @@ class GABE(Solver):
 
         self.MaxStep = MaxStep
 
-    def InitTempStorage(self,Start,Domain,Options):
+    def init_temp_storage(self, Start, Domain, Options):
 
-        self.TempStorage['Data'] = self.StorageSize*[Start]
-        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
-        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
-        self.TempStorage['F Evaluations'] = self.StorageSize*[1]
-        self.TempStorage['Projections'] = self.StorageSize*[0]
+        self.temp_storage['Data'] = self.StorageSize * [Start]
+        self.temp_storage[self.F] = self.StorageSize * [self.F(Start)]
+        self.temp_storage['Step'] = self.StorageSize * [Options.Init.Step]
+        self.temp_storage['f Evaluations'] = self.StorageSize * [1]
+        self.temp_storage['Projections'] = self.StorageSize * [0]
 
-        return self.TempStorage
+        return self.temp_storage
 
-    # BookKeeping(self,TempData) defined in super class 'Solver'
+    # book_keeping(self,TempData) defined in super class 'Solver'
 
-    def Update(self,Record):
+    def update(self, record):
 
         # Retrieve Necessary Data
-        Data = Record.TempStorage['Data'][-1]
-        _Data = Record.TempStorage['Data'][-2]
-        Step = Record.TempStorage['Step'][-1]
+        Data = record.TempStorage['Data'][-1]
+        _Data = record.TempStorage['Data'][-2]
+        Step = record.TempStorage['Step'][-1]
 
         # Initialize Storage
         TempData = {}
 
-        if (Record.thisPermIndex%2 == 0):
+        if record.thisPermIndex % 2 == 0:
 
-            # Perform Euler Update
-            F = Record.TempStorage[self.F][-1]
-            NewData = self.Proj.P(Data,Step,F)
+            # Perform Euler update
+            F = record.TempStorage[self.F][-1]
+            NewData = self.Proj.P(Data, Step, F)
 
             # Record Projections
-            TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
+            TempData['Projections'] = 1 + self.temp_storage['Projections'][-1]
 
         else:
 
-            # Perform Euler Update
-            Fs = Record.TempStorage[self.F]
-            _NewData = self.Proj.P(Data,Step,Fs[-1])
+            # Perform Euler update
+            Fs = record.TempStorage[self.F]
+            _NewData = self.Proj.P(Data, Step, Fs[-1])
 
-            # Perform Adams Bashforth Update
-            __NewData = self.Proj.P(Data,Step,-0.5*Fs[-2]+1.5*Fs[-1])
+            # Perform Adams Bashforth update
+            __NewData = self.Proj.P(Data, Step, -0.5 * Fs[-2] + 1.5 * Fs[-1])
 
-            # Approximate Gradient of ||F||^2
-            grad_norm = (np.linalg.norm(Fs[-1])-np.linalg.norm(Fs[-2]))/(Data-_Data)
+            # Approximate Gradient of ||f||^2
+            grad_norm = (
+                np.linalg.norm(Fs[-1]) - np.linalg.norm(Fs[-2])) / (Data - _Data)
             # print(grad_norm)
             # print(Data-_Data)
             # grad_norm = 0.
 
-            # Perform Adams Bashforth Update again with Gradient Norm
-            NewData = self.Proj.P(Data,Step,-0.5*Fs[-2]+1.5*Fs[-1]-0.5*grad_norm) #divergence is zero for DummyMARL
+            # Perform Adams Bashforth update again with Gradient Norm
+            # divergence is zero for DummyMARL
+            NewData = self.Proj.P(
+                Data, Step, -0.5 * Fs[-2] + 1.5 * Fs[-1] - 0.5 * grad_norm)
 
             # Adjust Stepsize
-            Delta = max(abs(__NewData-_NewData))
-            if Delta == 0.: Step = 2.*Step
-            else: Step = max(min(Step*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+            Delta = max(abs(__NewData - _NewData))
+            if Delta == 0.:
+                Step *= 2.
+            else:
+                Step = max(min(Step * min((self.Delta0 / Delta) ** 0.5,
+                                          self.GrowthLimit),
+                               self.MaxStep),
+                           self.MinStep)
 
             # Record Projections
-            TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
+            TempData['Projections'] = 2 + self.temp_storage['Projections'][-1]
 
         # Store Data
         TempData['Data'] = NewData
         TempData[self.F] = self.F(NewData)
         TempData['Step'] = Step
-        TempData['F Evaluations'] = 1 + self.TempStorage['F Evaluations'][-1]
-        self.BookKeeping(TempData)
-        
-        return self.TempStorage
+        TempData['f Evaluations'] = 1 + self.temp_storage['f Evaluations'][-1]
+        self.book_keeping(TempData)
 
-
-
-
-
-
+        return self.temp_storage

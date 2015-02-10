@@ -5,7 +5,7 @@ from Utilities import *
 from Solver import Solver
 
 
-class ABEuler(Solver):
+class DriftABE_Exact(Solver):
 
     def __init__(
             self,
@@ -18,9 +18,11 @@ class ABEuler(Solver):
 
         self.F = Domain.f
 
+        self.F_curl = Domain.f_curl
+
         self.Proj = P
 
-        self.StorageSize = 2
+        self.StorageSize = 3
 
         self.temp_storage = {}
 
@@ -32,6 +34,10 @@ class ABEuler(Solver):
 
         self.MaxStep = MaxStep
 
+        self.Mod = 10  # (100)
+
+        self.Agg = 10  # (10)
+
     def init_temp_storage(self, Start, Domain, Options):
 
         self.temp_storage['Data'] = self.StorageSize * [Start]
@@ -39,6 +45,8 @@ class ABEuler(Solver):
         self.temp_storage['Step'] = self.StorageSize * [Options.Init.Step]
         self.temp_storage['f Evaluations'] = self.StorageSize * [1]
         self.temp_storage['Projections'] = self.StorageSize * [0]
+        self.temp_storage['F_2norm'] = self.StorageSize * \
+            [np.dot(self.temp_storage[self.F][-1], self.temp_storage[self.F][-1])]
 
         return self.temp_storage
 
@@ -53,10 +61,17 @@ class ABEuler(Solver):
         # Initialize Storage
         TempData = {}
 
-        if record.thisPermIndex % 2 == 0:
+        # Choose Agent for Curl Component
+        agent_i = 0  # np.random.randint(Data.shape[0])
+
+        if (record.thisPermIndex >= self.Mod) and (
+                record.thisPermIndex % self.Mod == 0):
+
+            # Compute Curl Component for Agent i
+            F = record.TempStorage[self.F][-1]
+            F[agent_i] += - self.Agg * self.F_curl(Data)[agent_i]
 
             # Perform Euler update
-            F = record.TempStorage[self.F][-1]
             NewData = self.Proj.P(Data, Step, F)
 
             # Record Projections
@@ -89,6 +104,7 @@ class ABEuler(Solver):
         TempData[self.F] = self.F(NewData)
         TempData['Step'] = Step
         TempData['f Evaluations'] = 1 + self.temp_storage['f Evaluations'][-1]
+        TempData['F_2norm'] = np.dot(TempData[self.F], TempData[self.F])
         self.book_keeping(TempData)
 
         return self.temp_storage

@@ -1,39 +1,38 @@
 import numpy as np
 
+
 class Storage:
 
-    def __init__(self,Start,Domain,Method,Options):
-        self.thisTempIndex = 0
-        self.maxTempIndex = Method.StorageSize
-        self.thisPermIndex = 0
+    def __init__(self, start, domain, method, options):
+        self.this_temp_index = 0
+        self.max_temp_index = method.StorageSize
+        self.this_perm_index = 0
 
-        self.TempStorage = Method.InitTempStorage(Start,Domain,Options)
-        
-        self.PermStorage = {}
-        for req in Options.Repo.PermRequests:
-            if req in Method.TempStorage:
-                PermItem = Method.TempStorage[req][-1]
+        self.temp_storage = method.init_temp_storage(start, domain, options)
+
+        self.perm_storage = {}
+        for req in options.repo.perm_requests:
+            if req in method.temp_storage:
+                perm_item = method.temp_storage[req][-1]
             else:
-                PermItem = req(Start)
-            self.PermStorage[req] = [PermItem]
+                # perm_item = req(start)
+                perm_item = start
+            self.perm_storage[req] = [perm_item]
 
-    def BookKeeping(self,TempStorage):
+    def book_keeping(self, temp_storage):
 
         # Retrieve New Data
-        # NewData = TempStorage['Data'][-1]
-        NewData = TempStorage['Policy'][-1]
+        # new_data = temp_storage['Data'][-1]
+        new_data = temp_storage['Policy'][-1]
 
-        # Update TempStorage
-        self.TempStorage = TempStorage
+        # update temp_storage
+        self.temp_storage = temp_storage
 
-        # Update PermStorage
-        self.thisPermIndex += 1
-        for req in self.PermStorage:
-            if req in self.TempStorage:
-                PermItem = self.TempStorage[req][-1]
+        # update PermStorage
+        self.this_perm_index += 1
+        for req in self.perm_storage:
+            if req in self.temp_storage:
+                perm_item = self.temp_storage[req][-1]
             else:
-                PermItem = req(NewData)
-            self.PermStorage[req].append(PermItem)
-
-
-
+                perm_item = req(new_data)
+            self.perm_storage[req].append(perm_item)

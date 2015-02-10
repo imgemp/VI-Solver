@@ -1,53 +1,48 @@
 import time
-import datetime
-import numpy as np
 
-from Domains.Sphere import *
-from Domains.Watson import *
-from Domains.KojimaShindo import *
-from Domains.Sun import *
+from VISolver.Domains.Sphere import *
+from VISolver.Domains.Watson import *
+from VISolver.Domains.KojimaShindo import *
+from VISolver.Domains.Sun import *
+from VISolver.Solvers.HeunEuler import *
+from VISolver.Solvers.Solver import solve
+from VISolver.Options import *
+from VISolver.Log import *
 
-from Solvers.HeunEuler import *
 
-from Solver import Solve
-from Options import *
-from Log import *
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-
-def Demo():
-
-    #__SPHERE__##################################################
+def demo():
+    # __SPHERE__##################################################
 
     # Define Dimension and Domain
     Domain = Sphere(Dim=100)
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F,P=IdentityProjection(),History=0,Delta0=1e-2)
+    Method = HeunEuler(
+        Function=Domain.F,
+        P=IdentityProjection(),
+        History=0,
+        Delta0=1e-2)
 
-	# Set Options
-    Init = Initialization(Step=-1e-1)
-    Term = Termination(MaxIter=1000,Tols=[[Domain.f_Error,1e-3]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.f_Error])
+    # Set Options
+    Init = Initialization(step=-1e-1)
+    Term = Termination(max_iter=1000, tols=[[Domain.f_Error, 1e-3]])
+    Repo = Reporting(MaxData=1, requests=[Domain.f_Error])
     Misc = Miscellaneous()
-    Options = DescentOptions(Init,Term,Repo,Misc)
+    Options = DescentOptions(Init, Term, Repo, Misc)
 
     # Initialize Starting Point
-    Start = 100*np.ones(Domain.Dim)
+    Start = 100 * np.ones(Domain.Dim)
 
     # Print Stats
-    PrintSimStats(Domain,Method,Options)
+    print_sim_stats(Domain, Method, Options)
 
     # Start Solver
     tic = time.time()
-    SPHERE_Results = Solve(Start,Method,Domain,Options)
+    SPHERE_Results = solve(Start, Method, Domain, Options)
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(SPHERE_Results,Method,toc)
+    print_sim_results(SPHERE_Results, Method, toc)
 
     # Zero Projections
     Method.Proj.NP = 0
@@ -58,28 +53,32 @@ def Demo():
     Domain = KojimaShindo()
 
     # Set Method
-    Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+    Method = HeunEuler(
+        Function=Domain.F,
+        P=EntropicProjection(),
+        History=0,
+        Delta0=1e-1)
 
     # Set Options
-    Init = Initialization(Step=-1e-1)
-    Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-    Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+    Init = Initialization(step=-1e-1)
+    Term = Termination(max_iter=1000, tols=[[Domain.gap_simplex, 1e-3]])
+    Repo = Reporting(MaxData=1, requests=[Domain.gap_simplex])
     Misc = Miscellaneous()
-    Options = DescentOptions(Init,Term,Repo,Misc)
+    Options = DescentOptions(Init, Term, Repo, Misc)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+    Start = np.ones(Domain.Dim) / np.double(Domain.Dim)
 
     # Print Stats
-    PrintSimStats(Domain,Method,Options)
+    print_sim_stats(Domain, Method, Options)
 
     # Start Solver
     tic = time.time()
-    KS_Results = Solve(Start,Method,Domain,Options)
+    KS_Results = solve(Start, Method, Domain, Options)
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(KS_Results,Method,toc)
+    print_sim_results(KS_Results, Method, toc)
 
     # Zero Projections
     Method.Proj.NP = 0
@@ -90,79 +89,79 @@ def Demo():
     WAT_Results = [[] for i in trials]
 
     for p in trials:
-
-        #Define Dimension and Domain
+        # Define Dimension and Domain
         Domain = Watson(Pos=p)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+        Method = HeunEuler(
+            Function=Domain.F,
+            P=EntropicProjection(),
+            History=0,
+            Delta0=1e-1)
 
         # Set Options
-        Init = Initialization(Step=-1e-1)
-        Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Init = Initialization(step=-1e-1)
+        Term = Termination(max_iter=1000, tols=[[Domain.gap_simplex, 1e-3]])
+        Repo = Reporting(MaxData=1, requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
-        Options = DescentOptions(Init,Term,Repo,Misc)
-    
-        #Initialize Starting Point
-        Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+        Options = DescentOptions(Init, Term, Repo, Misc)
+
+        # Initialize Starting Point
+        Start = np.ones(Domain.Dim) / np.double(Domain.Dim)
 
         # Print Stats
-        PrintSimStats(Domain,Method,Options)
+        print_sim_stats(Domain, Method, Options)
 
         tic = time.time()
-        WAT_Results[p] = Solve(Start,Method,Domain,Options)
+        WAT_Results[p] = solve(Start, Method, Domain, Options)
         toc = time.time() - tic
 
         # Print Results
-        PrintSimResults(WAT_Results[p],Method,toc)
+        print_sim_results(WAT_Results[p], Method, toc)
 
         # Zero Projections
         Method.Proj.NP = 0
 
     #__SUN__##################################################
 
-    trials = xrange(8000,10000+1,2000)
+    trials = xrange(8000, 10000 + 1, 2000)
     Sun_Results = [[] for i in trials]
 
     for n in trials:
-
-        #Define Dimension and Domain
+        # Define Dimension and Domain
         Domain = Sun(Dim=n)
 
         # Set Method
-        Method = HeunEuler(Function=Domain.F,P=EntropicProjection(),History=0,Delta0=1e-1)
+        Method = HeunEuler(
+            Function=Domain.F,
+            P=EntropicProjection(),
+            History=0,
+            Delta0=1e-1)
 
         # Set Options
-        Init = Initialization(Step=-1e-1)
-        Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
-        Repo = Reporting(MaxData=1,Requests=[Domain.gap_simplex])
+        Init = Initialization(step=-1e-1)
+        Term = Termination(max_iter=1000, tols=[[Domain.gap_simplex, 1e-3]])
+        Repo = Reporting(MaxData=1, requests=[Domain.gap_simplex])
         Misc = Miscellaneous()
-        Options = DescentOptions(Init,Term,Repo,Misc)
-    
-        #Initialize Starting Point
-        Start = np.ones(Domain.Dim)/np.double(Domain.Dim)
+        Options = DescentOptions(Init, Term, Repo, Misc)
+
+        # Initialize Starting Point
+        Start = np.ones(Domain.Dim) / np.double(Domain.Dim)
 
         # Print Stats
-        PrintSimStats(Domain,Method,Options)
+        print_sim_stats(Domain, Method, Options)
 
         tic = time.time()
-        ind = n/2000-4
-        Sun_Results[ind] = Solve(Start,Method,Domain,Options)
+        ind = n / 2000 - 4
+        Sun_Results[ind] = solve(Start, Method, Domain, Options)
         toc = time.time() - tic
 
         # Print Results
-        PrintSimResults(Sun_Results[ind],Method,toc)
+        print_sim_results(Sun_Results[ind], Method, toc)
 
         # Zero Projections
         Method.Proj.NP = 0
 
+
 if __name__ == '__main__':
-  Demo()
-
-
-
-
-
-
-
+    demo()
