@@ -1,25 +1,39 @@
 import numpy as np
 
-from VISolver.Projection import *
-from VISolver.Utilities import *
-from VISolver.Solver.Solver import *
+from Projection import *
+from Utilities import *
+from Solver import Solver
 
-class DriftABE5(Solver):
+class DriftABE6(Solver):
 
     def __init__(self,Domain,P=IdentityProjection(),Delta0=1e-2,GrowthLimit=2,MinStep=-1e10,MaxStep=1e10):
+        
         self.R = [Domain.r,Domain.c]
+
         self.Proj = P
+
         self.StorageSize = 100
+
         self.TempStorage = {}
+
         self.Delta0 = Delta0
+
         self.GrowthLimit = GrowthLimit
+
         self.MinStep = MinStep
+
         self.MaxStep = MaxStep
+
         self.Mod = 2000 #(100)
+
         self.Agg = 1. #(10)
+
         self.Stall = 40
+
         self.agent_i = 0
+
         self.goodbad = [0,0]
+
         self.NE_L2Error = Domain.NE_L2Error
 
     def InitTempStorage(self,Start,Domain,Options):
@@ -85,8 +99,6 @@ class DriftABE5(Solver):
             
             dG_dxi = (dG_dyn-dG_stat)/dx_dyn
 
-            dPi_original = dPi.copy()
-
             # print('Current Policy:');
             # print('Player 1'); print(Pi[0])
             # print('Player 2'); print(Pi[1])
@@ -118,47 +130,40 @@ class DriftABE5(Solver):
                 self.goodbad[1] += 1
             # print(`Pi[self.agent_i]`+'\toriginal policy of agent_i'); print(`Pi_New[self.agent_i]`+'\tnew policy of agent_i'); print('-----------')
             # Record Projections
-
-            # Perform Euler Update on Policies and Project onto Simplex
-            Pi_1 = self.Proj.P(Pi[0],Eta,dPi_original[0]) # Player 1
-            Pi_2 = self.Proj.P(Pi[1],Eta,dPi_original[1]) # Player 2
-            Pi_New = np.array([Pi_1,Pi_2])
-
-
             TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
         else:
 
-            if (Record.thisPermIndex%2 == 0) or (Record.thisPermIndex%self.Mod == self.Stall+1):
+            # if (Record.thisPermIndex%2 == 0) or (Record.thisPermIndex%self.Mod == self.Stall+1):
 
-                # Perform Euler Update on Policies and Project onto Simplex
-                Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
-                Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
-                Pi_New = np.array([Pi_1,Pi_2])
+            # Perform Euler Update on Policies and Project onto Simplex
+            Pi_1 = self.Proj.P(Pi[0],Eta,dPi[0]) # Player 1
+            Pi_2 = self.Proj.P(Pi[1],Eta,dPi[1]) # Player 2
+            Pi_New = np.array([Pi_1,Pi_2])
 
-                # Record Projections
-                TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
+            # Record Projections
+            TempData['Projections'] = 1 + self.TempStorage['Projections'][-1]
 
-            else:
+            # else:
 
-                # Perform Adams Bashforth Update
-                dPis = Record.TempStorage['Policy Gradient (dPi)']
-                Pi_1 = self.Proj.P(Pi[0],Eta,-0.5*dPis[-2][0]+1.5*dPis[-1][0])
-                Pi_2 = self.Proj.P(Pi[1],Eta,-0.5*dPis[-2][1]+1.5*dPis[-1][1])
-                Pi_New = np.array([Pi_1,Pi_2])
+            #     # Perform Adams Bashforth Update
+            #     dPis = Record.TempStorage['Policy Gradient (dPi)']
+            #     Pi_1 = self.Proj.P(Pi[0],Eta,-0.5*dPis[-2][0]+1.5*dPis[-1][0])
+            #     Pi_2 = self.Proj.P(Pi[1],Eta,-0.5*dPis[-2][1]+1.5*dPis[-1][1])
+            #     Pi_New = np.array([Pi_1,Pi_2])
 
-                # Perform Euler Update
-                _Pi_1 = self.Proj.P(Pi[0],Eta,dPis[-1][0]) # Player 1
-                _Pi_2 = self.Proj.P(Pi[1],Eta,dPis[-1][1]) # Player 2
-                _Pi_New = np.array([_Pi_1,_Pi_2])
+            #     # Perform Euler Update
+            #     _Pi_1 = self.Proj.P(Pi[0],Eta,dPis[-1][0]) # Player 1
+            #     _Pi_2 = self.Proj.P(Pi[1],Eta,dPis[-1][1]) # Player 2
+            #     _Pi_New = np.array([_Pi_1,_Pi_2])
 
-                # Adjust Stepsize
-                Delta = np.max(abs(Pi_New-_Pi_New));
-                if Delta == 0.: Eta = max(min(Eta*2.,self.MaxStep),self.MinStep)
-                else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+            #     # Adjust Stepsize
+            #     Delta = np.max(abs(Pi_New-_Pi_New));
+            #     if Delta == 0.: Eta = max(min(Eta*2.,self.MaxStep),self.MinStep)
+            #     else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
 
-                # Record Projections
-                TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
+            #     # Record Projections
+            #     TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
         # print('Policy'); print(Pi_New[0]); print(Pi_New[1])
         # Play Game
         # Select Actions According to Policies

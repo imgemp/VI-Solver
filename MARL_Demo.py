@@ -2,15 +2,33 @@ import time
 
 # from Domains.DummyMARL import *
 # from Domains.DummyMARL2 import *
-from VISolver.Domains.MatchingPennies import *
 # from VISolver.Domains.Tricky import *
 
-from Solvers.IGA.WoLFIGA import *
 from Solvers.MySolver import *
 
 from VISolver.Solvers.Solver import solve
-from Options import *
 from Log import *
+from Domains.MatchingPennies import MatchingPennies
+
+# from Solvers.Euler import *
+# from Solvers.Extragradient import *
+# from Solvers.AcceleratedGradient import *
+# from Solvers.HeunEuler import *
+# from Solvers.AdamsBashforthEuler import *
+# from Solvers.CashKarp import *
+# from Solvers.GABE import *
+# from Solvers.Drift import *
+# from Solvers.DriftABE import *
+# from Solvers.DriftABE_Exact import *
+# from Solvers.DriftABE_BothExact import *
+# from Solvers.DriftABE_VIteration import *
+# from Solvers.DriftABE2 import *
+# from Solvers.DriftABE3 import *
+# from Solvers.DriftABE4 import *
+
+from Options import (
+    DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
+from VISolver.Log import print_sim_results
 
 import matplotlib.pyplot as plt
 
