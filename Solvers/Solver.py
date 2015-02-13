@@ -1,4 +1,4 @@
-from VISolver.Storage import *
+from Storage import *
 
 
 class Solver(object):

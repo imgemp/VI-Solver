@@ -5,7 +5,7 @@ class Storage:
 
     def __init__(self, start, domain, method, options):
         self.this_temp_index = 0
-        self.max_temp_index = method.StorageSize
+        self.max_temp_index = method.storage_size
         self.this_perm_index = 0
 
         self.temp_storage = method.init_temp_storage(start, domain, options)

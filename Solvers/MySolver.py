@@ -1,8 +1,9 @@
 __author__ = 'clemens'
 
-from VISolver.Projection import *
+from Projection import *
 from Solver import Solver
-from VISolver.Utilities import *
+from Utilities import *
+import numpy as np
 
 
 class MySolver(Solver):
