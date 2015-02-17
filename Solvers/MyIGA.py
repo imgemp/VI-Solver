@@ -1,5 +1,6 @@
 __author__ = 'clemens'
 
+import numpy as np
 from Projection import *
 from Solvers.Solver import Solver
 from Utilities import *
@@ -25,7 +26,9 @@ class MyIGA(Solver):
         self.temp_storage['Policy Learning Rate'] = self.storage_size * [[options.init.step], [options.init.step]]
         self.temp_storage['Projections'] = self.storage_size * [0]
         self.temp_storage['Reward'] = np.zeros((self.storage_size, 2)).tolist()
+        self.temp_storage['Value Variance'] = np.zeros((self.storage_size, 2)).tolist()
         self.temp_storage['Action'] = np.zeros((self.storage_size, 2)).tolist()
+        self.temp_storage['Policy Variance'] = np.zeros((self.storage_size, 2)).tolist()
 
         return self.temp_storage
 
@@ -39,6 +42,10 @@ class MyIGA(Solver):
         tmp_rew = self.temp_storage['Reward']
         tmp_val = self.temp_storage['Value Function']
         tmp_act = self.temp_storage['Action']
+        tmp_var = self.temp_storage['Value Variance']
+        tmp_pol_var = self.temp_storage['Policy Variance']
+
+
 
         # Initialize Storage
         temp_data = {}
@@ -54,10 +61,22 @@ class MyIGA(Solver):
 
         # compute the value of the current strategy
         # value = self.domain.compute_value_function(policy) # the analytical solution
-        value = np.mean(record.temp_storage['Reward'], axis=0)
+        value = np.mean(record.temp_storage['Reward'][-10:], axis=0)
 
         # computing the variance of the value function
-        # val_var = np.var(np.vstack((record.temp_storage['Value Function'], value[None])))
+        # val_var = np.var(np.vstack((record.temp_storage['Value Function'][-10:], value[None])))
+        val_var = (np.vstack((record.temp_storage['Value Function'][-10:], value[None])))
+        val_var = np.var(np.multiply(val_var, .5*(np.array(tmp_rew[-11:])+1)), axis=0)
+        # computing the variance of the policy function
+        pol = np.array([])
+        pol_var = np.var(np.vstack((record.temp_storage['Value Function'][-10:], np.array(policy)[:, 0][None])), axis=0)
+
+        # is the variance increasing?
+        var_inc = [False, False]
+        for i in range(2):
+            # if val_var[i] > np.mean(np.array(tmp_var), axis=0)[i]:
+            if val_var[i] > tmp_var[-1][i]:
+                var_inc[i] = True
 
         # compute the average reward expected this far
         exp_reward = np.mean(record.perm_storage['Value Function'][-5000:], axis=0)
@@ -65,7 +84,12 @@ class MyIGA(Solver):
         # decide on the learning rate
         learning_rate = [0, 0]
         for i in range(2):
-            learning_rate[i] = learn_min if value[i] > exp_reward[i] else learn_max
+            # learning_rate[i] = learn_min if value[i] > exp_reward[i] and var_inc[i] else learn_max
+            # learning_rate[i] = np.mean(np.array(tmp_var), axis=0)[i]/val_var[i]*learn_min \
+            #     if val_var[i]>1e-4 and val_var[i]<1e3 and value[i]>exp_reward[i] else learn_min
+            learning_rate[i] = np.mean(np.array(tmp_pol_var), axis=0)[i]/pol_var[i]*learn_min \
+                if pol_var[i]>1e-4 and pol_var[i]<1e3 and value[i]>exp_reward[i] else learn_min
+        # print learning_rate
 
         # compute the estimate for the opponent's policy
         policy_estimate = np.array([[0., 0.], [0., 0.]])
@@ -91,6 +115,8 @@ class MyIGA(Solver):
         temp_data['Policy Learning Rate'] = learning_rate
         temp_data['Reward'] = reward
         temp_data['Action'] = action
+        temp_data['Value Variance'] = val_var
+        temp_data['Policy Variance'] = pol_var
         self.book_keeping(temp_data)
 
         return self.temp_storage
