@@ -1,5 +1,4 @@
 import numpy as np
-
 from Utilities import *
 
 
@@ -13,47 +12,55 @@ class Projection:
 
 
 class IdentityProjection(Projection):
-
     def p(self, data, step, direc):
         return data + step * direc
 
 
 class BoxProjection(Projection):
-
-    def __init__(self, low=0., high=1.):
+    def __init__(self, low=0., high=1., simplex=True):
         self.low = low
         self.high = high
+        self.lies_on_simplex = simplex
 
     def p(self, data, step, direc):
+        if self.lies_on_simplex:
+            ret_val = np.minimum(np.maximum(self.low, data + step * direc), self.high)
+            return ret_val/sum(ret_val)
         return np.minimum(np.maximum(self.low, data + step * direc), self.high)
 
 
 class LinearProjection(Projection):
-    def __init__(self, low=0., high=1.):
+    def __init__(self, low=0., high=1., simplex=True, alternative_projection=BoxProjection):
         self.low = low
         self.high = high
+        self.alt_proj = alternative_projection(low, high)
+        self.lies_on_simplex = simplex
 
     def p(self, data, step, direc):
         # compute the projection values:
-        projected = data + (step*direc)
+        projected = data + (np.multiply(step, [direc, -1*direc]))
         # do they lie outside of the allowed box?
         projector = np.array([1., 1.])
         if np.max(projected) > self.high and np.max(projected) != 0.0:
             projector[1] = self.high/np.max(projected)
-        if np.min(projected) < self.low and np.min(projected) != 0.0:
-            projector[0] = self.low/np.min(projected)
-        print projected * np.min(projector)
-        return projected * np.min(projector)
+        if np.min(projected) < self.low:
+            if np.min(projected) != 0.0 and self.low != 0.:
+                projector[0] = self.low/np.min(projected)
+            else:
+                return self.alt_proj.p(data, step, direc)
+        factor = np.min(projector) if abs(np.min(projector)) > 1e-5 else np.max(projector)
+        if self.lies_on_simplex:
+            ret_val = np.multiply(projected, factor)
+            return ret_val/sum(ret_val)
+        return np.multiply(projected, factor)
 
 
 class RPlusProjection(Projection):
-
     def p(self, data, step, direc):
         return np.maximum(0, data + step * direc)
 
 
 class EntropicProjection(Projection):
-
     def p(self, data, step, direc):
         projected_data = data * np.exp(machine_limit_exp(step, direc) * direc)
         return projected_data / np.sum(projected_data)

@@ -147,7 +147,7 @@ class DriftABE_VIteration(Solver):
             #     Delta = np.max(abs(Pi_New-_Pi_New))
             #     if Delta == 0.: Eta = 2.*Eta
             # else: Eta =
-            # max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+            # max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.max_step),self.min_step)
 
             #     # Record Projections
             #     TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]

@@ -8,6 +8,7 @@ class MatchingPennies(Domain):
     The matching pennies domain (http://en.wikipedia.org/wiki/Matching_pennies)
     """
     def __init__(self):
+        self.players = 2
         self.dim = 2
         self.r_reward = np.array([[1., -1.], [-1., 1.]])
         self.c_reward = np.array([[-1., 1.], [1., -1.]])

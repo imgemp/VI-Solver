@@ -159,8 +159,8 @@ class DriftABE6(Solver):
 
             #     # Adjust Stepsize
             #     Delta = np.max(abs(Pi_New-_Pi_New));
-            #     if Delta == 0.: Eta = max(min(Eta*2.,self.MaxStep),self.MinStep)
-            #     else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.MaxStep),self.MinStep)
+            #     if Delta == 0.: Eta = max(min(Eta*2.,self.max_step),self.min_step)
+            #     else: Eta = max(min(Eta*min((self.Delta0/Delta)**0.5,self.GrowthLimit),self.max_step),self.min_step)
 
             #     # Record Projections
             #     TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
