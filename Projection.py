@@ -48,11 +48,11 @@ class LinearProjection(Projection):
                 projector[0] = self.low/np.min(projected)
             else:
                 return self.alt_proj.p(data, step, direc)
-        factor = np.min(projector) if abs(np.min(projector)) > 1e-5 else np.max(projector)
+        factor = np.min(projector) if abs(np.min(projector)) != 0 else np.max(projector)
+        ret_val = np.multiply(projected, factor)
         if self.lies_on_simplex:
-            ret_val = np.multiply(projected, factor)
-            return ret_val/sum(ret_val)
-        return np.multiply(projected, factor)
+            ret_val /= sum(ret_val)
+        return ret_val
 
 
 class RPlusProjection(Projection):
