@@ -1,4 +1,6 @@
+from __future__ import division
 __author__ = 'clemens'
+
 
 import numpy as np
 from Projection import *
@@ -6,7 +8,7 @@ from Solvers.Solver import Solver
 from Utilities import *
 from Options import Reporting
 import config
-from pykalman import KalmanFilter as kf
+# from pykalman import KalmanFilter as kf
 
 
 class MultiAgentVI(Solver):
@@ -22,6 +24,7 @@ class MultiAgentVI(Solver):
                  learning_rate_t=.0001,
                  learning_rate_e=.0001,
                  discount_factor=.95,
+                 discount_range_percentage=13,
                  value_approx_steps=50):
 
         self.reward = [domain.r_reward, domain.c_reward]
@@ -38,7 +41,9 @@ class MultiAgentVI(Solver):
         self.lr_t = learning_rate_t
         self.lr_e = learning_rate_e
         self.discounting = discount_factor
+        self.disc_range = discount_range_percentage
         self.value_approx_no = value_approx_steps
+        self.disc_increase_vector = self.compute_increase_vector()
         self.value_approx_range = np.array([1./(value_approx_steps-1)*i for i in range(value_approx_steps)])
 
     def init_temp_storage(self, start, domain, options):
@@ -69,6 +74,31 @@ class MultiAgentVI(Solver):
                                    'True Value Function',
                                    # 'Policy Estimates',
                                    ])
+
+    def compute_increase_vector(self):
+        dr_len = int(self.disc_range / 100. * self.value_approx_no)
+        dr = dr_len if (dr_len % 2) == 1 else dr_len + 1
+        vec = np.zeros((dr, ))
+        middle = int((dr-1)/2)
+        vec[middle] = self.discounting
+        for i in range(1, middle+1, 1):
+            vec[middle + i] = self.discounting * (.45 ** i)
+            vec[middle - i] = self.discounting * (.45 ** i)
+        print 'vec: ', vec
+        return vec
+
+    def add_value_vector(self, value, index):
+        middle = int((len(self.disc_increase_vector) - 1)/2)
+        val_ret = np.array(value)
+        min_val_index = max(0, index - middle)
+        max_val_index = min(len(value)-1, index + middle)
+        min_add_index = -1 * min(0, index - middle)
+        max_add_index = -1 * max(len(self.disc_increase_vector)-1, index + middle)
+        print "indices:", index, middle, min_val_index, max_val_index
+        print val_ret[min_val_index: max_val_index], self.disc_increase_vector
+        val_ret[min_val_index: max_val_index] += self.disc_increase_vector
+        print val_ret
+        return val_ret
 
     def compute_value_function(self, reward_history, window_size):
         return np.mean(reward_history[-1*window_size:])
@@ -107,6 +137,7 @@ class MultiAgentVI(Solver):
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # select the policy greedily from each policy's value function
         value_function = np.array(self.temp_storage['Value Function'][-1])
+        # print 'value funtction:\n', value_function
         index_played = [0, 0]
         # start by playing the game:
         for player in range(self.domain.players):
@@ -140,7 +171,9 @@ class MultiAgentVI(Solver):
             if update:
                 # decide on the strategy:
                 # do we have enough data? Are we winning?
-                value_function[self.compute_value_index(updated_policy[player][0])] += .1*reward[player]
+                value_function[player][:, 1] = self.add_value_vector(value_function[player][:, 1],
+                                                                     self.compute_value_index(updated_policy[player][0]))
+                # print value_function[self.compute_value_index(updated_policy[player][0])]
                 if config.debug_output_level:
                     print '-> player', player
                     print '   - temp policies last round:  %.2f' % tmp_pol[-1][player][0]
