@@ -268,26 +268,13 @@ class BloodBank(Domain):
                               x.shape)
 
     def dTotalDiscardingCostdx_dZhatxdx(
-            self,
-            x,
-            f_1C,
-            f_CB,
-            f_BP,
-            f_PS,
-            f_SD,
-            f_DR):
+            self, x, f_1C, f_CB, f_BP, f_PS, f_SD, f_DR):
         dz_1C = 2. * self.zhat_1C[self.ind_CBDR_C] * f_1C[self.ind_CBDR_C]
-        dz_CB = 2. * self.zhat_CB[self.ind_CBDR_C,
-                                  self.ind_CBDR_B] * f_CB[self.ind_CBDR_C,
-                                                          self.ind_CBDR_B]
+        dz_CB = 2. * self.zhat_CB[self.ind_CBDR_C, self.ind_CBDR_B] * f_CB[self.ind_CBDR_C, self.ind_CBDR_B]
         dz_BP = 2. * self.zhat_BP[self.ind_CBDR_B] * f_BP[self.ind_CBDR_B]
         dz_PS = 2. * self.zhat_PS[self.ind_CBDR_B] * f_PS[self.ind_CBDR_B]
-        dz_SD = 2. * self.zhat_SD[self.ind_CBDR_B,
-                                  self.ind_CBDR_D] * f_SD[self.ind_CBDR_B,
-                                                          self.ind_CBDR_D]
-        dz_DR = 2. * self.zhat_DR[self.ind_CBDR_D,
-                                  self.ind_CBDR_R] * f_DR[self.ind_CBDR_D,
-                                                          self.ind_CBDR_R]
+        dz_SD = 2. * self.zhat_SD[self.ind_CBDR_B, self.ind_CBDR_D] * f_SD[self.ind_CBDR_B, self.ind_CBDR_D]
+        dz_DR = 2. * self.zhat_DR[self.ind_CBDR_D, self.ind_CBDR_R] * f_DR[self.ind_CBDR_D, self.ind_CBDR_R]
 
         return np.reshape(dz_1C +
                           dz_CB * self.alpha_CBf +

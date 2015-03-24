@@ -1,4 +1,4 @@
 __author__ = 'clemens'
 
-show_debug_output = False
+debug_output_level = 0
 show_plots = False

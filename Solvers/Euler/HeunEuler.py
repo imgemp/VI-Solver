@@ -1,8 +1,8 @@
 import numpy as np
 
-from Projection import IdentityProjection
-from Utilities import *
-from Solver import Solver
+from VISolver.Projection import IdentityProjection
+from VISolver.Utilities import *
+from VISolver.Solvers.Solver import Solver
 
 
 class HeunEuler(Solver):

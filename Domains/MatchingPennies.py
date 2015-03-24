@@ -9,6 +9,7 @@ class MatchingPennies(Domain):
     """
     def __init__(self):
         self.players = 2
+        self.reward_range = [-1, 1]
         self.dim = 2
         self.r_reward = np.array([[1., -1.], [-1., 1.]])
         self.c_reward = np.array([[-1., 1.], [1., -1.]])
@@ -21,7 +22,8 @@ class MatchingPennies(Domain):
             [[2. * self.uprime ** 2., 0], [0, 2. * self.u ** 2.]])
         self.b_curl = np.array([-2. * self.uprime * (self.c_reward[1, 1] - self.c_reward[1, 0]),
                                 -2. * self.u * (self.r_reward[1, 1] - self.r_reward[0, 1])])
-        self.NE = np.array([.5, .5])  # 1 mixed NE
+        self.NE = np.array([[.5, .5],
+                            [.5, .5]])  # 1 mixed NE
 
     def u(self):
         return (self.r_reward[0, 0] + self.r_reward[1, 1]) - (self.r_reward[1, 0] + self.r_reward[0, 1])
@@ -63,7 +65,13 @@ class MatchingPennies(Domain):
     @staticmethod
     def action(policy):
         ind = np.random.rand()
-        if ind <= policy[0]:
-            return 0
-        else:
-            return 1
+        try:
+            if ind <= policy[0]:
+                return 0
+            else:
+                return 1
+        except ValueError:
+            if ind <= policy[0][0]:
+                return 0
+            else:
+                return 1

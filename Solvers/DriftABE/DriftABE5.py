@@ -20,7 +20,7 @@ class DriftABE5(Solver):
         self.Stall = 40
         self.agent_i = 0
         self.goodbad = [0,0]
-        self.NE_L2Error = Domain.NE_L2Error
+        self.NE_L2Error = Domain.ne_l2error
 
     def InitTempStorage(self,Start,Domain,Options):
 

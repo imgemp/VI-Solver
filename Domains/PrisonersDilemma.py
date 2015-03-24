@@ -3,14 +3,14 @@ import numpy as np
 from VISolver.Domains.Domain import Domain
 
 
-class Tricky(Domain):
+class PrisonersDilemma(Domain):
 
     def __init__(self):
         self.players = 2
         self.reward_range = [0, 3]
         self.Dim = 2
-        self.r_reward = np.array([[0., 3.], [1., 2.]])
-        self.c_reward = np.array([[3., 2.], [0., 1.]])
+        self.r_reward = np.array([[2., -1.], [3., 0.]])
+        self.c_reward = np.array([[2., 3.], [-1., 0.]])
         self.u = self.u()
         self.uprime = self.uprime()
         self.A = np.array([[0., self.u], [self.uprime, 0.]])
@@ -20,7 +20,7 @@ class Tricky(Domain):
             [[2. * self.uprime ** 2., 0], [0, 2. * self.u ** 2.]])
         self.b_curl = np.array([-2. * self.uprime * (self.c_reward[1, 1] - self.c_reward[1, 0]),
                                 -2. * self.u * (self.r_reward[1, 1] - self.r_reward[0, 1])])
-        self.NE = np.array([.5, .5])  # 1 mixed NE
+        self.NE = np.array([1., 1.])  # 1 mixed NE
 
     def u(self):
         return (self.r_reward[0, 0] + self.r_reward[1, 1]) - (self.r_reward[1, 0] + self.r_reward[0, 1])

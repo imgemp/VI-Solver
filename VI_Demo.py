@@ -4,7 +4,7 @@ from VISolver.Domains.Sphere import *
 from VISolver.Domains.Watson import *
 from VISolver.Domains.KojimaShindo import *
 from VISolver.Domains.Sun import *
-from VISolver.Solvers.HeunEuler import *
+from VISolver.Solvers.Euler.HeunEuler import *
 from VISolver.Solvers.Solver import solve
 from VISolver.Options import *
 from VISolver.Log import *

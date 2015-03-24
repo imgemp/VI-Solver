@@ -1,5 +1,6 @@
 import numpy as np
 from Utilities import *
+import config
 
 
 class Projection:
@@ -38,7 +39,11 @@ class LinearProjection(Projection):
 
     def p(self, data, step, direc):
         # compute the projection values:
-        projected = data + (np.multiply(step, [direc, -1*direc]))
+        if len(np.array(direc).shape) > 0:
+            d = direc
+        else:
+            d = [direc, -1*direc]
+        projected = data + (np.multiply(step, d))
         # do they lie outside of the allowed box?
         projector = np.array([1., 1.])
         if np.max(projected) > self.high and np.max(projected) != 0.0:
@@ -52,6 +57,12 @@ class LinearProjection(Projection):
         ret_val = np.multiply(projected, factor)
         if self.lies_on_simplex:
             ret_val /= sum(ret_val)
+        if config.debug_output_level >= 2:
+            print '    ~ The projection step:', \
+                  '\n       data: ', data, \
+                  '\n       step: ', step, \
+                  '\n       dire: ', direc, \
+                  '\n       res:  ', ret_val
         return ret_val
 
 

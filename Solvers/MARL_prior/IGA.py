@@ -21,7 +21,7 @@ class IGA(Solver):
         self.temp_storage['Policy Gradient (dPi)'] = self.StorageSize * [np.zeros(domain.b.shape)]
         self.temp_storage['Policy Learning Rate'] = self.StorageSize * [options.init.step]
         self.temp_storage['Projections'] = self.StorageSize * [0]
-        # self.temp_storage['Value'] = self.StorageSize * [0]
+        # self.temp_storage['Value'] = self.storage_size * [0]
 
         return self.temp_storage
 

@@ -1,7 +1,7 @@
 import time
 
 from Domains.Rosenbrock import *
-from Solvers.Extragradient import *
+from Solvers.Euler.Extragradient import *
 from Solvers.CashKarp import *
 from VISolver.Solvers.Solver import solve
 from Options import *

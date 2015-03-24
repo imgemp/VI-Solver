@@ -12,18 +12,18 @@ class WoLFIGA(Solver):
         self.domain = domain
         self.nash_eq_value = domain.compute_nash_eq_value()
         self.Proj = P
-        self.StorageSize = 3
+        self.storage_size = 3
         self.temp_storage = {}
         self.MinStep = min_step
         self.MaxStep = max_step
 
     def init_temp_storage(self, start, domain, options):
 
-        self.temp_storage['Policy'] = self.StorageSize * [start]
-        self.temp_storage['Value Function'] = self.StorageSize * [np.zeros(domain.r_reward.shape)]
-        self.temp_storage['Policy Gradient (dPi)'] = self.StorageSize * [np.zeros(domain.b.shape)]
-        self.temp_storage['Policy Learning Rate'] = self.StorageSize * [[options.init.step], [options.init.step]]
-        self.temp_storage['Projections'] = self.StorageSize * [0]
+        self.temp_storage['Policy'] = self.storage_size * [start]
+        self.temp_storage['Value Function'] = self.storage_size * [np.zeros(domain.r_reward.shape)]
+        self.temp_storage['Policy Gradient (dPi)'] = self.storage_size * [np.zeros(domain.b.shape)]
+        self.temp_storage['Policy Learning Rate'] = self.storage_size * [[options.init.step], [options.init.step]]
+        self.temp_storage['Projections'] = self.storage_size * [0]
 
         return self.temp_storage
 

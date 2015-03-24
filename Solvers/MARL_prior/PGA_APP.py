@@ -4,12 +4,12 @@ import numpy as np
 from Projection import *
 from Solvers.Solver import Solver
 from Utilities import *
-from Options import Reporting
 import config
-from pykalman import KalmanFilter as kf
+from Estimators import decaying_average_estimator
+from Options import Reporting
 
 
-class MyIGA(Solver):
+class PGA_APP(Solver):
     def __init__(self, domain,
                  P=IdentityProjection(),
                  delta0=1e-2,
@@ -18,7 +18,11 @@ class MyIGA(Solver):
                  max_step=1e-3,
                  averaging_window=10,
                  exploration_trials=50,
-                 averaging_meta_window=10):
+                 averaging_meta_window=5,
+                 learning_rate_t=.0001,
+                 learning_rate_e=.0001,
+                 discount_factor=.95,
+                 q_approx=50):
 
         self.reward = [domain.r_reward, domain.c_reward]
         self.domain = domain
@@ -31,11 +35,16 @@ class MyIGA(Solver):
         self.averaging_window = averaging_window
         self.exploration_trials = exploration_trials
         self.amw = averaging_meta_window
+        self.lr_t = learning_rate_t
+        self.lr_e = learning_rate_e
+        self.discounting = discount_factor
+        self.no_q_approx = q_approx
+        self.q_approx_range = np.array([1./(q_approx-1)*i for i in range(q_approx)])
 
     def init_temp_storage(self, start, domain, options):
         self.temp_storage['Action'] = np.zeros((self.storage_size, 2)).tolist()
-        self.temp_storage['Policy'] = self.storage_size * [start]
-        self.temp_storage['Policy Estimates'] = np.zeros((self.storage_size, 2)).tolist()
+        self.temp_storage['Policy'] = (np.ones((self.storage_size, 2, self.no_q_approx, 2))/2).tolist()
+        self.temp_storage['Last Policy'] = (np.ones((self.storage_size, 2, self.no_q_approx, 2))/2).tolist()
         self.temp_storage['Policy Learning Rate'] = (np.ones((self.storage_size, 2))*options.init.step).tolist()
         self.temp_storage['Policy Gradient (dPi)'] = self.storage_size * [np.zeros(domain.b.shape)]
         self.temp_storage['Policy Variance'] = np.zeros((self.storage_size, 2)).tolist()
@@ -43,6 +52,7 @@ class MyIGA(Solver):
         self.temp_storage['Reward'] = np.zeros((self.storage_size, 2)).tolist()
         self.temp_storage['Performance'] = np.zeros((self.storage_size, 2)).tolist()
         self.temp_storage['Value Function'] = np.zeros((self.storage_size, 2)).tolist()
+        self.temp_storage['Q Function'] = np.zeros((self.storage_size, 2, self.no_q_approx, 2)).tolist()
         self.temp_storage['True Value Function'] = np.zeros((self.storage_size, 2)).tolist()
         self.temp_storage['Am I winning?'] = np.zeros((self.storage_size, 2)).tolist()
         self.temp_storage['Value Variance'] = np.zeros((self.storage_size, 2)).tolist()
@@ -53,6 +63,7 @@ class MyIGA(Solver):
     def reporting_options(self):
         return Reporting(requests=[self.domain.ne_l2error,
                                    'Policy',
+                                   'Last Policy',
                                    'Policy Gradient (dPi)',
                                    'Policy Learning Rate',
                                    'Reward',
@@ -79,7 +90,7 @@ class MyIGA(Solver):
         val_index = [-1*i for i in range(self.averaging_window)]
         return (last_value-min_value)/range_value, \
                (mean_value-min_value)/range_value, \
-               last_value > (mean_value - np.mean(np.array(value_history)[val_index]))#)/range_value)
+               last_value > mean_value - np.mean(np.array(value_history)[val_index])#)/range_value)
 
     def am_i_at_a_fixpoint(self, variance_history, last_result):
         # deciding on the position in the range of the value history:
@@ -93,14 +104,8 @@ class MyIGA(Solver):
         range_value = range_value if abs(range_value) > 1e-2 else 1.
         return (last_value-min_value)/range_value, last_value > mean_value
 
-    def compute_value_function(self, reward_history, window_size=None):
-        if window_size is None:
-            window_size = self.averaging_window
-        # return np.mean(reward_history[-1*window_size:])
-        # version 2
-        rlen = len(reward_history)
-        weights = np.array([.9**(rlen-i) for i in range(rlen)])
-        return np.sum(np.multiply(np.array(reward_history), weights), axis=0) / np.sum(weights)
+    def compute_value_function(self, reward_history, window_size):
+        return np.mean(reward_history[-1*window_size:])
 
     def compute_last_update_index(self, averaging_window):
         return -1 * averaging_window
@@ -109,27 +114,48 @@ class MyIGA(Solver):
         indices_grad = np.array([-1*self.averaging_window*i for i in range(1, self.amw+1)], dtype='int')
         indices_val = np.array([-1*self.averaging_window*i-1 for i in range(self.amw)], dtype='int')
         val_diff = np.array(value_history)[indices_val] - np.array(value_history)[indices_val-1]
-        wlen = len(indices_grad)
-        weights = np.array([.9**(wlen-i) for i in range(wlen)])
-        direction = np.sum(np.multiply(np.multiply(np.array(policy_gradient_history)[indices_grad], val_diff), weights))
+        direction = np.sum(np.multiply(np.array(policy_gradient_history)[indices_grad], val_diff))
         return direction
 
-    def estimate_policy(self, action_history):
-        # version 1
-        # return np.mean(np.array(action_history)[-1*self.averaging_window:, :], axis=0)
-        # version 2
-        wlen = len(action_history)
-        weights = np.array([.9**(wlen-i) for i in range(wlen)])
-        weights = np.vstack((weights, weights)).T
-        return np.sum(np.multiply(np.array(action_history), weights), axis=0) / np.sum(weights[:, 0])
+    def decaying_reward_action_estimator(self, reward_history, action_history, averaging_window, window_reps, decaying_rate=.9):
+        """
+        This is the decaying average estimator. It computes a weighted average, where the weights are
+        decaying backwards.
+        :param reward_history:
+        :param averaging_window: the number of observations considered to be locally stable
+        :param window_reps: the number of observation windows considered to be relevant
+        :param decaying_rate: the rate at which the observations decay
+        :param action_history: another value history where the gradients on the observation-window gaps are considered
+        :return:
+        """
+        indices_grad = np.array([-1*averaging_window*i for i in range(1, window_reps+1)], dtype='int')
+        indices_val = np.array([-1*averaging_window*i-1 for i in range(window_reps)], dtype='int')
+        wlen = len(indices_grad)
+        # if the second parameter, i.e. the gradient-weight, is not specified
+        if action_history is None:
+            val_diff = np.ones((window_reps))
+        else:
+            val_diff = np.array(action_history)[indices_val] - np.array(action_history)[indices_val-1]
+        weights = np.array([decaying_rate**(wlen-i) for i in range(wlen)])
+        return np.sum(np.multiply(np.multiply(np.array(reward_history)[indices_grad], val_diff), weights))
+
+    def compute_q_index(self, value):
+        try:
+            print 'value', value
+            print 'qindex', (np.abs(self.q_approx_range-np.array(value)[:, 0])).argmin()
+            return (np.abs(self.q_approx_range-np.array(value)[:, 0])).argmin()
+        except TypeError:
+            return(np.abs(self.q_approx_range-value)).argmin()
 
     def update(self, record):
         # Retrieve Necessary Data
         policy = record.temp_storage['Policy'][-1]
+        last_policy = record.temp_storage['Last Policy'][-1]
         tmp_pol = self.temp_storage['Policy']
         tmp_pol_grad = self.temp_storage['Policy Gradient (dPi)']
         tmp_pol_lr = self.temp_storage['Policy Learning Rate']
         tmp_rew = self.temp_storage['Reward']
+        tmp_act = self.temp_storage['Action']
         tmp_val = self.temp_storage['Value Function']
         tmp_perf = self.temp_storage['Performance']
         # tmp_act = self.temp_storage['Action']
@@ -137,6 +163,8 @@ class MyIGA(Solver):
         tmp_pol_var = self.temp_storage['Policy Variance']
         tmp_winning = np.array(self.temp_storage['Am I winning?'])
         last_stable = self.temp_storage['Am I stable?'][-1]
+        q_values = self.temp_storage['Q Function'][-1]
+        # print q_values
 
         comp_val_hist = np.array(record.perm_storage['Value Function'])
 
@@ -144,13 +172,13 @@ class MyIGA(Solver):
         temp_data = {}
         learning_rate = np.zeros((2,)).tolist()
         # policy_gradient = np.ones((2,))
-        policy_gradient = np.zeros((2,))#np.ones((2,))*.1 if tmp_pol_grad[0].any() == 0 else tmp_pol_grad[-1]
+        policy_gradient = np.ones((2, 2))#np.ones((2,))*.1 if tmp_pol_grad[0].any() == 0 else tmp_pol_grad[-1]
         value = np.zeros((2,)).tolist()
         performance = np.zeros((2,)).tolist()
         action = [0, 0]
         reward = [0., 0.]
         mean_val = [0., 0.]
-        updated_policy = list(policy)
+        updated_policy = last_policy
         val_var = list(tmp_var[-1])
         pol_var = list(tmp_pol_var[-1])
         winning = [False, False]
@@ -160,87 +188,61 @@ class MyIGA(Solver):
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # start by playing the game:
+        print 'iteration', iteration
         for player in range(self.domain.players):
             # playing the game
-            action[player] = self.domain.action(policy[player])
+            print 'first call'
+            action[player] = self.domain.action(policy[player][self.compute_q_index(last_policy[player])])
 
         # compute the reward and the resulting value function:
         for player in range(self.domain.players):
+            policy_index = self.compute_q_index(policy[player])
+            print 'player', player
             # computing the reward
             reward[player] = self.reward[player][action[0]][action[1]]
             # compute the value of the current strategy
             value[player] = self.compute_value_function(np.hstack((np.array(tmp_rew)[:, player], [reward[player]])),
                                                         self.averaging_window)
             val_var[player] = (np.array(tmp_val)[-1*self.averaging_window:, player]).tolist() + [value[player]]
+            # updating the q-value
+            print 'second call'
+            old_q_value = q_values[player][policy_index][action[player]]
+            print 'third call'
+            q_value_succ = [q_values[player][policy_index][i] for i in range(2)]
+            new_q_value = (1 - self.lr_t) * old_q_value + \
+                          self.lr_t * (reward[player] + self.discounting * max(q_value_succ))
+            print 'fourth call'
+            q_values[player][policy_index][action[player]] = new_q_value
+            value = np.dot(q_values[player][policy_index], policy[player][policy_index])
+            print 'new q value', q_values[player][policy_index], policy[player][policy_index], value
+
         # value = self.domain.compute_value_function(policy)
         # print '-~-~-~-~-~-~ new iteration ~-~-~-~-~-~-~-~-~-~-~-~-'
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-        # update = iteration > self.exploration_trials and (iteration % self.averaging_window) == 0
-        # update = False
-        update = iteration > self.exploration_trials
-        if update and config.debug_output_level:
+        if config.debug_output_level >= 1:
             print '-~-~-~-~-~-~ new iteration (', iteration, ') ~-~-~-~-~-~-~-~-~-~-~-~-'
         # perform the update on the policies:
         for player in range(self.domain.players):
-            # TODO: only do updates every nth iteration?
-            # update = (len(record.perm_storage['Policy']) % 10) == 0
-            # update = iteration > self.exploration_trials and (iteration % self.averaging_window) == 0
-            if update:
-                # decide on the strategy:
-                # do we have enough data? Are we winning?
-                performance[player], \
-                mean_val[player], \
-                winning[player] = self.am_i_winning(np.hstack((comp_val_hist[:, player],
-                                                               value[player])),
-                                                    tmp_winning[:, player])
+            for act in range(2):
+                pass
+            if config.debug_output_level >= 1:
+                print '-> player', player
+                print '   - which update is performed?', policy_gradient[player][action[player]] < 0
+                print '   - temp policies last round:  %.4f' % tmp_pol[-1][player][0]
+                print '          - round before that:  %.4f' % tmp_pol[lavi][player][0]
+                print '   - temp value last round:     %.4f' % tmp_val[-1][player]
+                print '          - round before that:  %.4f' % tmp_val[lavi][player]
+                print '   - the winningness:           %.4f' % performance[player]
+                print '   - the learning rate:         %.4f' % learning_rate[player]
+                print '   - the policy gradient:       ', policy_gradient[player]
+                print '   - the resulting policy:      ', updated_policy[player][0]
+                print '   - the resulting polgrad:     ', (updated_policy[player]-tmp_pol[lavi][player])[0]
 
-                # computing the policy gradient and the learning rate
-                if not winning[player]:
-                    # play randomly
-                    # policy_gradient[player] = 2**(-1*self.compute_update_direction(np.array(tmp_pol_grad)[:, player],
-                    #                                                                np.array(tmp_val)[:, player]))
-                    policy_gradient[player] = 2**(-1*self.compute_update_direction(np.array(tmp_pol_grad)[:, player],
-                                                                                   np.array(tmp_val)[:, player]))
-                    learning_rate[player] = (-1 * mean_val[player] + performance[player]) + (np.random.random())
-
-                else:
-                    # play more sophisticated, for we are winning :-)
-                    # reinforce the direction if we are doing better than last time, flip it otherwise
-                    policy_gradient[player] = self.compute_update_direction(np.array(tmp_pol_grad)[:, player],
-                                                                            np.array(tmp_val)[:, player])
-
-                    # compute the learning rate
-                    # the idea is that we are already winning. So we do not want to make jumps, generally.
-                    # however, we want the least change if we are at an equilibrium - i.e. an area where a change in
-                    # policy will only result in a small change in the value function.
-                    relative_var, fixpoint[player] = self.am_i_at_a_fixpoint(val_var[player], last_stable[player])
-
-                    # update the learning rate based on the variance
-                    learning_rate[player] = 2 ** (-2. + 4. * relative_var) * .5 * (self.max_step - self.min_step)
-
-                # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-                # compute the new policy
-                updated_policy[player] = self.Proj.p(policy[player],
-                                                     learning_rate[player],
-                                                     policy_gradient[player])
-                if config.debug_output_level:
-                    print '-> player', player
-                    print '   - is this a random play?    ', not winning[player]
-                    print '   - temp policies last round:  %.2f' % tmp_pol[-1][player][0]
-                    print '          - round before that:  %.2f' % tmp_pol[lavi][player][0]
-                    print '   - temp value last round:     %.2f' % tmp_val[-1][player]
-                    print '          - round before that:  %.2f' % tmp_val[lavi][player]
-                    print '   - the winningness:           %.2f' % performance[player]
-                    print '   - the learning rate:         %.2f' % learning_rate[player]
-                    print '   - the policy gradient:       %.2f' % policy_gradient[player]
-                    print '   - the resulting policy:      %.2f' % updated_policy[player][0]
-                    print '   - the resulting polgrad:     %.2f' % (updated_policy[player]-tmp_pol[lavi][player])[0]
-
-        # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # Store Data
         temp_data['Policy'] = updated_policy
-        temp_data['Policy Estimates'] = self.estimate_policy(self.temp_storage['Action']).tolist()
+        temp_data['Last Policy'] = new_policy = updated_policy
+        print 'updated policy', updated_policy
         temp_data['Value Function'] = value
         temp_data['Performance'] = performance
         temp_data['True Value Function'] = self.domain.compute_value_function(updated_policy)
@@ -252,6 +254,7 @@ class MyIGA(Solver):
         temp_data['Policy Variance'] = pol_var
         temp_data['Am I stable?'] = fixpoint
         temp_data['Am I winning?'] = winning
+        temp_data['Q Function'] = q_values
         self.book_keeping(temp_data)
 
         return self.temp_storage
