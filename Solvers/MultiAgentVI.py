@@ -21,8 +21,8 @@ class MultiAgentVI(Solver):
                  averaging_window=10,
                  exploration_trials=50,
                  averaging_meta_window=10,
-                 learning_rate_t=.0001,
-                 learning_rate_e=.0001,
+                 learning_rate_t=.01,
+                 learning_rate_e=.001,
                  discount_factor=.95,
                  discount_range_percentage=13,
                  value_approx_steps=50):
@@ -56,10 +56,7 @@ class MultiAgentVI(Solver):
         self.temp_storage['Reward'] = np.zeros((self.storage_size, 2)).tolist()
         # self.temp_storage['Value Function'] = np.zeros((self.storage_size, 2,
         #                                                 self.value_approx_no, self.value_approx_no))
-        self.temp_storage['Value Function'] = np.zeros((self.storage_size, 2, self.value_approx_no, 2))
-        self.temp_storage['Value Function'][-1, 0, :, 0] = self.value_approx_range
-        self.temp_storage['Value Function'][-1, 1, :, 0] = self.value_approx_range
-        self.temp_storage['Value Function'] = self.temp_storage['Value Function'].tolist()
+        self.temp_storage['Value Function'] = np.zeros((self.storage_size, 2, self.value_approx_no)).tolist()
         self.temp_storage['True Value Function'] = np.zeros((self.storage_size, 2)).tolist()
 
         return self.temp_storage
@@ -80,25 +77,27 @@ class MultiAgentVI(Solver):
         dr = dr_len if (dr_len % 2) == 1 else dr_len + 1
         vec = np.zeros((dr, ))
         middle = int((dr-1)/2)
-        vec[middle] = self.discounting
-        for i in range(1, middle+1, 1):
-            vec[middle + i] = self.discounting * (.45 ** i)
-            vec[middle - i] = self.discounting * (.45 ** i)
+        for i in range(0, middle+1, 1):
+            vec[middle + i] = self.lr_t * (.45 ** i)
+            vec[middle - i] = self.lr_t * (.45 ** i)
         print 'vec: ', vec
         return vec
 
-    def add_value_vector(self, value, index):
+    def add_value_vector(self, value, reward, action, policy, index, current_value):
         middle = int((len(self.disc_increase_vector) - 1)/2)
         val_ret = np.array(value)
-        min_val_index = max(0, index - middle)
+        min_val_index = max(0, index - middle - 1)
         max_val_index = min(len(value)-1, index + middle)
-        min_add_index = -1 * min(0, index - middle)
-        max_add_index = -1 * max(len(self.disc_increase_vector)-1, index + middle)
-        print "indices:", index, middle, min_val_index, max_val_index
-        print val_ret[min_val_index: max_val_index], self.disc_increase_vector
-        val_ret[min_val_index: max_val_index] += self.disc_increase_vector
-        print val_ret
-        return val_ret
+        min_add_index = -1 * min(0, index - middle - 1)
+        max_add_index = min(len(self.disc_increase_vector), self.value_approx_no - index + middle)
+        val_ret[min_val_index:max_val_index] *= self.discounting
+        if current_value > .5:
+            policy_factor = 1 - policy[action]
+        else:
+            policy_factor = policy[action]
+        val_ret[min_val_index:max_val_index] += reward * (policy_factor + self.lr_e) * \
+                                                self.disc_increase_vector[min_add_index:max_add_index]
+        return val_ret #/ np.abs(val_ret).max()
 
     def compute_value_function(self, reward_history, window_size):
         return np.mean(reward_history[-1*window_size:])
@@ -111,7 +110,7 @@ class MultiAgentVI(Solver):
 
     def update(self, record):
         # Retrieve Necessary Data
-        policy = record.temp_storage['Policy'][-1]
+        policy = np.array(record.temp_storage['Policy'][-1])
         tmp_pol = self.temp_storage['Policy']
         tmp_pol_grad = self.temp_storage['Policy Gradient (dPi)']
         tmp_pol_lr = self.temp_storage['Policy Learning Rate']
@@ -137,25 +136,31 @@ class MultiAgentVI(Solver):
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # select the policy greedily from each policy's value function
         value_function = np.array(self.temp_storage['Value Function'][-1])
+        print 'vas', value_function[0]
+        print 'vas', value_function[1]
         # print 'value funtction:\n', value_function
         index_played = [0, 0]
         # start by playing the game:
         for player in range(self.domain.players):
             # playing the game
             # select the best policy greedily
-            index_played[player] = value_function[player, :, 1].argmax()
-            updated_policy[player][0] = value_function[player, index_played[player], 0]
+            index_played[player] = value_function[player].argmax()
+            updated_policy[player][0] = self.value_approx_range[index_played[player]]
             updated_policy[player][1] = 1-updated_policy[player][0]
             # play according to that policy
             action[player] = self.domain.action(updated_policy[player])
-
         # compute the reward and the resulting value function:
         for player in range(self.domain.players):
             # computing the reward
             reward[player] = self.reward[player][action[0]][action[1]]
             # compute the value of the current strategy
-            value[player] = self.compute_value_function(np.hstack((np.array(tmp_rew)[:, player], [reward[player]])),
-                                                        self.averaging_window)
+            # value[player] = self.compute_value_function(np.hstack((np.array(tmp_rew)[:, player], [reward[player]])),
+            #                                             self.averaging_window)
+
+        print 'indexp', index_played[1]
+        print 'reward', reward[1]
+        print 'policy', updated_policy[1]
+        print 'value ', value_function[1][index_played[1]]
         # value = self.domain.compute_value_function(policy)
         # print '-~-~-~-~-~-~ new iteration ~-~-~-~-~-~-~-~-~-~-~-~-'
 
@@ -171,8 +176,12 @@ class MultiAgentVI(Solver):
             if update:
                 # decide on the strategy:
                 # do we have enough data? Are we winning?
-                value_function[player][:, 1] = self.add_value_vector(value_function[player][:, 1],
-                                                                     self.compute_value_index(updated_policy[player][0]))
+                value_function[player] = self.add_value_vector(value_function[player],
+                                                               reward[player],
+                                                               action[player],
+                                                               policy[player],
+                                                               index_played[player],
+                                                               self.domain.compute_value_function(updated_policy)[player])
                 # print value_function[self.compute_value_index(updated_policy[player][0])]
                 if config.debug_output_level:
                     print '-> player', player
@@ -182,7 +191,8 @@ class MultiAgentVI(Solver):
                     print '   - the policy gradient:       %.2f' % policy_gradient[player]
                     print '   - the resulting policy:      %.2f' % updated_policy[player][0]
 
-        # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
+        print 'value ', value_function[1][index_played[1]]
+# -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # Store Data
         temp_data['Policy'] = updated_policy
         # temp_data['Policy Estimates'] = self.estimate_policy(self.temp_storage['Action']).tolist()
