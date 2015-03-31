@@ -195,7 +195,7 @@ class WPL(Solver):
             #                                                                       self.averaging_window,
             #                                                                       self.amw,
             #                                                                       decaying_rate=1.)
-            learning_rate[player] = 0.003
+            learning_rate[player] = 0.03
             # computing the policy gradient and the learning rate
             if policy_gradient[player][action[player]] < 0:
                 policy_gradient[player][action[player]] *= policy[player][action[player]]
@@ -223,6 +223,7 @@ class WPL(Solver):
                 print '   - the resulting polgrad:     ', (updated_policy[player]-tmp_pol[lavi][player])[0]
 
         # Store Data
+        # updated_policy[0] = [0., 1.]
         temp_data['Policy'] = updated_policy
         temp_data['Value Function'] = value
         temp_data['Performance'] = performance

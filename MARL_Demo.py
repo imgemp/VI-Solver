@@ -6,7 +6,10 @@ from optparse import OptionParser
 
 from VISolver.Solvers.Solver import solve
 from Domains.MatchingPennies import MatchingPennies
+from Domains.Tricky import Tricky
 from Domains.PrisonersDilemma import PrisonersDilemma
+from Domains.BattleOfTheSexes import BattleOfTheSexes
+
 from Domains.BloodBank import BloodBank, CreateRandomNetwork
 
 from Solvers.MARL_prior.WPL import *
@@ -19,24 +22,7 @@ from Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import print_sim_results
 
-import matplotlib.pyplot as plt
-
-
-def smooth_1d_sequence(sequence, sigma=15):
-    # smoothing functions for more readable plotting
-    from scipy.ndimage import gaussian_filter1d
-    sequence = np.array(sequence)
-    assert len(sequence.shape) <= 2, 'Cannot interpret an array with more than 2 dimensions as a tuple of 1d sequences.'
-    # asserting that the data is in the rows and that the array has a second dimension (for the for loop)
-    if max(sequence.shape) > min(sequence.shape):
-        if sequence.shape[1] > sequence.shape[0]:
-            sequence = sequence.T
-    else:
-        sequence = sequence[None]
-    for i in range(sequence.shape[1]):
-        val_interpol = np.interp(range(sequence.shape[0]), range(sequence.shape[0]), sequence[:, i])
-        sequence[:, i] = gaussian_filter1d(val_interpol, sigma)
-    return sequence
+from Helpers import *
 
 
 def demo():
@@ -53,7 +39,7 @@ def demo():
 
     # Set Method
     # box = np.array(Domain.reward_range)
-    box = np.array([0, 1])
+    box = np.array([-1, 1])
     epsilon = np.array([-0.01, 0.01])
 
     # method = IGA(Domain, P=BoxProjection())
@@ -78,7 +64,7 @@ def demo():
     # Set Options
     initialization_conditions = Initialization(step=1e-4)
     # init = Initialization(Step=-0.1)
-    terminal_conditions = Termination(max_iter=300, tols=[(Domain.ne_l2error, 1e-3)])
+    terminal_conditions = Termination(max_iter=500, tols=[(Domain.ne_l2error, 1e-3)])
     reporting_options = method.reporting_options()
     whatever_this_does = Miscellaneous()
     options = DescentOptions(initialization_conditions, terminal_conditions, reporting_options, whatever_this_does)
@@ -89,7 +75,7 @@ def demo():
     # Start Solver
     tic = time.time()
     # set random seed
-    np.random.seed(0)
+    # np.random.seed(0)
     marl_results = solve(start_strategies, method, Domain, options)
     toc = time.time() - tic
 
@@ -99,8 +85,8 @@ def demo():
     # creating plots, if desired:
     if config.show_plots:
         policy = np.array(marl_results.perm_storage['Policy'])[:, :, 0]  # Just take probabilities for first action
-        # policy_est = np.array(marl_results.perm_storage['Policy Estimates'])  # Just take probabilities for first action
-        val_fun = np.array(marl_results.perm_storage['Value Function'])
+        # policy_est = np.array(marl_results.perm_storage['Policy Estimates'])
+        val_fun = np.array(marl_results.perm_storage['Value Function'])[-1]
         true_val_fun = np.array(marl_results.perm_storage['True Value Function'])
         # val_var = np.array(marl_results.perm_storage['Value Variance'])
         # pol_grad = np.array([[marl_results.perm_storage['Policy Gradient (dPi)'][i][0, 0],
@@ -108,26 +94,13 @@ def demo():
         #                      for i in range(1, len(marl_results.perm_storage['Policy Gradient (dPi)']))])
         pol_lr = np.array(marl_results.perm_storage['Policy Learning Rate'])
         # value_function_values = np.array(MARL_Results.perm_storage['Value Function'])[:, :, 0]
-        print('Percentage of games won:')
-        print np.mean(.5 + np.array(marl_results.perm_storage['Reward']), axis=0)
+        print('Ratio of games won:')
+        win_ratio = np.mean(.5 + .5*np.array(marl_results.perm_storage['Reward']), axis=0).round(2)
+        print 'Player 1:', win_ratio[0], 'Player 2:', win_ratio[1]
         print('Endpoint:')
         print(policy[-1])
-        # print('The policy gradient histrogram:')
-        # a, b = np.histogram(pol_grad)
-        # pol_grad_hist = [[a[i], b[i]] for i in range(len(a))]
-        # for i in range(len(pol_grad_hist)):
-        #     print '  ', pol_grad_hist[i][1], ': ', pol_grad_hist[i][0]
-        # print(np.histogram(pol_grad))
         print 'The value function'
-        for player in range(2):
-            print 'Player ', player
-            for val in val_fun[player]:
-                if val[1].all() != 0.:
-                    print val[0], ':', val[1]
-        fig, ax = plt.subplots(3, 2)
 
-        print true_val_fun
-        print val_fun
 
         # ax[0, 1].plot(policy[:, 0], policy[:, 1])
         # ax[0, 1].set_xlim(box + epsilon)
@@ -135,44 +108,13 @@ def demo():
         # ax[0, 1].set_title('The policy-policy space')
         # ax[0, 1].grid(True)
 
-        # ax[0, 1].plot(smooth_1d_sequence(performance))
-        # ax[0, 1].plot(performance)
-        # ax[0, 1].set_title('Performance')
-        # ax[0, 1].grid(True)
-
-        ax[1, 0].plot(true_val_fun)
-        ax[1, 0].set_title('True Value Function')
-        ax[1, 0].set_ylim(box)
-        ax[1, 0].grid(True)
-
-        # ax[2, 0].plot(smooth_1d_sequence(policy_est, 3))
-        # ax[2, 0].set_title('Policy Estimates')
-        # ax[2, 0].set_ylim(np.array([0., 1.]))
-        # ax[2, 0].grid(True)
-
-        ax[2, 0].plot(smooth_1d_sequence(policy, 2))
-        # ax[2, 0].plot(policy)
-        ax[2, 0].set_title('The policies')
-        ax[2, 0].set_ylim(np.array([0, 1]) + epsilon)
-        ax[2, 0].grid(True)
-
-        # ax[0, 0].plot(smooth_1d_sequence(val_fun, 10))
-        # ax[0, 0].plot(win_val)
-        # ax[0, 0].set_title('The (estimated) value function')
-        # ax[0, 0].set_ylim(box)
-        # ax[0, 0].set_title('Am I winning?')
-        # ax[0, 0].grid(True)
-
-        # ax[1, 1].plot(smooth_1d_sequence(pol_grad, 15))
-        # ax[1, 1].plot(pol_grad)
-        # ax[1, 1].set_title('The policy gradient')
-        # ax[1, 1].grid(True)
-
-        ax[2, 1].plot(smooth_1d_sequence(pol_lr))
-        # ax[2, 1].plot(pol_lr)
-        ax[2, 1].set_title('The learning rate')
-        ax[2, 1].grid(True)
-        plt.show()
+        printing_data = {}
+        printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
+        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth':-1}
+        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth':-1}
+        # printing_data['The policy gradient'] = {'values': pol_grad}
+        # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
+        plot_results(printing_data)
 
 
 if __name__ == '__main__':
