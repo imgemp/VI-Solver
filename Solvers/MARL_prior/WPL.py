@@ -6,7 +6,7 @@ from Solvers.Solver import Solver
 from Utilities import *
 import config
 from Options import Reporting
-from Estimators import decaying_average_estimator
+# from Estimators import decaying_average_estimator
 
 
 class WPL(Solver):
@@ -127,6 +127,13 @@ class WPL(Solver):
         weights = np.array([decaying_rate**(wlen-i) for i in range(wlen)])
         return np.sum(np.multiply(np.multiply(np.array(reward_history)[indices_grad], val_diff), weights))
 
+    def project_error(self, value, scaling_factor=None, exponent=1.33):
+        # return value
+        if scaling_factor is None:
+            scaling_factor = .3/np.sqrt(exponent)
+        # return np.sign(value)*(abs(value)//scaling_factor)**exponent
+        return np.sign(value) * (abs(value)//scaling_factor)**exponent
+
     def update(self, record):
         # Retrieve Necessary Data
         policy = record.temp_storage['Policy'][-1]
@@ -195,14 +202,15 @@ class WPL(Solver):
             #                                                                       self.averaging_window,
             #                                                                       self.amw,
             #                                                                       decaying_rate=1.)
-            learning_rate[player] = 0.003
+            # learning_rate[player] = 0.12
+            learning_rate[player] = 0.03
             # computing the policy gradient and the learning rate
             if policy_gradient[player][action[player]] < 0:
-                policy_gradient[player][action[player]] *= policy[player][action[player]]
+                policy_gradient[player][action[player]] *= self.project_error(policy[player][action[player]])
 
             else:
                 # play more sophisticated, for we are winning :-)
-                policy_gradient[player][action[player]] *= (1. - policy[player][action[player]])
+                policy_gradient[player][action[player]] *= self.project_error(1. - policy[player][action[player]])
 
             # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
             # compute the new policy
@@ -221,6 +229,8 @@ class WPL(Solver):
                 print '   - the policy gradient:       ', policy_gradient[player]
                 print '   - the resulting policy:      ', updated_policy[player][0]
                 print '   - the resulting polgrad:     ', (updated_policy[player]-tmp_pol[lavi][player])[0]
+
+        updated_policy[0] = [1., 0.]
 
         # Store Data
         temp_data['Policy'] = updated_policy
