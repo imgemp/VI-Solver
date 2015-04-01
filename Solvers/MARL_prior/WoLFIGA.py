@@ -3,6 +3,7 @@ __author__ = 'clemens'
 from VISolver.Projection import *
 from VISolver.Solvers.Solver import Solver
 from VISolver.Utilities import *
+from Options import Reporting
 
 
 class WoLFIGA(Solver):
@@ -26,6 +27,20 @@ class WoLFIGA(Solver):
         self.temp_storage['Projections'] = self.storage_size * [0]
 
         return self.temp_storage
+
+    def reporting_options(self):
+        return Reporting(requests=[self.domain.ne_l2error,
+                                   'Policy',
+                                   'Policy Gradient (dPi)',
+                                   'Policy Learning Rate',
+                                   'Reward',
+                                   'Value Function',
+                                   'True Value Function',
+                                   'Value Variance',
+                                   'Performance',
+                                   'Am I winning?',
+                                   # 'Policy Estimates',
+                                   ])
 
     def update(self, record):
         # Retrieve Necessary Data

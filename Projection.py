@@ -49,7 +49,7 @@ class LinearProjection(Projection):
         if np.max(projected) > self.high and np.max(projected) != 0.0:
             projector[1] = self.high/np.max(projected)
         if np.min(projected) < self.low:
-            if np.min(projected) != 0.0 and self.low != 0.:
+            if np.min(projected) != 0. and self.low != 0.:
                 projector[0] = self.low/np.min(projected)
             else:
                 return self.alt_proj.p(data, step, direc)

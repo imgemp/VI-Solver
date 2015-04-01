@@ -8,6 +8,7 @@ from VISolver.Solvers.Solver import solve
 from Domains.MatchingPennies import MatchingPennies
 from Domains.Tricky import Tricky
 from Domains.PrisonersDilemma import PrisonersDilemma
+from Domains.PureStrategyTest import PureStrategyTest
 from Domains.BattleOfTheSexes import BattleOfTheSexes
 
 from Domains.BloodBank import BloodBank, CreateRandomNetwork
@@ -29,17 +30,19 @@ def demo():
     # __DUMMY_MARL__##################################################
 
     # Define Domain
-    Domain = MatchingPennies()
+    # Domain = MatchingPennies()
+    # Domain = PureStrategyTest()
     # Domain = BattleOfTheSexes('traditional')
     # Domain = BattleOfTheSexes('new')
     # Domain = Tricky()
-    # Domain = PrisonersDilemma()
+    Domain = PrisonersDilemma()
     # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
     # Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
     # box = np.array(Domain.reward_range)
-    box = np.array([-1, 1])
+    box = np.array([np.vstack((Domain.r_reward, Domain.c_reward)).min(),
+                    np.vstack((Domain.r_reward, Domain.c_reward)).max()])
     epsilon = np.array([-0.01, 0.01])
 
     # method = IGA(Domain, P=BoxProjection())
@@ -47,11 +50,11 @@ def demo():
     # method = MySolver(Domain, P=BoxProjection())
     # method = MyIGA(Domain, P=BoxProjection())
     # method = MyIGA(Domain, P=LinearProjection())
-    # method = WPL(Domain, P=LinearProjection())
+    method = WPL(Domain, P=LinearProjection(low=.001))
     # method = WPL(Domain, P=BoxProjection(low=.001))
     # method = AWESOME(Domain, P=LinearProjection())
     # method = PGA_APP(Domain, P=LinearProjection())
-    method = MultiAgentVI(Domain, P=LinearProjection)
+    # method = MultiAgentVI(Domain, P=LinearProjection)
 
     # Initialize Starting Point
     # Start = np.array([0,1])
@@ -89,17 +92,22 @@ def demo():
         val_fun = np.array(marl_results.perm_storage['Value Function'])[-1]
         true_val_fun = np.array(marl_results.perm_storage['True Value Function'])
         # val_var = np.array(marl_results.perm_storage['Value Variance'])
-        # pol_grad = np.array([[marl_results.perm_storage['Policy Gradient (dPi)'][i][0, 0],
-        #                       marl_results.perm_storage['Policy Gradient (dPi)'][i][1, 0]]
-        #                      for i in range(1, len(marl_results.perm_storage['Policy Gradient (dPi)']))])
+        pol_grad = np.array([[marl_results.perm_storage['Policy Gradient (dPi)'][i][0, 0],
+                              marl_results.perm_storage['Policy Gradient (dPi)'][i][1, 0]]
+                             for i in range(1, len(marl_results.perm_storage['Policy Gradient (dPi)']))])
         pol_lr = np.array(marl_results.perm_storage['Policy Learning Rate'])
+        reward = np.array(marl_results.perm_storage['Reward'])
+        action = np.array(marl_results.perm_storage['Action'])
         # value_function_values = np.array(MARL_Results.perm_storage['Value Function'])[:, :, 0]
         print('Ratio of games won:')
-        win_ratio = np.mean(.5 + .5*np.array(marl_results.perm_storage['Reward']), axis=0).round(2)
+        win_ratio = np.mean(.5 + .5*reward, axis=0).round(2)
         print 'Player 1:', win_ratio[0], 'Player 2:', win_ratio[1]
         print('Endpoint:')
         print(policy[-1])
-        print 'The value function'
+        pol_grad = np.vstack(([0., 0.], pol_grad))
+        print 'pol1, pol2, action1, action2, reward1, reward2, polgrad1, polgrad2'
+        # for i in np.hstack((np.round(policy, 2), action, reward, np.round(pol_grad, 2))):
+        #     print i
 
 
         # ax[0, 1].plot(policy[:, 0], policy[:, 1])
@@ -109,9 +117,9 @@ def demo():
         # ax[0, 1].grid(True)
 
         printing_data = {}
-        printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
-        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth':-1}
-        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth':-1}
+        # printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
+        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': -1}
+        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         # printing_data['The policy gradient'] = {'values': pol_grad}
         # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
         plot_results(printing_data)
