@@ -57,9 +57,7 @@ class WPL(Solver):
                                    'Reward',
                                    'Value Function',
                                    'True Value Function',
-                                   'Value Variance',
-                                   'Performance',
-                                   'Am I winning?',
+                                   'Action',
                                    # 'Policy Estimates',
                                    ])
 
@@ -127,12 +125,19 @@ class WPL(Solver):
         weights = np.array([decaying_rate**(wlen-i) for i in range(wlen)])
         return np.sum(np.multiply(np.multiply(np.array(reward_history)[indices_grad], val_diff), weights))
 
-    def project_error(self, value, scaling_factor=None, exponent=1.33):
+    def project_error(self, value, scaling_factor=None, exponent=3):
         # return value
         if scaling_factor is None:
-            scaling_factor = .3/np.sqrt(exponent)
-        # return np.sign(value)*(abs(value)//scaling_factor)**exponent
-        return np.sign(value) * (abs(value)//scaling_factor)**exponent
+            scaling_factor = 1.3
+            # if value <= 0:
+            #     scaling_factor = 1.
+            # else:
+            #     scaling_factor = 5.
+        # print 'projecting', value, 'to', scaling_factor * (value/.5)**exponent
+        return (scaling_factor * value)**exponent
+        # return np.sign(value) * (abs(value)//scaling_factor)**exponent
+        # print value
+        return np.sign(value) * (1 - np.cos(value * 3.14159))
 
     def update(self, record):
         # Retrieve Necessary Data
@@ -156,7 +161,7 @@ class WPL(Solver):
         temp_data = {}
         learning_rate = np.zeros((2,)).tolist()
         # policy_gradient = np.ones((2,))
-        policy_gradient = np.ones((2, 2))#np.ones((2,))*.1 if tmp_pol_grad[0].any() == 0 else tmp_pol_grad[-1]
+        policy_gradient = np.zeros((2, 2))#np.ones((2,))*.1 if tmp_pol_grad[0].any() == 0 else tmp_pol_grad[-1]
         value = np.zeros((2,)).tolist()
         performance = np.zeros((2,)).tolist()
         action = [0, 0]
@@ -195,7 +200,7 @@ class WPL(Solver):
             # TODO: only do updates every nth iteration?
             # update = iteration > self.exploration_trials and (iteration % self.averaging_window) == 0
             # decide on the strategy:
-            policy_gradient[player] = (reward[player] - tmp_val[-1][player])
+            policy_gradient[player][action[player]] = (reward[player] - tmp_val[-1][player])
             # policy_gradient[player] += .01*np.sign(policy_gradient[player]) if abs(policy_gradient[player]) < 1e-6 \
             #     else policy_gradient[player]
             # policy_gradient[player] = reward[player] - decaying_reward_action_estimator(np.array(tmp_rew)[:, player],
@@ -203,14 +208,20 @@ class WPL(Solver):
             #                                                                       self.amw,
             #                                                                       decaying_rate=1.)
             # learning_rate[player] = 0.12
-            learning_rate[player] = 0.03
+            learning_rate[player] = 0.01
             # computing the policy gradient and the learning rate
             if policy_gradient[player][action[player]] < 0:
-                policy_gradient[player][action[player]] *= self.project_error(policy[player][action[player]])
+                policy_gradient[player][action[player]] = self.project_error(policy_gradient[player][action[player]])
+                policy_gradient[player][action[player]] *= policy[player][action[player]]
+                # policy_gradient[player][action[player]] = self.project_error(policy[player][action[player]]*
+                #                                                              policy_gradient[player][action[player]])
 
             else:
                 # play more sophisticated, for we are winning :-)
-                policy_gradient[player][action[player]] *= self.project_error(1. - policy[player][action[player]])
+                policy_gradient[player][action[player]] = self.project_error(policy_gradient[player][action[player]])
+                policy_gradient[player][action[player]] *= 1. - policy[player][action[player]]
+                # policy_gradient[player][action[player]] = self.project_error((1. - policy[player][action[player]])*
+                #                                                              policy_gradient[player][action[player]])
 
             # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
             # compute the new policy
@@ -230,7 +241,7 @@ class WPL(Solver):
                 print '   - the resulting policy:      ', updated_policy[player][0]
                 print '   - the resulting polgrad:     ', (updated_policy[player]-tmp_pol[lavi][player])[0]
 
-        updated_policy[0] = [1., 0.]
+        # updated_policy[0] = [1., 0.]
 
         # Store Data
         temp_data['Policy'] = updated_policy
