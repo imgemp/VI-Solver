@@ -9,8 +9,8 @@ class PrisonersDilemma(Domain):
         self.players = 2
         self.reward_range = [0, 3]
         self.Dim = 2
-        self.r_reward = np.array([[2., -1.], [3., 0.]])
-        self.c_reward = np.array([[2., 3.], [-1., 0.]])
+        self.r_reward = np.array([[-1., -3.], [0., -2.]])
+        self.c_reward = np.array([[-1., 0.], [-3., -2.]])
         self.u = self.u()
         self.uprime = self.uprime()
         self.A = np.array([[0., self.u], [self.uprime, 0.]])

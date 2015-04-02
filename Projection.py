@@ -56,7 +56,7 @@ class LinearProjection(Projection):
         factor = np.min(projector) if abs(np.min(projector)) != 0 else np.max(projector)
         ret_val = np.multiply(projected, factor)
         if self.lies_on_simplex:
-            ret_val /= sum(ret_val)
+            ret_val /= sum(ret_val) + 0.00001
         if config.debug_output_level >= 2:
             print '    ~ The projection step:', \
                   '\n       data: ', data, \

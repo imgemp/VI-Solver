@@ -18,6 +18,7 @@ from Solvers.MARL_prior.WoLFIGA import *
 from Solvers.MARL_prior.AWESOME import *
 from Solvers.MARL_prior.PGA_APP import *
 from Solvers.MultiAgentVI import MultiAgentVI
+from Solvers.BoostedWPL import BoostedWPL
 
 from Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -30,12 +31,12 @@ def demo():
     # __DUMMY_MARL__##################################################
 
     # Define Domain
-    # Domain = MatchingPennies()
+    Domain = MatchingPennies()
     # Domain = PureStrategyTest()
     # Domain = BattleOfTheSexes('traditional')
     # Domain = BattleOfTheSexes('new')
     # Domain = Tricky()
-    Domain = PrisonersDilemma()
+    # Domain = PrisonersDilemma()
     # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
     # Domain = BloodBank(Network=Network,alpha=2)
 
@@ -50,11 +51,12 @@ def demo():
     # method = MySolver(Domain, P=BoxProjection())
     # method = MyIGA(Domain, P=BoxProjection())
     # method = MyIGA(Domain, P=LinearProjection())
-    method = WPL(Domain, P=LinearProjection(low=.001))
+    # method = WPL(Domain, P=LinearProjection(low=.001))
     # method = WPL(Domain, P=BoxProjection(low=.001))
     # method = AWESOME(Domain, P=LinearProjection())
     # method = PGA_APP(Domain, P=LinearProjection())
-    # method = MultiAgentVI(Domain, P=LinearProjection)
+    # method = MultiAgentVI(Domain, P=LinearProjection())
+    method = BoostedWPL(Domain, P=LinearProjection())
 
     # Initialize Starting Point
     # Start = np.array([0,1])

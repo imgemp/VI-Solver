@@ -38,7 +38,7 @@ class MatchingPennies(Domain):
         return 0.5 * self.A_curl.dot(data) + self.b_curl
 
     def ne_l2error(self, data):
-        return np.linalg.norm(data - self.NE)
+        return np.linalg.norm(data[0] - self.NE)
 
     def compute_value_function(self, policy, policy_approx=None):
         if policy_approx is None:

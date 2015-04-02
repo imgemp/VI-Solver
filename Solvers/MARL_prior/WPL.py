@@ -125,14 +125,8 @@ class WPL(Solver):
         weights = np.array([decaying_rate**(wlen-i) for i in range(wlen)])
         return np.sum(np.multiply(np.multiply(np.array(reward_history)[indices_grad], val_diff), weights))
 
-    def project_error(self, value, scaling_factor=None, exponent=3):
+    def project_error(self, value, scaling_factor=1.3, exponent=3):
         # return value
-        if scaling_factor is None:
-            scaling_factor = 1.3
-            # if value <= 0:
-            #     scaling_factor = 1.
-            # else:
-            #     scaling_factor = 5.
         # print 'projecting', value, 'to', scaling_factor * (value/.5)**exponent
         return (scaling_factor * value)**exponent
         # return np.sign(value) * (abs(value)//scaling_factor)**exponent
