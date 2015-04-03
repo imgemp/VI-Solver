@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from VISolver.Domains.BloodBank import BloodBank, CreateRandomNetwork, CreateNetworkExample
+from VISolver.Domains.BloodBank import BloodBank, CreateNetworkExample
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 
@@ -141,12 +141,18 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    Frames = np.concatenate((BloodBank_Results_Phase1.PermStorage['Data'],
-                             [BloodBank_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
-                             BloodBank_Results_Phase2.PermStorage['Data'],
-                             [BloodBank_Results_Phase2.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
-                             BloodBank_Results_Phase3.PermStorage['Data'],
-                             [BloodBank_Results_Phase3.PermStorage['Data'][-1]]*fps*frame_skip*freeze),
+    equi_1 = BloodBank_Results_Phase1.PermStorage['Data']
+    conv_1 = [equi_1[-1]] * fps * frame_skip * freeze
+    equi_2 = BloodBank_Results_Phase2.PermStorage['Data']
+    conv_2 = [equi_2[-1]] * fps * frame_skip * freeze
+    equi_3 = BloodBank_Results_Phase3.PermStorage['Data']
+    conv_3 = [equi_3[-1]] * fps * frame_skip * freeze
+    Frames = np.concatenate((equi_1,
+                             conv_1,
+                             equi_2,
+                             conv_2,
+                             equi_3,
+                             conv_3),
                             axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
@@ -159,18 +165,28 @@ def Demo():
     t4 = t3 + len(BloodBank_Results_Phase2.PermStorage['Data']) // frame_skip
     t5 = t4 + fps*freeze
     t6 = t5 + len(BloodBank_Results_Phase3.PermStorage['Data']) // frame_skip
-    anns = sorted([(t1, plt.title, '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
-                   (t2, plt.title, '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'),
-                   (t3, plt.title, '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
-                   (t4, plt.title, '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Converged)'),
-                   (t5, plt.title, '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'),
-                   (t6, plt.title, '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Converged)')],
+
+    title_1 = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    title_2 = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+    title_3 = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    title_4 = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+    title_5 = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    title_6 = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+
+    anns = sorted([(t1, plt.title, title_1),
+                   (t2, plt.title, title_2),
+                   (t3, plt.title, title_3),
+                   (t4, plt.title, title_4),
+                   (t5, plt.title, title_5),
+                   (t6, plt.title, title_6)],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File
     fig, ax = plt.subplots()
-    BloodBank_ani = animation.FuncAnimation(fig, Domain.UpdateVisual, init_func=Domain.InitVisual,
-                                             frames=len(Frames), fargs=(ax, Frames, anns), blit=True)
+    BloodBank_ani = animation.FuncAnimation(fig, Domain.UpdateVisual,
+                                            init_func=Domain.InitVisual,
+                                            frames=len(Frames),
+                                            fargs=(ax, Frames, anns), blit=True)
     BloodBank_ani.save('BloodBank.mp4', writer=writer)
 
 if __name__ == '__main__':

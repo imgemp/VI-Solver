@@ -1,8 +1,9 @@
 import numpy as np
 
-import matplotlib as mpl; mpl.use("Agg")
+import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.collections  as mc
+import matplotlib.collections as mc
 import matplotlib.cm as cm
 
 from VISolver.Domain import Domain
@@ -37,10 +38,12 @@ class SOI(Domain):
         self.cmap = cmap
         maxFlows = [0]*2
         for data in Data:
-            newFlows = [np.max(flow) for flow in list(self.PathFlow2LinkFlow_x2f(*self.UnpackData(data))[0])]
+            flows = list(self.PathFlow2LinkFlow_x2f(*self.UnpackData(data))[0])
+            newFlows = [np.max(flow) for flow in flows]
             maxFlows = np.max([maxFlows,newFlows],axis=0)
         norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
-        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba for n in norm]
+        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba
+                        for n in norm]
 
     def InitVisual(self):
 
@@ -50,16 +53,22 @@ class SOI(Domain):
         # Add Colorbar
         cax = fig.add_axes([0.95, 0.2, 0.02, 0.6])
         plt.axis('off')
-        cb = mpl.colorbar.ColorbarBase(cax, cmap=self.cmap, spacing='proportional')
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=self.cmap,
+                                       spacing='proportional')
         cb.set_label('Internet Traffic (Q)')
 
         plt.sca(ax)
 
         # Create Network Skeleton
         mid = (max([self.m,self.n,self.o]) - 1.)/2.
-        Ix = np.linspace(mid-(self.m-1.)/2.,mid+(self.m-1.)/2.,self.m); Iy = 2.
-        Jx = np.linspace(mid-(self.n-1.)/2.,mid+(self.n-1.)/2.,self.n); Jy = 1.
-        Kx = np.linspace(mid-(self.o-1.)/2.,mid+(self.o-1.)/2.,self.o); Ky = 0.
+        Ix = np.linspace(mid-(self.m-1.)/2.,mid+(self.m-1.)/2.,self.m)
+        Jx = np.linspace(mid-(self.n-1.)/2.,mid+(self.n-1.)/2.,self.n)
+        Kx = np.linspace(mid-(self.o-1.)/2.,mid+(self.o-1.)/2.,self.o)
+
+        Iy = 2.
+        Jy = 1.
+        Ky = 0.
+
         od = []
         for i in xrange(self.m):
             for j in xrange(self.n):
@@ -75,7 +84,8 @@ class SOI(Domain):
 
         # Annotate Plot
         plt.box('off')
-        plt.yticks([0,1,2],['Demand\nMarkets', 'Network\nProviders', 'Service\nProviders'], rotation=45)
+        plt.yticks([0,1,2],['Demand\nMarkets', 'Network\nProviders',
+                            'Service\nProviders'], rotation=45)
         plt.xticks(Kx,['Market\n'+str(k+1) for k in xrange(self.o)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
@@ -115,14 +125,16 @@ class SOI(Domain):
     def UnpackNetwork(self,Network):
 
         self.m,self.n,self.o,\
-        self.coeff_f_Q,self.coeff_rho_Q,self.coeff_rho_q,self.coeff_rho_const,\
-        self.coeff_c_q_pow1,self.coeff_c_q_pow2,self.coeff_oc_Pi,\
-        self.drhodQ_ind_I,self.dcdq_ind,\
-        self.ind_IJ_I,self.ind_IJ_J,self.ind_JK_J,self.ind_JK_K = Network
+            self.coeff_f_Q,self.coeff_rho_Q,\
+            self.coeff_rho_q,self.coeff_rho_const,\
+            self.coeff_c_q_pow1,self.coeff_c_q_pow2,self.coeff_oc_Pi,\
+            self.drhodQ_ind_I,self.dcdq_ind,\
+            self.ind_IJ_I,self.ind_IJ_J,self.ind_JK_J,self.ind_JK_K = Network
 
     def UnpackData(self,Data):
 
-        return [np.reshape(Data[s:s+self.Dim//3],(self.m,self.n,self.o)) for s in xrange(0,self.Dim,self.Dim//3)]
+        return [np.reshape(Data[s:s+self.Dim//3],(self.m,self.n,self.o))
+                for s in xrange(0,self.Dim,self.Dim//3)]
 
     def CalculateNetworkSize(self):
 
@@ -130,16 +142,22 @@ class SOI(Domain):
 
     def PathFlow2LinkFlow_x2f(self,Q,q,Pi):
 
-        f_Q_top = np.reshape(np.sum(Q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1),(self.m,self.n))
-        f_Q_bot = np.reshape(np.sum(Q[:,self.ind_JK_J,self.ind_JK_K],axis=0),(self.n,self.o))
+        Q_top_sum = np.sum(Q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_Q_top = np.reshape(Q_top_sum,(self.m,self.n))
+        Q_bot_sum = np.sum(Q[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_Q_bot = np.reshape(Q_bot_sum,(self.n,self.o))
         f_Q = [f_Q_top,f_Q_bot]
 
-        f_q_top = np.reshape(np.sum(q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1),(self.m,self.n))
-        f_q_bot = np.reshape(np.sum(q[:,self.ind_JK_J,self.ind_JK_K],axis=0),(self.n,self.o))
+        q_top_sum = np.sum(q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_q_top = np.reshape(q_top_sum,(self.m,self.n))
+        q_bot_sum = np.sum(q[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_q_bot = np.reshape(q_bot_sum,(self.n,self.o))
         f_q = [f_q_top,f_q_bot]
 
-        f_Pi_top = np.reshape(np.sum(Pi[self.ind_IJ_I,self.ind_IJ_J,:],axis=1),(self.m,self.n))
-        f_Pi_bot = np.reshape(np.sum(Pi[:,self.ind_JK_J,self.ind_JK_K],axis=0),(self.n,self.o))
+        Pi_top_sum = np.sum(Pi[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_Pi_top = np.reshape(Pi_top_sum,(self.m,self.n))
+        Pi_bot_sum = np.sum(Pi[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_Pi_bot = np.reshape(Pi_bot_sum,(self.n,self.o))
         f_Pi = [f_Pi_top,f_Pi_bot]
 
         return f_Q, f_q, f_Pi
@@ -149,7 +167,7 @@ class SOI(Domain):
         # Unpack Data
         Q,q,Pi = self.UnpackData(Data)
 
-        F_unpacked =  self.FX_dX(Q,q,Pi)
+        F_unpacked = self.FX_dX(Q,q,Pi)
 
         # Pack Data
         F_packed = np.array([])
@@ -164,15 +182,19 @@ class SOI(Domain):
 
     def dProductionCostdQuantity_dfdQ(self,Q):
 
-        return np.tile(2.*self.coeff_f_Q*np.sum(Q,axis=(1,2))+1.,Q.shape[1:][::-1]+(1,)).T
+        return np.tile(2.*self.coeff_f_Q*np.sum(Q,axis=(1,2)) +
+                       1.,Q.shape[1:][::-1]+(1,)).T
 
     def DemandPrice_rho(self,Q,q):
 
-        return np.sum(self.coeff_rho_Q*np.resize(Q,self.coeff_rho_Q.shape),axis=(3,4,5))+self.coeff_rho_q*q+self.coeff_rho_const
+        return np.sum(self.coeff_rho_Q *
+                      np.resize(Q,self.coeff_rho_Q.shape),axis=(3,4,5)) + \
+            self.coeff_rho_q*q+self.coeff_rho_const
 
     def dDemandPricedQuantity_drhodQ(self,Q,q):
 
-        return np.swapaxes(np.swapaxes(self.coeff_rho_Q[self.drhodQ_ind_I,:,:,self.drhodQ_ind_I,:,:],1,3),2,4)
+        slc = self.coeff_rho_Q[self.drhodQ_ind_I,:,:,self.drhodQ_ind_I,:,:]
+        return np.swapaxes(np.swapaxes(slc,1,3),2,4)
 
     def TransportationCost_c(self,Q,q):
 
@@ -181,7 +203,8 @@ class SOI(Domain):
     def dTransportationCostdQuality_dcdq(self,Q,q):
 
         dcdq = np.zeros(q.shape+(q.shape[0],q.shape[2]))
-        dcdq[self.dcdq_ind] = (2.*self.coeff_c_q_pow2*q + self.coeff_c_q_pow1).flatten()
+        dcdq[self.dcdq_ind] = (2.*self.coeff_c_q_pow2*q +
+                               self.coeff_c_q_pow1).flatten()
 
         return dcdq
 
@@ -208,7 +231,8 @@ class SOI(Domain):
 
         Qrep = np.rollaxis(np.tile(Q,(self.n,self.o,1,1,1)),2,0)
 
-        return rho+np.sum(drhodQ*Qrep,axis=(0+len(Q.shape),1+len(Q.shape)))-Pi-dfdQ
+        return rho+np.sum(drhodQ*Qrep,axis=(0+len(Q.shape),1+len(Q.shape))) - \
+            Pi-dfdQ
 
     def NetworkProviderProfit(self,Q,q,Pi):
 
@@ -235,6 +259,7 @@ class SOI(Domain):
                 -self.dNetworkProvderProfitdQuality_dU2dq(Q,q,Pi),
                 -self.dNetworkProvderProfitdDemandPrice_dU2dPi(Q,q,Pi)]
 
+
 def CreateNetworkExample(ex=1):
 
     m = 3
@@ -244,17 +269,26 @@ def CreateNetworkExample(ex=1):
     coeff_f_Q = np.array([2.,1.,3.])
 
     coeff_rho_Q = np.zeros((3,2,2,3,2,2))
-    coeff_rho_Q[0,0,0,0,0,0] = -1.; coeff_rho_Q[0,0,0,0,0,1] = -.5
-    coeff_rho_Q[0,0,1,0,0,1] = -2.; coeff_rho_Q[0,0,1,0,0,0] = -1.
-    coeff_rho_Q[0,1,0,0,1,0] = -2.; coeff_rho_Q[0,1,0,0,0,0] = -.5
-    coeff_rho_Q[0,1,1,0,1,1] = -3.; coeff_rho_Q[0,1,1,0,0,1] = -1.
-    coeff_rho_Q[1,0,0,1,0,0] = -1.; coeff_rho_Q[1,0,0,1,0,1] = -.5
+    coeff_rho_Q[0,0,0,0,0,0] = -1.
+    coeff_rho_Q[0,0,0,0,0,1] = -.5
+    coeff_rho_Q[0,0,1,0,0,1] = -2.
+    coeff_rho_Q[0,0,1,0,0,0] = -1.
+    coeff_rho_Q[0,1,0,0,1,0] = -2.
+    coeff_rho_Q[0,1,0,0,0,0] = -.5
+    coeff_rho_Q[0,1,1,0,1,1] = -3.
+    coeff_rho_Q[0,1,1,0,0,1] = -1.
+    coeff_rho_Q[1,0,0,1,0,0] = -1.
+    coeff_rho_Q[1,0,0,1,0,1] = -.5
     coeff_rho_Q[1,0,1,1,0,1] = -3.
-    coeff_rho_Q[1,1,0,1,1,0] = -2.; coeff_rho_Q[1,1,0,1,1,1] = -1.
-    coeff_rho_Q[1,1,1,1,1,1] = -3.; coeff_rho_Q[1,1,1,0,1,0] = -1.
+    coeff_rho_Q[1,1,0,1,1,0] = -2.
+    coeff_rho_Q[1,1,0,1,1,1] = -1.
+    coeff_rho_Q[1,1,1,1,1,1] = -3.
+    coeff_rho_Q[1,1,1,0,1,0] = -1.
     coeff_rho_Q[2,0,0,2,0,0] = -4.
-    coeff_rho_Q[2,0,1,2,0,1] = -2.; coeff_rho_Q[2,0,1,2,1,0] = -1.
-    coeff_rho_Q[2,1,0,2,1,0] = -3.; coeff_rho_Q[2,1,0,2,0,0] = -1.
+    coeff_rho_Q[2,0,1,2,0,1] = -2.
+    coeff_rho_Q[2,0,1,2,1,0] = -1.
+    coeff_rho_Q[2,1,0,2,1,0] = -3.
+    coeff_rho_Q[2,1,0,2,0,0] = -1.
     coeff_rho_Q[2,1,1,2,1,1] = -4.
 
     coeff_rho_q = np.zeros((3,2,2))
@@ -273,7 +307,7 @@ def CreateNetworkExample(ex=1):
 
     coeff_rho_const = np.zeros((3,2,2))
     coeff_rho_const[0,0,0] = 100.
-    if ex==2:
+    if ex == 2:
         coeff_rho_const[0,0,0] = 200.
     coeff_rho_const[0,0,1] = 200.
     coeff_rho_const[0,1,0] = 100.
@@ -349,6 +383,7 @@ def CreateNetworkExample(ex=1):
             drhodQ_ind_I,dcdq_ind,
             ind_IJ_I,ind_IJ_J,ind_JK_J,ind_JK_K]
 
+
 def CreateRandomNetwork(m,n,o,seed):
 
     np.random.seed(seed)
@@ -363,9 +398,12 @@ def CreateRandomNetwork(m,n,o,seed):
                 coeff_rho_Q[i,j,k,i,j,k] = -5.*np.random.rand()
                 #external dependence
                 ext = np.random.randint(0,m*n*o-1)
-                if ext >= (i*n*o + j*o + k): ext += 1
-                r = divmod(ext,n*o); ext_i = r[0]
-                r = divmod(r[1],o); ext_j = r[0]
+                if ext >= (i*n*o + j*o + k):
+                    ext += 1
+                r = divmod(ext,n*o)
+                ext_i = r[0]
+                r = divmod(r[1],o)
+                ext_j = r[0]
                 ext_k = r[1]
                 coeff_rho_Q[i,j,k,ext_i,ext_j,ext_k] = -2.5*np.random.rand()
     coeff_rho_q = np.random.rand(m,n,o)

@@ -109,10 +109,14 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    Frames = np.concatenate((SupplyChain_Results_Phase1.PermStorage['Data'],
-                             [SupplyChain_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
-                             SupplyChain_Results_Phase2.PermStorage['Data'],
-                             [SupplyChain_Results_Phase2.PermStorage['Data'][-1]]*fps*frame_skip*freeze),
+    equi_1 = SupplyChain_Results_Phase1.PermStorage['Data']
+    conv_1 = [equi_1[-1]] * fps * frame_skip * freeze
+    equi_2 = SupplyChain_Results_Phase2.PermStorage['Data']
+    conv_2 = [equi_2[-1]] * fps * frame_skip * freeze
+    Frames = np.concatenate((equi_1,
+                             conv_1,
+                             equi_2,
+                             conv_2),
                             axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
@@ -123,16 +127,25 @@ def Demo():
     t2 = t1 + len(SupplyChain_Results_Phase1.PermStorage['Data']) // frame_skip
     t3 = t2 + fps*freeze
     t4 = t3 + len(SupplyChain_Results_Phase2.PermStorage['Data']) // frame_skip
-    anns = sorted([(t1, plt.title, 'Control Network\n(Equilibrating)'),
-                   (t2, plt.title, 'Control Network\n(Converged)'),
-                   (t3, plt.title, 'Market Increases Demand for Firm 2''s Product\n(Equilibrating)'),
-                   (t4, plt.title, 'Market Increases Demand for Firm 2''s Product\n(Converged)')],
+
+    title_1 = 'Control Network\n(Equilibrating)'
+    title_2 = 'Control Network\n(Converged)'
+    title_3 = 'Market Increases Demand for Firm 2''s Product\n(Equilibrating)'
+    title_4 = 'Market Increases Demand for Firm 2''s Product\n(Converged)'
+
+    anns = sorted([(t1, plt.title, title_1),
+                   (t2, plt.title, title_2),
+                   (t3, plt.title, title_3),
+                   (t4, plt.title, title_4)],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File
     fig, ax = plt.subplots()
-    SupplyChain_ani = animation.FuncAnimation(fig, Domain.UpdateVisual, init_func=Domain.InitVisual,
-                                             frames=len(Frames), fargs=(ax, Frames, anns), blit=True)
+    SupplyChain_ani = animation.FuncAnimation(fig, Domain.UpdateVisual,
+                                              init_func=Domain.InitVisual,
+                                              frames=len(Frames),
+                                              fargs=(ax, Frames, anns),
+                                              blit=True)
     SupplyChain_ani.save('Videos/SupplyChain.mp4', writer=writer)
 
 if __name__ == '__main__':
