@@ -8,7 +8,7 @@ class PrisonersDilemma(Domain):
     def __init__(self):
         self.players = 2
         self.reward_range = [0, 3]
-        self.Dim = 2
+        self.dim = 2
         self.r_reward = np.array([[-1., -3.], [0., -2.]])
         self.c_reward = np.array([[-1., 0.], [-3., -2.]])
         self.u = self.u()

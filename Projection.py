@@ -26,7 +26,7 @@ class BoxProjection(Projection):
     def p(self, data, step, direc):
         if self.lies_on_simplex:
             ret_val = np.minimum(np.maximum(self.low, data + step * direc), self.high)
-            return ret_val/sum(ret_val)
+            return ret_val/(sum(ret_val) + .0000001)
         return np.minimum(np.maximum(self.low, data + step * direc), self.high)
 
 

@@ -31,12 +31,12 @@ def demo():
     # __DUMMY_MARL__##################################################
 
     # Define Domain
-    Domain = MatchingPennies()
+    # Domain = MatchingPennies()
     # Domain = PureStrategyTest()
     # Domain = BattleOfTheSexes('traditional')
     # Domain = BattleOfTheSexes('new')
     # Domain = Tricky()
-    # Domain = PrisonersDilemma()
+    Domain = PrisonersDilemma()
     # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
     # Domain = BloodBank(Network=Network,alpha=2)
 
@@ -60,11 +60,9 @@ def demo():
 
     # Initialize Starting Point
     # Start = np.array([0,1])
-    rand_start_one = np.random.random()
-    rand_start_two = np.random.random()
-    # start_strategies = np.array([[.5, .5], [.5, .5]])
-    # start_strategies = np.array([[.51, .49], [.49, .51]])
-    start_strategies = np.array([[rand_start_one, 1-rand_start_one], [rand_start_two, 1-rand_start_two]])
+    start_strategies = np.random.random((Domain.players, Domain.dim))
+    for i in range(start_strategies.shape[0]):
+        start_strategies[i] /= np.sum(start_strategies[i])
 
     # Set Options
     initialization_conditions = Initialization(step=1e-4)
@@ -90,6 +88,8 @@ def demo():
     # creating plots, if desired:
     if config.show_plots:
         policy = np.array(marl_results.perm_storage['Policy'])[:, :, 0]  # Just take probabilities for first action
+        if 'Forecaster Policies' in marl_results.perm_storage:
+            forecaster = np.array(marl_results.perm_storage['Forecaster Policies'])[:, :, :, 0]  # Just take probabilities for first action
         # policy_est = np.array(marl_results.perm_storage['Policy Estimates'])
         val_fun = np.array(marl_results.perm_storage['Value Function'])[-1]
         true_val_fun = np.array(marl_results.perm_storage['True Value Function'])
@@ -120,8 +120,11 @@ def demo():
 
         printing_data = {}
         # printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
-        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': -1}
-        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
+        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': 1}
+        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
+        if 'Forecaster Policies' in marl_results.perm_storage:
+            printing_data['Forecaster - P1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
+            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
         # printing_data['The policy gradient'] = {'values': pol_grad}
         # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
         plot_results(printing_data)
