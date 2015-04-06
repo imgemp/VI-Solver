@@ -12,13 +12,13 @@ from Estimators import decaying_average_estimator
 class BoostedWPL(Solver):
     def __init__(self, domain,
                  P=IdentityProjection(),
-                 learning_rate=0.03,
+                 learning_rate=0.06,
                  min_step=1e-5,
                  max_step=1e-3,
                  averaging_window=10,
                  exploration_trials=50,
                  averaging_meta_window=5,
-                 no_forecasters=2,
+                 no_forecasters=5,
                  estimator_decay=.9):
 
         self.reward = [domain.r_reward, domain.c_reward]
@@ -35,7 +35,7 @@ class BoostedWPL(Solver):
         self.no_forecasters = no_forecasters
         self.lr = learning_rate
         self.estimator_decay = estimator_decay
-        self.learning_settings = [[.5, .5], [.75, .75], [1., 1.], [1.2, 2], [1.2, 3]]
+        self.learning_settings = [[1., 1., .03], [1., .75, .08],  [1.5, 2.5, .01], [1., .3, .1], [2., 3., .008]]
 
     def init_temp_storage(self, start, domain, options):
         self.temp_storage['Action'] = np.zeros((self.storage_size,
@@ -70,7 +70,8 @@ class BoostedWPL(Solver):
                                                               2,
                                                               ))/2.)
         for i in range(2):
-            self.temp_storage['Forecaster Policies'][:, i, :, :] = np.array(start)
+            for j in range(self.no_forecasters):
+                self.temp_storage['Forecaster Policies'][:, i, j, :] = np.array(start[i])
         self.temp_storage['Forecaster Policies'] = self.temp_storage['Forecaster Policies'].tolist()
         return self.temp_storage
 
@@ -83,16 +84,16 @@ class BoostedWPL(Solver):
                                    'Value Function',
                                    'True Value Function',
                                    'Action',
+                                   'Forecaster Policies',
                                    # 'Policy Estimates',
                                    ])
 
     def compute_value_function(self, reward, value_old):
         return (reward + self.estimator_decay * np.array(value_old)) / (1 + self.estimator_decay)
 
-    def project_error(self, value, scaling_factor=1.3, exponent=3):
-        # return value
-        return np.sign(value) * ((abs(value) * scaling_factor)**exponent)
-        # return np.sign(value) * (1 - np.cos(value * 3.14159))
+    def project_error(self, value, scaling_factor=1, exponent=1):
+        return np.sign(value) * ((np.absolute(value) * scaling_factor)**exponent)
+        # return np.sign(value) * (1 - np.cos((np.absolute(value) * scaling_factor)**exponent))
 
     def singular_wpl_update(self, forecaster_policy, action, reward, prev_value, learning_setting):
         # print 'in wpl update:', forecaster_policy, action, reward, prev_value
@@ -106,23 +107,35 @@ class BoostedWPL(Solver):
         else:
             policy_gradient[action] *= 1 - forecaster_policy[action]
         # computing the policy gradient and the learning rate
-        return policy_gradient, self.Proj.p(forecaster_policy, self.lr, policy_gradient)
+        return policy_gradient, self.Proj.p(forecaster_policy, learning_setting[2], policy_gradient)
 
-    def weighted_average_forecaster(self, fc_policies, reward_history, action_history):
-        fcp = np.array([fc_policies[i, :, action_history[i]] for i in range(len(action_history))])
-        reward_action_function = np.dot(fcp.T, reward_history)
-        # print 'raf', reward_action_function
-        # print 'bla', reward_history, action_history, fcp
-        return reward_action_function
+    def weighted_average_forecaster(self, fc_policies, reward_history, action_history, averaging_type=None):
+        # calculating the reward-action space
+        fcp = np.array([fc_policies[i, :, action_history[i]]*(.4**(len(action_history)-i-1)) for i in range(len(action_history))])
+        weighted_reward = np.array(reward_history)
+        weighted_reward[weighted_reward < 0] *= 50.
+        reward_action_function = np.mean(np.multiply(fcp, np.repeat(weighted_reward[None].T,
+                                                                    fcp.shape[1], axis=1)),
+                                         axis=0)
+        # applying the weights
+        weight = 15.#/(reward_action_function.max()+1e-9)
+        if averaging_type == 'exponential':
+            reward_action_function *= weight
+            reward_action_function = np.exp(reward_action_function)
+        # returning the weighted sum
+        reward_action_function = np.dot(fc_policies[-1].T, reward_action_function[None].T)
+        # returning after projecting back on the simplex
+        return reward_action_function.T[-1]/(np.sum(reward_action_function)+1e-9)
 
     def update(self, record):
         # Retrieve Necessary Data
+        iteration = len(record.perm_storage['Policy'])
         policy = record.temp_storage['Policy'][-1]
         tmp_policy = self.temp_storage['Policy']
-        tmp_reward = self.temp_storage['Reward']
-        tmp_action = self.temp_storage['Action']
+        tmp_reward = np.array(self.temp_storage['Reward'][-1*iteration:])
+        tmp_action = np.array(self.temp_storage['Action'][-1*iteration:])
         tmp_value = self.temp_storage['Value Function'][-1]
-        tmp_forecaster_policies = np.array(self.temp_storage['Forecaster Policies'])
+        tmp_forecaster_policies = np.array(self.temp_storage['Forecaster Policies'][-1*iteration:])
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # Initialize Storage
@@ -133,17 +146,20 @@ class BoostedWPL(Solver):
         action = [0, 0]
         reward = [0., 0.]
         policy_taken = np.array(policy)
-        iteration = len(record.perm_storage['Policy'])
         updated_forecaster_policies = np.array(tmp_forecaster_policies[-1])
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 1. start by calculating the forecaster's policy/recommendation
         for player in range(self.domain.players):
-            policy_value_distribution = self.weighted_average_forecaster(tmp_forecaster_policies[player],
-                                                                         tmp_reward[player],
-                                                                         tmp_action[player])
+            policy_taken[player] = self.weighted_average_forecaster(tmp_forecaster_policies[:, player],
+                                                                    tmp_reward[:, player],
+                                                                    tmp_action[:, player],
+                                                                    averaging_type='exponential')
+            # policy_value_distribution = self.weighted_average_forecaster(tmp_forecaster_policies[:, player],
+            #                                                              tmp_reward[:, player],
+            #                                                              tmp_action[:, player])
             # print policy_value_distribution
-            policy_taken[player] = updated_forecaster_policies[player][policy_value_distribution.argmax()]
+            # policy_taken[player] = updated_forecaster_policies[player][policy_value_distribution.argmax()]
             # policy_taken[player] = updated_forecaster_policies[player][0]
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
