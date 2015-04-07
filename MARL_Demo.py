@@ -24,66 +24,46 @@ from Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import print_sim_results
 
-from Helpers import *
+from Utilities import *
 
 
-def demo():
+def demo(domain, method, iterations=500):
     # __DUMMY_MARL__##################################################
-
-    # Define Domain
-    # Domain = MatchingPennies()
-    # Domain = PureStrategyTest()
-    # Domain = BattleOfTheSexes('traditional')
-    # Domain = BattleOfTheSexes('new')
-    # Domain = Tricky()
-    Domain = PrisonersDilemma()
-    # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
-    # Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
     # box = np.array(Domain.reward_range)
-    box = np.array([np.vstack((Domain.r_reward, Domain.c_reward)).min(),
-                    np.vstack((Domain.r_reward, Domain.c_reward)).max()])
+    box = np.array([np.vstack((domain.r_reward, domain.c_reward)).min(),
+                    np.vstack((domain.r_reward, domain.c_reward)).max()])
     epsilon = np.array([-0.01, 0.01])
-
-    # method = IGA(Domain, P=BoxProjection())
-    # method = WoLFIGA(Domain, P=BoxProjection(), min_step=1e-4, max_step=1e-3 )
-    # method = MySolver(Domain, P=BoxProjection())
-    # method = MyIGA(Domain, P=BoxProjection())
-    # method = MyIGA(Domain, P=LinearProjection())
-    # method = WPL(Domain, P=LinearProjection(low=.001))
-    # method = WPL(Domain, P=BoxProjection(low=.001))
-    # method = AWESOME(Domain, P=LinearProjection())
-    # method = PGA_APP(Domain, P=LinearProjection())
-    # method = MultiAgentVI(Domain, P=LinearProjection())
-    method = BoostedWPL(Domain, P=LinearProjection())
 
     # Initialize Starting Point
     # Start = np.array([0,1])
-    start_strategies = np.random.random((Domain.players, Domain.dim))
+    start_strategies = np.random.random((domain.players, domain.dim))
     for i in range(start_strategies.shape[0]):
         start_strategies[i] /= np.sum(start_strategies[i])
+        start_strategies = np.array([[.8, .2], [.1, .9]])
 
     # Set Options
     initialization_conditions = Initialization(step=1e-4)
     # init = Initialization(Step=-0.1)
-    terminal_conditions = Termination(max_iter=500, tols=[(Domain.ne_l2error, 1e-3)])
+    terminal_conditions = Termination(max_iter=iterations, tols=[(domain.ne_l2error, 1e-3)])
     reporting_options = method.reporting_options()
     whatever_this_does = Miscellaneous()
     options = DescentOptions(initialization_conditions, terminal_conditions, reporting_options, whatever_this_does)
 
     # Print Stats
-    # print_sim_stats(Domain,Method,Options)
+    # print_sim_stats(domain,Method,Options)
 
     # Start Solver
     tic = time.time()
     # set random seed
     # np.random.seed(0)
-    marl_results = solve(start_strategies, method, Domain, options)
+    marl_results = solve(start_strategies, method, domain, options)
     toc = time.time() - tic
 
     # Print Results
-    print_sim_results(options, marl_results, method, toc)
+    if config.debug_output_level != -1:
+        print_sim_results(options, marl_results, method, toc)
 
     # creating plots, if desired:
     if config.show_plots:
@@ -121,14 +101,57 @@ def demo():
         printing_data = {}
         # printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
         printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': 1}
-        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
+        printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         if 'Forecaster Policies' in marl_results.perm_storage:
-            printing_data['Forecaster - P1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
-            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': 1}
+            printing_data['Forecaster - P1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
+            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         # printing_data['The policy gradient'] = {'values': pol_grad}
         # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
         plot_results(printing_data)
+    reward = np.array(marl_results.perm_storage['Reward'])
+    win_ratio = np.mean(.5 + .5*reward, axis=0).round(2)
+    return win_ratio
 
+
+def wrapper():
+    # Define Domain
+    domain = MatchingPennies()
+    # domain = PureStrategyTest()
+    # domain = BattleOfTheSexes('traditional')
+    # domain = BattleOfTheSexes('new')
+    # domain = Tricky()
+    # domain = PrisonersDilemma()
+    # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
+    # domain = BloodBank(Network=Network,alpha=2)
+
+    # method = IGA(domain, P=BoxProjection())
+    # method = WoLFIGA(domain, P=BoxProjection(), min_step=1e-4, max_step=1e-3 )
+    # method = MySolver(domain, P=BoxProjection())
+    # method = MyIGA(domain, P=BoxProjection())
+    # method = MyIGA(domain, P=LinearProjection())
+    # method = WPL(domain, P=LinearProjection(low=.001))
+    method1 = WPL(domain, P=BoxProjection(low=.001))
+    # method = AWESOME(domain, P=LinearProjection())
+    # method = PGA_APP(domain, P=LinearProjection())
+    # method = MultiAgentVI(domain, P=LinearProjection())
+    method2 = BoostedWPL(domain, P=LinearProjection())
+    results1 = []
+    results2 = []
+    iterations = 100
+    for i in range(20):
+        results1.append(demo(domain, method1, iterations))
+        results2.append(demo(domain, method2, iterations))
+
+    print 'first method'
+    print 'max values', np.array(results1).max(axis=0)
+    print 'min values', np.array(results1).min(axis=0)
+    print 'averages', np.mean(results1, axis=0)
+    print 'median', np.median(results1, axis=0)
+    print 'second method'
+    print 'max values', np.array(results2).max(axis=0)
+    print 'min values', np.array(results2).min(axis=0)
+    print 'averages', np.mean(results2, axis=0)
+    print 'median', np.median(results2, axis=0)
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -136,6 +159,8 @@ if __name__ == '__main__':
     parser.add_option('-v', '--show-output', type='int', dest='debug', default=0, help='debug level')
     (options, args) = parser.parse_args()
     config.debug_output_level = options.debug
-    # config.debug_output_level = False
     config.show_plots = options.plot
-    demo()
+    domain = MatchingPennies()
+    method2 = BoostedWPL(domain, P=LinearProjection())
+
+    demo(domain, method2, 500)

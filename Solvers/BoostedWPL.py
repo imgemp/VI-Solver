@@ -35,7 +35,10 @@ class BoostedWPL(Solver):
         self.no_forecasters = no_forecasters
         self.lr = learning_rate
         self.estimator_decay = estimator_decay
-        self.learning_settings = [[1., 1., .03], [1., .75, .08],  [1.5, 2.5, .01], [1., .3, .1], [2., 3., .008]]
+        self.learning_settings = [[1., .75, .08], [1., .3, .1], [1., 1., .03], [1.5, 2.5, .01], [2., 3., .008]]
+        self.value_approx_range = np.array([1./(51-1)*i for i in range(51)])
+        self.additive_ = compute_increase_vector(15, .6, .1)
+        self.ne_hypotheses = np.zeros(self.value_approx_range.shape)
 
     def init_temp_storage(self, start, domain, options):
         self.temp_storage['Action'] = np.zeros((self.storage_size,
@@ -65,7 +68,7 @@ class BoostedWPL(Solver):
         self.temp_storage['Forecaster Policies'] = (np.zeros((self.storage_size,
                                                               # self.domain.players,
                                                               2,
-                                                              self.no_forecasters,
+                                                              self.no_forecasters+3,
                                                               # self.domain.Dim,
                                                               2,
                                                               ))/2.)
@@ -127,6 +130,32 @@ class BoostedWPL(Solver):
         # returning after projecting back on the simplex
         return reward_action_function.T[-1]/(np.sum(reward_action_function)+1e-9)
 
+    def equilibrium_testing(self, fc_policies, decision_type='majority', iteration=0):
+        """
+        given a set of policies, this method decides on whether or not an equilibrium has been found, based
+        on the deviation of the different policy hypotheses.
+        :param fc_policies:
+        :return:
+        """
+        # 1. computing the symmetrical distance matrix between the different hypotheses
+        distances = np.zeros((self.no_forecasters, self.no_forecasters))
+        for i in range(self.no_forecasters):
+            for j in range(i+1, self.no_forecasters, 1):
+                distances[i, j] = np.linalg.norm(fc_policies[i] - fc_policies[j])
+        if decision_type == 'majority' and iteration > 50:
+            if np.sum(distances > .02) < 5:
+                # exception = np.mean(distances > .1, axis=0).argmax()
+                # if config.debug_output_level > 2:
+                hypo_index = compute_value_index(self.value_approx_range,
+                                                 np.mean(fc_policies[:self.no_forecasters], axis=0)[0])
+                print np.mean(fc_policies[:self.no_forecasters], axis=0), iteration
+                self.ne_hypotheses = add_value_vector(self.ne_hypotheses, self.additive_, hypo_index)
+                if self.ne_hypotheses.max() > 1.:
+                    pass
+                    # print self.value_approx_range[self.ne_hypotheses.argmax()]
+                return True
+            return False
+
     def update(self, record):
         # Retrieve Necessary Data
         iteration = len(record.perm_storage['Policy'])
@@ -151,6 +180,7 @@ class BoostedWPL(Solver):
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 1. start by calculating the forecaster's policy/recommendation
         for player in range(self.domain.players):
+            self.equilibrium_testing(updated_forecaster_policies[player], 'majority', iteration)
             policy_taken[player] = self.weighted_average_forecaster(tmp_forecaster_policies[:, player],
                                                                     tmp_reward[:, player],
                                                                     tmp_action[:, player],
