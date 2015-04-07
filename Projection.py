@@ -24,10 +24,10 @@ class BoxProjection(Projection):
         self.lies_on_simplex = simplex
 
     def p(self, data, step, direc):
+        ret_val = np.clip(data + step * direc, self.low, self.high)
         if self.lies_on_simplex:
-            ret_val = np.minimum(np.maximum(self.low, data + step * direc), self.high)
-            return ret_val/(sum(ret_val) + .0000001)
-        return np.minimum(np.maximum(self.low, data + step * direc), self.high)
+            return ret_val/max(ret_val.sum(), .0000001)
+        return ret_val
 
 
 class LinearProjection(Projection):
@@ -42,7 +42,7 @@ class LinearProjection(Projection):
         if len(np.array(direc).shape) > 0:
             d = direc
         else:
-            d = [direc, -1*direc]
+            d = [direc, -direc]
         projected = data + (np.multiply(step, d))
         # do they lie outside of the allowed box?
         projector = np.array([1., 1.])
@@ -53,16 +53,18 @@ class LinearProjection(Projection):
                 projector[0] = self.low/np.min(projected)
             else:
                 return self.alt_proj.p(data, step, direc)
-        factor = np.min(projector) if abs(np.min(projector)) != 0 else np.max(projector)
+        factor = np.min(projector)
+        if abs(factor) < 1e-10:
+            factor = np.max(projector)
         ret_val = np.multiply(projected, factor)
         if self.lies_on_simplex:
             ret_val /= sum(ret_val) + 0.00001
         if config.debug_output_level >= 2:
-            print '    ~ The projection step:', \
-                  '\n       data: ', data, \
-                  '\n       step: ', step, \
-                  '\n       dire: ', direc, \
-                  '\n       res:  ', ret_val
+            print '    ~ The projection step:'
+            print '       data: ', data
+            print '       step: ', step
+            print '       dire: ', direc
+            print '       res:  ', ret_val
         return ret_val
 
 
