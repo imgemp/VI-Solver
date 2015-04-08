@@ -41,7 +41,7 @@ def demo(domain, method, iterations=500):
     start_strategies = np.random.random((domain.players, domain.dim))
     for i in range(start_strategies.shape[0]):
         start_strategies[i] /= np.sum(start_strategies[i])
-        start_strategies = np.array([[.8, .2], [.1, .9]])
+    # start_strategies = np.array([[.8, .2], [.1, .9]])
 
     # Set Options
     initialization_conditions = Initialization(step=1e-4)
@@ -91,7 +91,6 @@ def demo(domain, method, iterations=500):
         # for i in np.hstack((np.round(policy, 2), action, reward, np.round(pol_grad, 2))):
         #     print i
 
-
         # ax[0, 1].plot(policy[:, 0], policy[:, 1])
         # ax[0, 1].set_xlim(box + epsilon)
         # ax[0, 1].set_ylim(box + epsilon)
@@ -115,8 +114,8 @@ def demo(domain, method, iterations=500):
 
 def wrapper():
     # Define Domain
-    domain = MatchingPennies()
-    # domain = PureStrategyTest()
+    # domain = MatchingPennies()
+    domain = PureStrategyTest()
     # domain = BattleOfTheSexes('traditional')
     # domain = BattleOfTheSexes('new')
     # domain = Tricky()
@@ -160,7 +159,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     config.debug_output_level = options.debug
     config.show_plots = options.plot
+    # domain = PureStrategyTest()
     domain = MatchingPennies()
+    # domain = Tricky()
     method2 = BoostedWPL(domain, P=LinearProjection())
 
     demo(domain, method2, 500)

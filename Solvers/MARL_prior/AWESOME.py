@@ -91,7 +91,7 @@ class AWESOME(Solver):
 
     def compute_reward_per_action(self, tmp_act, tmp_rew):
         # retrieving the different actions
-        actions = range(self.domain.Dim)
+        # actions = range(self.domain.Dim)
         reward_per_action = np.zeros((self.domain.Dim, ))
         actions_taken = np.ones((self.domain.Dim, ))
         for i in range(len(tmp_act)):
