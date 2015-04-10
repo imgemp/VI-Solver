@@ -137,7 +137,7 @@ class BoostedWPL(Solver):
         # returning after projecting back on the simplex
         if self.get_forecaster_no('r') > self.get_forecaster_no('w'):
             best_ne_index = self.get_forecaster_no('w') + reward_action_function[self.get_forecaster_no('r')-1:].argmax()
-            if np.linalg.norm(best_estimate-fc_policies[-1, best_ne_index]) < .5:
+            if np.linalg.norm(best_estimate-fc_policies[-1, best_ne_index]) < .7:
                 return fc_policies[-1, best_ne_index]
         return best_estimate
 
@@ -169,19 +169,19 @@ class BoostedWPL(Solver):
                     # self.get_forecaster_no('w') += 1
                     # TODO: making sure that we do not add the same ne forecaster again
                     # if we have seen it, update it instead
-                    print('the policies:\n', fc_policies[self.get_forecaster_no('w'):])
-                    print('the policies:\n', fc_policies-pol)
-                    print('distances:', np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no('w'):]-pol), axis=1)))
+                    # print('the policies:\n', fc_policies[self.get_forecaster_no('w'):])
+                    # print('the policies:\n', fc_policies-pol)
+                    # print('distances:', np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no('w'):]-pol), axis=1)))
                     if np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no('w'):]-pol), axis=1)).min() > .6:
                         # if we have not seen it, add it
                         self.learning_settings.append([1., 1., .0])
-                        print(fc_policies, self.get_forecaster_no('r'), fc_policies[self.get_forecaster_no('r')])
+                        # print(fc_policies, self.get_forecaster_no('r'), fc_policies[self.get_forecaster_no('r')])
                         fc_policies[self.get_forecaster_no('r')-1] = pol
-                        print('added a new ne hypothesis:', pol)
+                        # print('added a new ne hypothesis:', pol)
                     else:
                         nep = np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no('w'):]-pol), axis=0)).argmin()
                         fc_policies[self.get_forecaster_no('w')+nep] = (pol + fc_policies[self.get_forecaster_no('w')+nep])/2
-                        print('modified the hypothesis', fc_policies[self.get_forecaster_no('w')+nep], 'to')
+                        # print('modified the hypothesis', fc_policies[self.get_forecaster_no('w')+nep], 'to')
                     # print(self.value_approx_range[self.ne_hypotheses.argmax()])
                     ne_hypos *= .99
         return ne_hypos, fc_policies
@@ -235,10 +235,14 @@ class BoostedWPL(Solver):
             # policy_taken[player] = updated_forecaster_policies[player][0]
 
         # stupid random play
-        # if iteration % 80 >= 40:
-        #     policy_taken[0] = [1., 0.]
-        # else:
-        #     policy_taken[0] = [0., 1.]
+        if iteration <= 500:
+            policy_taken[0] = [1., 0.]
+        elif iteration <= 1000:
+            policy_taken[0] = [0., 1.]
+        elif iteration % 80 < 40:
+            policy_taken[0] = [0., 1.]
+        else:
+            policy_taken[0] = [1., 0.]
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 2. then play the game

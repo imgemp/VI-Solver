@@ -103,7 +103,7 @@ def demo(domain, method, iterations=500):
         printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         if 'Forecaster Policies' in marl_results.perm_storage:
             printing_data['Forecaster - P1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
-            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
+            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, 5:], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         # printing_data['The policy gradient'] = {'values': pol_grad}
         # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
         plot_results(printing_data)
@@ -159,9 +159,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     config.debug_output_level = options.debug
     config.show_plots = options.plot
-    # domain = PureStrategyTest()
-    domain = MatchingPennies()
+    domain = PureStrategyTest()
+    # domain = MatchingPennies()
     # domain = Tricky()
     method2 = BoostedWPL(domain, P=LinearProjection())
 
-    demo(domain, method2, 500)
+    demo(domain, method2, 5000)
