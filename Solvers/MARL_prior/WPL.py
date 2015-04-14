@@ -169,6 +169,16 @@ class WPL(Solver):
         iteration = len(record.perm_storage['Policy'])
         lavi = self.compute_last_update_index(self.averaging_window)
 
+        # if iteration <= 5000:
+        #     policy[0] = [1., 0.]
+        # elif iteration <= 10000:
+        #     policy[0] = [0., 1.]
+        # elif iteration % 400 < 200:
+        #     policy[0] = [0., 1.]
+        # else:
+        #     policy[0] = [1., 0.]
+
+
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # start by playing the game:
         for player in range(self.domain.players):

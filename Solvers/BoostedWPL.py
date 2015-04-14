@@ -36,8 +36,8 @@ class BoostedWPL(Solver):
         self.no_forecasters = no_forecasters
         self.lr = learning_rate
         self.estimator_decay = estimator_decay
-        self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .008]]
-        # self.learning_settings = [[1., 1., .08], [1., 1., .1], [1., 1., .03], [1.5, 1., .01], [1.5, 1., .008]]
+        self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .01]]
+        # self.learning_settings = [[1., .75, .07], [1., .5, .09], [1., 1., .03]]
         self.value_approx_range = np.array([1./(51-1)*i for i in range(51)])
         self.additive_ = compute_increase_vector(15, .7, .1)
         # self.ne_hypotheses = np.zeros(self.value_approx_range.shape)
@@ -162,6 +162,7 @@ class BoostedWPL(Solver):
         """
         # initializing variables
         learning_settings = list(self.temp_storage['Learning Settings'][-1][player])
+
         # 1. computing the symmetrical distance matrix between the different hypotheses
         distances = np.zeros((self.get_forecaster_no(player, 'w'), self.get_forecaster_no(player, 'w')))
         for i in range(self.get_forecaster_no(player, 'w')):
@@ -187,28 +188,28 @@ class BoostedWPL(Solver):
         # 2. deciding on whether or not the current policies agree according to the chosen strategy
         if decision_type == 'majority' and iteration > self.exploration_trials:
             # the following computes the number of distances greater than a specific threshold
-            if np.sum(distances > .02) < 5:
+            if np.sum(distances > .031) < 7:
                 # this computes the value of a nash equilibrium hypothesis
                 hypo_index = compute_value_index(self.value_approx_range,
                                                  np.mean(fc_policies[:self.get_forecaster_no(player, 'w')], axis=0)[0])
                 # this computes the value function for the hypothesis
                 ne_hypos = add_value_vector(ne_hypos, self.additive_, hypo_index)
                 # this computes whether or not the hypothesis is close enough
-                if ne_hypos.max() > .5:
+                if ne_hypos.max() > .4:
                     # if it is, this converts the hypothesis to a policy
                     pol = np.mean(fc_policies[:self.get_forecaster_no(option='w')+1], axis=0)
                     # is this a new hypothesis?
                     if np.sqrt(np.sum(np.square(np.array(fc_policies[self.get_forecaster_no(player, 'w'):])-pol),
-                                      axis=1)).min() > .5:
+                                      axis=1)).min() > .7:
                         # yes - the distance to the old hypotheses is too large
-                        learning_settings.append([1., 1., .0])
+                        learning_settings.append([1., 1., 0.])
                         fc_policies[self.get_forecaster_no(player, 'r')-1] = pol
-                    else:
+                    # else:
                         # no - the policy is nearly the same as a previous hypothesis
-                        nep = np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no(player, 'w'):]-pol), axis=0)).argmin()
-                        fc_policies[self.get_forecaster_no(player, 'w')+nep] = (ne_hypos.max()*pol + self.additive_.max()*fc_policies[self.get_forecaster_no(player, 'w')+nep])/(ne_hypos.max() + self.additive_.max())
+                        # nep = np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no(player, 'w'):]-pol), axis=0)).argmin()
+                        # fc_policies[self.get_forecaster_no(player, 'w')+nep] = (ne_hypos.max()*pol + self.additive_.max()*fc_policies[self.get_forecaster_no(player, 'w')+nep])/(ne_hypos.max() + self.additive_.max())
                     # decrease the value of everything in the value funtion
-                    ne_hypos *= .99
+            ne_hypos *= .99
 
         return ne_hypos, fc_policies, learning_settings
 
@@ -260,14 +261,14 @@ class BoostedWPL(Solver):
                                                                     averaging_type='exponential')
 
         # stupid random play
-        if iteration <= 5000:
+        if iteration <= 2000:
             policy_taken[0] = [1., 0.]
-        elif iteration <= 10000:
+        elif iteration <= 4000:
             policy_taken[0] = [0., 1.]
         elif iteration % 400 < 200:
-            policy_taken[0] = [0., 1.]
-        else:
             policy_taken[0] = [1., 0.]
+        else:
+            policy_taken[0] = [0., 1.]
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 2. then play the game
