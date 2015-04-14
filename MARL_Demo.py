@@ -162,6 +162,7 @@ if __name__ == '__main__':
     # domain = PureStrategyTest()
     domain = MatchingPennies()
     # domain = Tricky()
-    method2 = BoostedWPL(domain, P=LinearProjection())
+    # method2 = BoostedWPL(domain, P=LinearProjection())
+    method2 = WPL(domain, P=LinearProjection())
 
-    demo(domain, method2, 6000)
+    demo(domain, method2, 20000)

@@ -36,7 +36,8 @@ class BoostedWPL(Solver):
         self.no_forecasters = no_forecasters
         self.lr = learning_rate
         self.estimator_decay = estimator_decay
-        self.learning_settings = [[1., .75, .08], [1., .3, .1], [1., 1., .03], [1.5, 2.5, .01], [2., 3., .008]]
+        self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .008]]
+        # self.learning_settings = [[1., 1., .08], [1., 1., .1], [1., 1., .03], [1.5, 1., .01], [1.5, 1., .008]]
         self.value_approx_range = np.array([1./(51-1)*i for i in range(51)])
         self.additive_ = compute_increase_vector(15, .7, .1)
         # self.ne_hypotheses = np.zeros(self.value_approx_range.shape)
@@ -109,7 +110,6 @@ class BoostedWPL(Solver):
         # return np.sign(value) * (1 - np.cos((np.absolute(value) * scaling_factor)**exponent))
 
     def singular_wpl_update(self, forecaster_policy, action, reward, prev_value, learning_setting):
-        # print 'in wpl update:', forecaster_policy, action, reward, prev_value
         # compute the policy gradient:
         policy_gradient = np.zeros(2)
         policy_error = reward - prev_value
@@ -131,23 +131,25 @@ class BoostedWPL(Solver):
                                                                     fcp.shape[1], axis=1)),
                                          axis=0)
         # applying the weights
-        weight = 18.#/(reward_action_function.max()+1e-9)
+        weight = 18. #/(reward_action_function.max()+1e-9)
         if averaging_type == 'exponential':
             reward_action_function *= weight
             reward_action_function = np.exp(reward_action_function)
-        best_estimate = np.dot(fc_policies[-1].T, reward_action_function[None].T)
+        #       reward_action_function.T[:self.get_forecaster_no(option='w')].shape)
+        best_estimate = np.dot(fc_policies[-1].T[:, :self.get_forecaster_no(option='w')],
+                               reward_action_function[None].T[:self.get_forecaster_no(option='w')])
         # returning after projecting back on the simplex
         best_estimate = best_estimate.T[-1]/(np.sum(best_estimate)+1e-9)
 
         # testing the quality of our ne's
         # do we have any ne hypotheses?
         if self.get_forecaster_no(player, 'r') > self.get_forecaster_no(option='w'):
-            print('yeyeyey')
             # which is the best one?
             best_ne_index = self.get_forecaster_no(option='w') + \
-                            reward_action_function[self.get_forecaster_no(option='w'):].argmax()
+                            reward_action_function[self.get_forecaster_no(option='w'):
+                                                   self.get_forecaster_no(player, 'r')].argmax()
             # is the best one in accordance with the current game behavior?
-            if np.linalg.norm(best_estimate-fc_policies[-1, best_ne_index]) < .7:
+            if np.linalg.norm(best_estimate - fc_policies[-1, best_ne_index]) < .7:
                 return fc_policies[-1, best_ne_index]
         return best_estimate
 
@@ -177,12 +179,10 @@ class BoostedWPL(Solver):
         if hypo_distances != [] and hypo_distances.min() < .1:
             hypo_ind = np.unravel_index(hypo_distances.argmin(), hypo_distances.shape)
             index_to_remove = self.get_forecaster_no(player, option='w') + max(hypo_ind)
-            print('lsb', learning_settings,
-                  fc_policies[index_to_remove],
-                  fc_policies[self.get_forecaster_no(player, option='w') + min(hypo_ind)])
+            #       fc_policies[index_to_remove],
+            #       fc_policies[self.get_forecaster_no(player, option='w') + min(hypo_ind)])
             learning_settings.pop(index_to_remove)
             fc_policies[index_to_remove] = np.zeros(np.array(fc_policies[index_to_remove]).shape).tolist()
-            print('lsa', learning_settings, fc_policies[self.get_forecaster_no(player, option='w') + min(hypo_ind)])
 
         # 2. deciding on whether or not the current policies agree according to the chosen strategy
         if decision_type == 'majority' and iteration > self.exploration_trials:
@@ -197,11 +197,9 @@ class BoostedWPL(Solver):
                 if ne_hypos.max() > .5:
                     # if it is, this converts the hypothesis to a policy
                     pol = np.mean(fc_policies[:self.get_forecaster_no(option='w')+1], axis=0)
-                    # print(pol)
-                    # TODO: making sure that we do not add the same ne forecaster again
                     # is this a new hypothesis?
                     if np.sqrt(np.sum(np.square(np.array(fc_policies[self.get_forecaster_no(player, 'w'):])-pol),
-                                      axis=1)).min() > .6:
+                                      axis=1)).min() > .5:
                         # yes - the distance to the old hypotheses is too large
                         learning_settings.append([1., 1., .0])
                         fc_policies[self.get_forecaster_no(player, 'r')-1] = pol
@@ -262,14 +260,14 @@ class BoostedWPL(Solver):
                                                                     averaging_type='exponential')
 
         # stupid random play
-        # if iteration <= 1500:
-        #     policy_taken[0] = [1., 0.]
-        # elif iteration <= 3000:
-        #     policy_taken[0] = [0., 1.]
-        # elif iteration % 160 < 80:
-        #     policy_taken[0] = [0., 1.]
-        # else:
-        #     policy_taken[0] = [1., 0.]
+        if iteration <= 5000:
+            policy_taken[0] = [1., 0.]
+        elif iteration <= 10000:
+            policy_taken[0] = [0., 1.]
+        elif iteration % 400 < 200:
+            policy_taken[0] = [0., 1.]
+        else:
+            policy_taken[0] = [1., 0.]
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 2. then play the game
