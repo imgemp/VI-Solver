@@ -10,6 +10,36 @@ from Options import Reporting
 # from Estimators import decaying_average_estimator
 
 
+class Settings():
+    def __init__(self):
+        self.forecaster_learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .01]]
+        self.number_of_forecasters = len(self.forecaster_learning_settings)
+        self.number_of_learnable_nes = 3
+        self.value_function_add_vector = compute_increase_vector(3, .7, .3)
+        self.value_function_approximation_space = np.array([1./(51-1)*i for i in range(51)])
+        self.value_function_decay_factor = .6
+        self.value_function_threshold = .4
+        self.minimal_distance_between_nes = .7
+        self.discard_weight_factor = .5
+        self.negative_penalty_ratio = 25.
+        self.projecting_exponential_factor = 18.
+        self.distance_to_nash_to_play_nash = .7
+        self.distance_threshold_to_assume_agreement = .032
+        self.number_of_forecasters_to_agree = 7
+
+    @property
+    def fls(self):
+        return self.forecaster_learning_settings
+
+    @property
+    def nof(self):
+        return self.number_of_forecasters
+
+    @property
+    def nolne(self):
+        return self.number_of_learnable_nes
+
+
 class BoostedWPL(Solver):
     def __init__(self, domain,
                  P=IdentityProjection(),
@@ -39,7 +69,7 @@ class BoostedWPL(Solver):
         self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .01]]
         # self.learning_settings = [[1., .75, .07], [1., .5, .09], [1., 1., .03]]
         self.value_approx_range = np.array([1./(51-1)*i for i in range(51)])
-        self.additive_ = compute_increase_vector(15, .7, .1)
+        self.additive_ = compute_increase_vector(3, .7, .3)
         # self.ne_hypotheses = np.zeros(self.value_approx_range.shape)
 
     def init_temp_storage(self, start, domain, options):
@@ -188,16 +218,17 @@ class BoostedWPL(Solver):
         # 2. deciding on whether or not the current policies agree according to the chosen strategy
         if decision_type == 'majority' and iteration > self.exploration_trials:
             # the following computes the number of distances greater than a specific threshold
-            if np.sum(distances > .031) < 7:
+            if np.sum(distances > .032) < 7:
                 # this computes the value of a nash equilibrium hypothesis
                 hypo_index = compute_value_index(self.value_approx_range,
                                                  np.mean(fc_policies[:self.get_forecaster_no(player, 'w')], axis=0)[0])
                 # this computes the value function for the hypothesis
+                ne_hypos *= .6
                 ne_hypos = add_value_vector(ne_hypos, self.additive_, hypo_index)
                 # this computes whether or not the hypothesis is close enough
                 if ne_hypos.max() > .4:
                     # if it is, this converts the hypothesis to a policy
-                    pol = np.mean(fc_policies[:self.get_forecaster_no(option='w')+1], axis=0)
+                    pol = np.mean(fc_policies[:self.get_forecaster_no(option='w')], axis=0)
                     # is this a new hypothesis?
                     if np.sqrt(np.sum(np.square(np.array(fc_policies[self.get_forecaster_no(player, 'w'):])-pol),
                                       axis=1)).min() > .7:
@@ -209,7 +240,6 @@ class BoostedWPL(Solver):
                         # nep = np.sqrt(np.sum(np.square(fc_policies[self.get_forecaster_no(player, 'w'):]-pol), axis=0)).argmin()
                         # fc_policies[self.get_forecaster_no(player, 'w')+nep] = (ne_hypos.max()*pol + self.additive_.max()*fc_policies[self.get_forecaster_no(player, 'w')+nep])/(ne_hypos.max() + self.additive_.max())
                     # decrease the value of everything in the value funtion
-            ne_hypos *= .99
 
         return ne_hypos, fc_policies, learning_settings
 
@@ -219,7 +249,7 @@ class BoostedWPL(Solver):
         if option == 'w':
             return self.no_forecasters
         if option == 'm':
-            return self.no_forecasters + 3
+            return self.no_forecasters + 4
 
     def update(self, record):
         # Retrieve Necessary Data
