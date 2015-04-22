@@ -3,6 +3,7 @@ from scipy.special import erf
 
 from VISolver.Domain import Domain
 
+
 class CloudServices(Domain):
 
     def __init__(self,Network,alpha=2):
@@ -13,21 +14,21 @@ class CloudServices(Domain):
         self.alpha = alpha
 
     def F(self,Data,FDs=None):
-        
         return -np.concatenate((self.dCloudProfit(Data),self.dBizProfits(Data)))
 
     def gap_rplus(self,Data):
-        X    = Data
+        X = Data
         dFdX = self.F(Data)
 
-        Y   = np.maximum(0,X - dFdX/self.alpha)
-        Z   = X - Y
+        Y = np.maximum(0,X - dFdX/self.alpha)
+        Z = X - Y
 
         return np.dot(dFdX,Z) - self.alpha/2.*np.dot(Z,Z)
 
     # Functions used to Initialize the Cloud Network and Calculate F
 
-    def UnpackNetwork(self,nClouds,nBiz,c_clouds,c_bizes,dist_bizes,lam_bizes,p_bizes):
+    def UnpackNetwork(self,nClouds,nBiz,c_clouds,c_bizes,dist_bizes,
+                      lam_bizes,p_bizes):
         self.nClouds = nClouds
         self.nBiz = nBiz
         self.c_clouds = c_clouds
