@@ -23,9 +23,9 @@ class CloudServices(Domain):
 
     def gap_rplus(self,Data):
         X = Data
-        print('-------------error here--------------------------')
+        # print('-------------error here--------------------------')
         dFdX = self.F(Data)
-        print('-'*100)
+        # print('-'*100)
 
         Y = np.maximum(0,X - dFdX/self.alpha)
         Z = X - Y
@@ -67,10 +67,11 @@ class CloudServices(Domain):
         for i in xrange(self.nClouds):
             # Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
             # Cost[i] = self.poly(Q[i],*self.c_clouds[i])
-            QL_cost = self.poly(Q_L[i],*self.c_clouds[i])
+            a = 0.3
+            QL_cost = a*self.poly(Q_L[i],*self.c_clouds[i])
             c_s = 1.5*self.c_clouds[i][0]
             d_s = self.c_clouds[i][1]
-            QS_cost = self.poly(Q_S[i],c_s,d_s)
+            QS_cost = a*self.poly(Q_S[i],c_s,d_s)
             Cost[i] = QL_cost + QS_cost
         # embed()
         # assert False
@@ -94,16 +95,16 @@ class CloudServices(Domain):
 
         # Cost = self.exp2lin(Q,*self.c_clouds[i])
         # Cost = self.poly(Q,*self.c_clouds[i])
-        print('in cloudprofit')
+        # print('in cloudprofit')
         QL_cost = self.poly(Q_L,*self.c_clouds[i])
         if Q_L < 0.:
             embed()
             assert False
-        print('error above?')
+        # print('error above?')
         c_s = 1.5*self.c_clouds[i][0]
         d_s = self.c_clouds[i][1]
         QS_cost = self.poly(Q_S,c_s,d_s)
-        print('error above now?')
+        # print('error above now?')
         Cost = QL_cost + QS_cost
 
         return Revenue - Cost
@@ -114,7 +115,7 @@ class CloudServices(Domain):
         pert = np.zeros_like(Data)
         pert[-1] = delta
         for i in xrange(Data.shape[0]):
-            print(i)
+            # print(i)
             pert = np.roll(pert,1)
             f = lambda x: self.CloudProfit(x,i % self.nClouds)
             findiff[i] = self.forwdiff(f,Data,Data+pert,delta)
@@ -236,7 +237,7 @@ class CloudServices(Domain):
     def argmax_firm_profits(self,Data):
         q = np.zeros_like(self.q)
         for j in xrange(self.nBiz):
-            print(j)
+            # print(j)
             q[j] = self.argmax_firm_profit(Data,j)
             if (q[j] < 0.).any():
                 embed()
@@ -259,11 +260,13 @@ class CloudServices(Domain):
         cdf = lambda x: self.nngauss_cdf(x,mu,sigma)
         dcost = lambda x: self.dpoly(x,*self.c_bizes[j])
         dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf,dcost)
-
+        # embed()
+        # assert False
         bnds = tuple([(0,None)]*len(x0))
-        print('start')
-        res = minimize(fun,x0,jac=dfun,method='SLSQP',bounds=bnds)
-        print('finish')
+        # print('start')
+        # res = minimize(fun,x0,jac=dfun,method='SLSQP',bounds=bnds)
+        res = minimize(fun,x0,jac=dfun,method='L-BFGS-B',bounds=bnds)
+        # print('finish')
         if (res.x < 0.).any():
             embed()
             assert False
@@ -286,9 +289,11 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
     # c_clouds = np.array([[21.,23.,1.],
     #                      [27.,43.,1.],
     #                      [32.,68.,1.]])
+    # c_clouds = np.array([[[0.,4.5],[0.,2.]],
+    #                      [[0.,2.0],[0.,2.2]],
+    #                      [[0.,3.0],[0.,2.1]]])
     c_clouds = np.array([[[0.,4.5],[0.,2.]],
-                         [[0.,2.0],[0.,2.2]],
-                         [[0.,3.0],[0.,2.1]]])
+                         [[0.,2.0],[0.,2.2]]])
 
     # Business cost functions
     # Need to add a business cost function
@@ -339,6 +344,6 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
 
     # Business sale prices, p_biz
     # p_bizes = np.random.rand(nBiz)*1+5
-    p_bizes = np.array([.3,.4,.2,.5,.6,.4,.3,.2,.5,.3])
+    p_bizes = np.array([.3,.4,.2,.5,.6,.4,.3,.2,.5,.3])*10.
 
     return (nClouds,nBiz,c_clouds,c_bizes,dist_bizes,lam_bizes,p_bizes)
