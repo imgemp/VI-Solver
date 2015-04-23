@@ -60,7 +60,8 @@ class CloudServices(Domain):
 
         Cost = np.zeros(self.nClouds)
         for i in xrange(self.nClouds):
-            Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
+            # Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
+            Cost[i] = self.poly(Q[i],*self.c_clouds[i])
         # embed()
         # assert False
         return Revenue - Cost
@@ -78,7 +79,8 @@ class CloudServices(Domain):
 
         Revenue = p_L*Q_L + p_S*Q_S
 
-        Cost = self.exp2lin(Q,*self.c_clouds[i])
+        # Cost = self.exp2lin(Q,*self.c_clouds[i])
+        Cost = self.poly(Q,*self.c_clouds[i])
 
         return Revenue - Cost
 
@@ -143,16 +145,28 @@ class CloudServices(Domain):
         else:
             return 1./(a*c)*np.exp(b/a)
 
-    def firm_profit(self,q,dp,lam,mu,intcdf):
+    def poly(self,x,c,d):
+        # c and d should also be 1-d, else should match x shape maybe?
+        # embed()
+        assert c.shape[-1] == d.shape[-1]  # == x.shape[-1]
+        return np.sum(c*x**d,axis=-1)
+
+    def dpoly(self,x,c,d):
+        # c and d should also be 1-d, else should match x shape maybe?
+        assert c.shape[-1] == d.shape[-1]  # == x.shape[-1]
+        return np.sum(d*c*x**(d-1),axis=-1)
+
+    def firm_profit(self,q,dp,lam,mu,intcdf,c):
         half = len(q)//2
         Ql = np.sum(q[:half])
-        return np.sum(q*dp) + lam[1]*(Ql-mu) - (lam[0]+lam[1])*intcdf(Ql)
+        cst = c(Ql)
+        return np.sum(q*dp) + lam[1]*(Ql-mu) - (lam[0]+lam[1])*intcdf(Ql) - cst
 
-    def dfirm_profit(self,q,dp,lam,cdf):
+    def dfirm_profit(self,q,dp,lam,cdf,dc):
         half = len(q)//2
         Ql = np.sum(q[:half])
         res = np.empty_like(dp)
-        res[:half] = dp[:half] + lam[1] - (lam[0]+lam[1])*cdf(Ql)
+        res[:half] = dp[:half] + lam[1] - (lam[0]+lam[1])*cdf(Ql) - dc(Ql)
         res[half:] = dp[half:]
         return res
 
@@ -172,10 +186,12 @@ class CloudServices(Domain):
         dp = self.p_bizes[j] - Data
 
         intcdf = lambda x: self.nngauss_intcdf(x,mu,sigma)
-        fun = lambda q: -self.firm_profit(q,dp,lam,mu,intcdf)
+        cost = lambda x: self.poly(x,*self.c_bizes[j])
+        fun = lambda q: -self.firm_profit(q,dp,lam,mu,intcdf,cost)
 
         cdf = lambda x: self.nngauss_cdf(x,mu,sigma)
-        dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf)
+        dcost = lambda x: self.dpoly(x,*self.c_bizes[j])
+        dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf,dcost)
 
         bnds = tuple([(0,None)]*len(x0))
 
@@ -199,10 +215,12 @@ class CloudServices(Domain):
         dp = self.p_bizes[j] - Data
 
         intcdf = lambda x: self.nngauss_intcdf(x,mu,sigma)
-        fun = lambda q: -self.firm_profit(q,dp,lam,mu,intcdf)
+        cost = lambda x: self.poly(x,*self.c_bizes[j])
+        fun = lambda q: -self.firm_profit(q,dp,lam,mu,intcdf,cost)
 
         cdf = lambda x: self.nngauss_cdf(x,mu,sigma)
-        dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf)
+        dcost = lambda x: self.dpoly(x,*self.c_bizes[j])
+        dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf,dcost)
 
         bnds = tuple([(0,None)]*len(x0))
 
@@ -224,15 +242,27 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
     # b: transition point from exp to lin
     # c: scaling factor for costs
     # c_clouds = 0*(np.random.rand(nClouds,3)*[0,.5,.2]+[1,1,1])
-    c_clouds = np.array([[21.,23.,1.],
-                         [27.,43.,1.],
-                         [32.,68.,1.]])
+    # c_clouds = np.array([[21.,23.,1.],
+    #                      [27.,43.,1.],
+    #                      [32.,68.,1.]])
+    c_clouds = np.array([[[0.,4.5],[0.,2.]],
+                         [[0.,2.0],[0.,2.2]],
+                         [[0.,3.0],[0.,2.1]]])
 
     # Business cost functions
     # Need to add a business cost function
     # c_bizes = np.random.rand(nBiz,3)*[0,0.2,0.1]+[0,0,0]
     # c_bizes = np.zeros((nBiz,3))
-    c_bizes = c_clouds.copy()
+    c_bizes = np.array([[[0.,4.5],[0.,2.]],
+                         [[0.,2.0],[0.,2.2]],
+                         [[0.,3.0],[0.,2.1]],
+                         [[0.,4.5],[0.,2.]],
+                         [[0.,2.0],[0.,2.2]],
+                         [[0.,3.0],[0.,2.1]],
+                         [[0.,4.5],[0.,2.]],
+                         [[0.,2.0],[0.,2.2]],
+                         [[0.,3.0],[0.,2.1]],
+                         [[0.,4.5],[0.,2.]]])
 
     # Business demand distribution function means, mu_biz, and
     # standard deviations, sigma_biz
