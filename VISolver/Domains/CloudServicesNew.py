@@ -5,6 +5,9 @@ from scipy.optimize import minimize
 from IPython import embed
 from VISolver.Domain import Domain
 
+# import warnings
+# warnings.filterwarnings('error')
+
 
 class CloudServices(Domain):
 
@@ -20,7 +23,9 @@ class CloudServices(Domain):
 
     def gap_rplus(self,Data):
         X = Data
+        print('-------------error here--------------------------')
         dFdX = self.F(Data)
+        print('-'*100)
 
         Y = np.maximum(0,X - dFdX/self.alpha)
         Z = X - Y
@@ -61,7 +66,12 @@ class CloudServices(Domain):
         Cost = np.zeros(self.nClouds)
         for i in xrange(self.nClouds):
             # Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
-            Cost[i] = self.poly(Q[i],*self.c_clouds[i])
+            # Cost[i] = self.poly(Q[i],*self.c_clouds[i])
+            QL_cost = self.poly(Q_L[i],*self.c_clouds[i])
+            c_s = 1.5*self.c_clouds[i][0]
+            d_s = self.c_clouds[i][1]
+            QS_cost = self.poly(Q_S[i],c_s,d_s)
+            Cost[i] = QL_cost + QS_cost
         # embed()
         # assert False
         return Revenue - Cost
@@ -71,6 +81,9 @@ class CloudServices(Domain):
         p_S = Data[i+self.nClouds]
 
         q = self.argmax_firm_profits(Data)
+        if (q < 0.).any():
+            embed()
+            assert False
         self.q = q
 
         Q_L = np.sum(q[:,i])
@@ -80,7 +93,18 @@ class CloudServices(Domain):
         Revenue = p_L*Q_L + p_S*Q_S
 
         # Cost = self.exp2lin(Q,*self.c_clouds[i])
-        Cost = self.poly(Q,*self.c_clouds[i])
+        # Cost = self.poly(Q,*self.c_clouds[i])
+        print('in cloudprofit')
+        QL_cost = self.poly(Q_L,*self.c_clouds[i])
+        if Q_L < 0.:
+            embed()
+            assert False
+        print('error above?')
+        c_s = 1.5*self.c_clouds[i][0]
+        d_s = self.c_clouds[i][1]
+        QS_cost = self.poly(Q_S,c_s,d_s)
+        print('error above now?')
+        Cost = QL_cost + QS_cost
 
         return Revenue - Cost
 
@@ -90,6 +114,7 @@ class CloudServices(Domain):
         pert = np.zeros_like(Data)
         pert[-1] = delta
         for i in xrange(Data.shape[0]):
+            print(i)
             pert = np.roll(pert,1)
             f = lambda x: self.CloudProfit(x,i % self.nClouds)
             findiff[i] = self.forwdiff(f,Data,Data+pert,delta)
@@ -149,12 +174,18 @@ class CloudServices(Domain):
         # c and d should also be 1-d, else should match x shape maybe?
         # embed()
         assert c.shape[-1] == d.shape[-1]  # == x.shape[-1]
+        # try:
+        #     np.sum(c*x**d,axis=-1)
+        # except Warning:
+        #     embed()
         return np.sum(c*x**d,axis=-1)
 
     def dpoly(self,x,c,d):
         # c and d should also be 1-d, else should match x shape maybe?
         assert c.shape[-1] == d.shape[-1]  # == x.shape[-1]
-        return np.sum(d*c*x**(d-1),axis=-1)
+        _c = c[d != 0.]
+        _d = d[d != 0.]
+        return np.sum(_d*_c*x**(_d-1),axis=-1)
 
     def firm_profit(self,q,dp,lam,mu,intcdf,c):
         half = len(q)//2
@@ -205,7 +236,14 @@ class CloudServices(Domain):
     def argmax_firm_profits(self,Data):
         q = np.zeros_like(self.q)
         for j in xrange(self.nBiz):
+            print(j)
             q[j] = self.argmax_firm_profit(Data,j)
+            if (q[j] < 0.).any():
+                embed()
+                assert False
+        if (q < 0.).any():
+            embed()
+            assert False
         return q
 
     def argmax_firm_profit(self,Data,j):
@@ -223,9 +261,12 @@ class CloudServices(Domain):
         dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf,dcost)
 
         bnds = tuple([(0,None)]*len(x0))
-
+        print('start')
         res = minimize(fun,x0,jac=dfun,method='SLSQP',bounds=bnds)
-
+        print('finish')
+        if (res.x < 0.).any():
+            embed()
+            assert False
         if -res.fun < 0.:
             return 0.*res.x
         else:

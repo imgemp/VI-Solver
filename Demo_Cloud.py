@@ -35,10 +35,12 @@ def Demo():
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = .5*np.ones(Domain.Dim)
+    Start = .2*np.ones(Domain.Dim)
 
     # Calculate Initial Gap
+    print('comp gap')
     gap_0 = Domain.gap_rplus(Start)
+    print('done')
     print(Domain.CloudProfits(Start))
     print(Domain.dCloudProfits(Start))
     print(Domain.maxfirm_profits(Start))
@@ -46,8 +48,8 @@ def Demo():
 
     # Set Options
     # Init = Initialization(Step=-1e-10)
-    Init = Initialization(Step=-0.001)
-    Term = Termination(MaxIter=5,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
+    Init = Initialization(Step=-0.00001)
+    Term = Termination(MaxIter=5,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
