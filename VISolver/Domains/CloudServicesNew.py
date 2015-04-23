@@ -49,9 +49,7 @@ class CloudServices(Domain):
         p_L = Data[:half]
         p_S = Data[half:]
 
-        q = np.zeros_like(self.q)
-        for j in xrange(self.nBiz):
-            q[j] = self.argmax_firm_profit(Data,j)
+        q = self.argmax_firm_profits(Data)
         self.q = q
 
         Q_L = np.sum(q[:,:half],axis=0)
@@ -63,17 +61,15 @@ class CloudServices(Domain):
         Cost = np.zeros(self.nClouds)
         for i in xrange(self.nClouds):
             Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
-        embed()
-        assert False
+        # embed()
+        # assert False
         return Revenue - Cost
 
     def CloudProfit(self,Data,i):
         p_L = Data[i]
         p_S = Data[i+self.nClouds]
 
-        q = np.zeros_like(self.q)
-        for j in xrange(self.nBiz):
-            q[j] = self.argmax_firm_profit(Data,j)
+        q = self.argmax_firm_profits(Data)
         self.q = q
 
         Q_L = np.sum(q[:,i])
@@ -189,6 +185,12 @@ class CloudServices(Domain):
             return 0.
         else:
             return -res.fun
+
+    def argmax_firm_profits(self,Data):
+        q = np.zeros_like(self.q)
+        for j in xrange(self.nBiz):
+            q[j] = self.argmax_firm_profit(Data,j)
+        return q
 
     def argmax_firm_profit(self,Data,j):
         x0 = self.q[j]

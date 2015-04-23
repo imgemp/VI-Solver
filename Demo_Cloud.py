@@ -35,13 +35,14 @@ def Demo():
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = .1*np.ones(Domain.Dim)
+    Start = .5*np.ones(Domain.Dim)
 
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
     print(Domain.CloudProfits(Start))
     print(Domain.dCloudProfits(Start))
     print(Domain.maxfirm_profits(Start))
+    print(Domain.argmax_firm_profits(Start))
 
     # Set Options
     # Init = Initialization(Step=-1e-10)
@@ -68,6 +69,7 @@ def Demo():
     print(Domain.CloudProfits(x))
     print(Domain.dCloudProfits(x))
     print(Domain.maxfirm_profits(x))
+    print(Domain.argmax_firm_profits(x))
     embed()
 
 if __name__ == '__main__':
