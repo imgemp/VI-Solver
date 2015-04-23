@@ -15,6 +15,7 @@ from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimResults, PrintSimStats
+from IPython import embed
 
 
 def Demo():
@@ -40,11 +41,12 @@ def Demo():
     gap_0 = Domain.gap_rplus(Start)
     print(Domain.CloudProfits(Start))
     print(Domain.dCloudProfits(Start))
+    print(Domain.maxfirm_profits(Start))
 
     # Set Options
     # Init = Initialization(Step=-1e-10)
     Init = Initialization(Step=-0.001)
-    Term = Termination(MaxIter=1000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
+    Term = Termination(MaxIter=5,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
@@ -65,6 +67,8 @@ def Demo():
     # print(x)
     print(Domain.CloudProfits(x))
     print(Domain.dCloudProfits(x))
+    print(Domain.maxfirm_profits(x))
+    embed()
 
 if __name__ == '__main__':
     Demo()

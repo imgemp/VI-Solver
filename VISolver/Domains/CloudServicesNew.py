@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 from scipy.special import erf
 from scipy.optimize import minimize
-
+from IPython import embed
 from VISolver.Domain import Domain
 
 
@@ -41,7 +41,7 @@ class CloudServices(Domain):
         self.q = np.zeros((self.nBiz,2*self.nClouds))
 
     def CalculateNetworkSize(self):
-        return 2*self.nClouds*(self.nBiz + 1)
+        return 2*self.nClouds
 
     def CloudProfits(self,Data):
         half = len(Data)//2
@@ -63,6 +63,8 @@ class CloudServices(Domain):
         Cost = np.zeros(self.nClouds)
         for i in xrange(self.nClouds):
             Cost[i] = self.exp2lin(Q[i],*self.c_clouds[i])
+        embed()
+        assert False
         return Revenue - Cost
 
     def CloudProfit(self,Data,i):
@@ -91,8 +93,9 @@ class CloudServices(Domain):
         pert[-1] = delta
         for i in xrange(Data.shape[0]):
             pert = np.roll(pert,1)
-            f = lambda x: self.CloudProfit(x,i)
+            f = lambda x: self.CloudProfit(x,i % self.nClouds)
             findiff[i] = self.forwdiff(f,Data,Data+pert,delta)
+        return findiff
 
     def nngauss_pdf(self,x,mu,sigma):
         if x >= 0.:
@@ -105,7 +108,7 @@ class CloudServices(Domain):
 
     def nngauss_cdf(self,x,mu,sigma):
         if x >= 0.:
-            a = erf()
+            a = erf((x-mu)/(sigma*np.sqrt(2.)))
             b = erf(-mu/(sigma*np.sqrt(2.)))
             return 1./2.*(a-b)
         else:
@@ -120,6 +123,8 @@ class CloudServices(Domain):
             return 1./2.*(_x*erf(_x) +
                           1./np.sqrt(np.pi)*np.exp(-_x**2.) -
                           eta - kappa - eta/xi*x)
+        else:
+            return 0.
 
     def nngauss_mean(self,mu,sigma):
         skew = 2./(1.-erf(-mu/(sigma*np.sqrt(2.)))) * sigma/np.sqrt(2.*np.pi)
@@ -128,10 +133,11 @@ class CloudServices(Domain):
     def exp2lin(self,x,a,b,c):
         if x <= 0.:
             return 0.
-        elif x <= b:
-            return 1./c*(np.exp(x/a)-1.)
         else:
-            return 1./c*(np.exp(b/a)*(x/a+1-b/a)-1)
+        # elif x <= b:
+            return 1./c*(np.exp(x/a)-1.)
+        # else:
+        #     return 1./c*(np.exp(b/a)*(x/a+1-b/a)-1)
 
     def dexp2lin(self,x,a,b,c):
         if x <= 0.:
@@ -157,6 +163,33 @@ class CloudServices(Domain):
     def forwdiff(self,f,x,_x,h):
         return (f(_x)-f(x))/h
 
+    def maxfirm_profits(self,Data):
+        res = np.empty(self.nBiz)
+        for j in xrange(self.nBiz):
+            res[j] = self.maxfirm_profit(Data,j)
+        return res
+
+    def maxfirm_profit(self,Data,j):
+        x0 = self.q[j]
+        mu, sigma = self.dist_bizes[j]
+        lam = self.lam_bizes[j]
+        dp = self.p_bizes[j] - Data
+
+        intcdf = lambda x: self.nngauss_intcdf(x,mu,sigma)
+        fun = lambda q: -self.firm_profit(q,dp,lam,mu,intcdf)
+
+        cdf = lambda x: self.nngauss_cdf(x,mu,sigma)
+        dfun = lambda q: -self.dfirm_profit(q,dp,lam,cdf)
+
+        bnds = tuple([(0,None)]*len(x0))
+
+        res = minimize(fun,x0,jac=dfun,method='SLSQP',bounds=bnds)
+
+        if -res.fun < 0.:
+            return 0.
+        else:
+            return -res.fun
+
     def argmax_firm_profit(self,Data,j):
         x0 = self.q[j]
         mu, sigma = self.dist_bizes[j]
@@ -173,7 +206,10 @@ class CloudServices(Domain):
 
         res = minimize(fun,x0,jac=dfun,method='SLSQP',bounds=bnds)
 
-        return res.x
+        if -res.fun < 0.:
+            return 0.*res.x
+        else:
+            return res.x
 
 
 def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
@@ -191,9 +227,10 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
                          [32.,68.,1.]])
 
     # Business cost functions
-    # Unused for now
+    # Need to add a business cost function
     # c_bizes = np.random.rand(nBiz,3)*[0,0.2,0.1]+[0,0,0]
-    c_bizes = np.zeros((nBiz,3))
+    # c_bizes = np.zeros((nBiz,3))
+    c_bizes = c_clouds.copy()
 
     # Business demand distribution function means, mu_biz, and
     # standard deviations, sigma_biz
@@ -216,7 +253,7 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
     # Business forecasting cost functions
     # = lam_biz[0]*E_surplus + lam_biz[1]*E_shortage
     # lam_bizes = np.random.rand(nBiz,2)*[0,0.01]+[0,0.005]
-    lam_bizes = np.array([[.1,.1],
+    lam_bizes = 1e2*np.array([[.1,.1],
                           [.1,.1],
                           [.1,.1],
                           [.1,.1],
