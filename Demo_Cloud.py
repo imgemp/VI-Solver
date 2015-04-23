@@ -1,21 +1,20 @@
 import time
-import datetime
 import numpy as np
 
-from VISolver.Domains.CloudServices3 import CloudServices, CreateRandomNetwork
+from VISolver.Domains.CloudServicesNew import CloudServices, CreateRandomNetwork
 
 from VISolver.Solvers.Euler import Euler
-from VISolver.Solvers.Extragradient import EG
-from VISolver.Solvers.AcceleratedGradient import AG
-from VISolver.Solvers.HeunEuler import HeunEuler
-from VISolver.Solvers.AdamsBashforthEuler import ABEuler
-from VISolver.Solvers.CashKarp import CashKarp
+# from VISolver.Solvers.Extragradient import EG
+# from VISolver.Solvers.AcceleratedGradient import AG
+# from VISolver.Solvers.HeunEuler import HeunEuler
+# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
+# from VISolver.Solvers.CashKarp import CashKarp
 
 from VISolver.Projection import RPlusProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
-from Log import PrintSimResults, PrintSimStats
+from VISolver.Log import PrintSimResults, PrintSimStats
 
 
 def Demo():
@@ -23,7 +22,7 @@ def Demo():
     #__CLOUD_SERVICES__##################################################
 
     # Define Network and Domain
-    Network = CreateRandomNetwork(nClouds=2,nBiz=5,seed=0)
+    Network = CreateRandomNetwork()
     Domain = CloudServices(Network=Network,alpha=2)
 
     # Set Method
@@ -35,20 +34,19 @@ def Demo():
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = 5*np.ones(Domain.Dim)
-    
+    Start = .1*np.ones(Domain.Dim)
+
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
-    print(Domain.CloudProfit(Start))
-    print(Domain.BizProfits(Start))
-    print(Domain.dCloudProfit(Start))
-    print(Domain.dBizProfits(Start))
+    print(Domain.CloudProfits(Start))
+    print(Domain.dCloudProfits(Start))
 
-	# Set Options
+    # Set Options
     # Init = Initialization(Step=-1e-10)
     Init = Initialization(Step=-0.001)
-    Term = Termination(MaxIter=1000000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
-    Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations','Projections','Data'])
+    Term = Termination(MaxIter=1000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
+    Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
+                               'Projections','Data'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -65,10 +63,8 @@ def Demo():
 
     x = CloudServices_Results.PermStorage['Data'][-1]
     # print(x)
-    print(Domain.CloudProfit(x))
-    print(Domain.BizProfits(x))
-    print(Domain.dCloudProfit(x))
-    print(Domain.dBizProfits(x))
+    print(Domain.CloudProfits(x))
+    print(Domain.dCloudProfits(x))
 
 if __name__ == '__main__':
-  Demo()
+    Demo()
