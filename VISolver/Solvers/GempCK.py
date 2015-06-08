@@ -4,7 +4,7 @@ from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solver
 
 
-class GempRK2(Solver):
+class GempCK(Solver):
 
     def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-2,
                  GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
@@ -21,7 +21,7 @@ class GempRK2(Solver):
         c = 5.*k
         N = max(int((c*self.Sigma)**2./Delta0/1.),1)
         print(N)
-        N /= 100
+        N /= 1000
         self.N = N
 
         self.Proj = P
@@ -37,6 +37,16 @@ class GempRK2(Solver):
         self.MinStep = MinStep
 
         self.MaxStep = MaxStep
+
+        self.BT = np.array([
+            [1./5.,0.,0.,0.,0.,0.],
+            [3./40.,9./40.,0.,0.,0.,0.],
+            [3./10.,-9./10.,6./5.,0.,0.,0.],
+            [-11./54.,5./2.,-70./27.,35./27.,0.,0.],
+            [1631./55296.,175./512.,575./13824.,44275./110592.,253./4096.,0.],
+            [37./378.,0.,250./621.,125./594.,0.,512./1771.],
+            [2825./27648.,0.,18575./48384.,13525./55296.,277./14336.,0.25]
+        ])
 
     def InitTempStorage(self,Start,Domain,Options):
 
@@ -55,7 +65,7 @@ class GempRK2(Solver):
         # Retrieve Necessary Data
         Data = Record.TempStorage['Data'][-1]
         Step = Record.TempStorage['Step'][-1]
-        Fs = np.zeros((2,Data.shape[0]))
+        Fs = np.zeros((6,Data.shape[0]))
 
         # Initialize Storage
         TempData = {}
@@ -66,31 +76,39 @@ class GempRK2(Solver):
         F_avg = np.zeros_like(Data)
 
         for n in xrange(self.N):
+            # Calculate k values (gradients)
             Fs[0,:] = self.F(Data)
-            _NewData_n = self.Proj.P(Data,Step,Fs[0,:])
-            Fs[1,:] = self.F(_NewData_n)
-            NewData_n = self.Proj.P(Data,Step,0.5*np.sum(Fs,axis=0))
+            for i in xrange(5):
+                direction = np.einsum('i,i...', self.BT[i,:i+1], Fs[:i+1])
+                _TempData_n = self.Proj.P(Data, Step, direction)
+                Fs[i+1,:] = self.F(_TempData_n)
+
+            # Compute order-p, order-p+1 data points
+            direction = np.einsum('i,i...', self.BT[6,:6], Fs[:6])
+            _NewData_n = self.Proj.P(Data, Step, direction)
+            direction = np.einsum('i,i...', self.BT[5,:6], Fs[:6])
+            NewData_n = self.Proj.P(Data, Step, direction)
 
             # Note that convex combination of results will still be in K
             _NewData += _NewData_n/self.N
             NewData += NewData_n/self.N
-            F_avg += 0.5*np.sum(Fs,axis=0)/self.N
+            F_avg += direction/self.N
 
         # Adjust Stepsize - P(|Diff|>=k/c*Delta) <= 1/k^2
         Delta = max(abs(NewData-_NewData))
         if Delta == 0:
             Step = 2 * Step
         else:
-            growth = min((self.Delta0/Delta)**0.5, self.GrowthLimit)
-            Step = max(min(Step*growth, self.MaxStep), self.MinStep)
+            growth = min((self.Delta0/Delta)**0.2, self.GrowthLimit)
+            Step = np.clip(Step*growth, self.MinStep, self.MaxStep)
 
         # Store Data
         TempData['Data'] = NewData
         TempData[self.F] = F_avg
         TempData['Step'] = Step
-        TempData['F Evaluations'] = 2*self.N + \
+        TempData['F Evaluations'] = 6*self.N + \
             self.TempStorage['F Evaluations'][-1]
-        TempData['Projections'] = 2*self.N + self.TempStorage['Projections'][-1]
+        TempData['Projections'] = 6*self.N + self.TempStorage['Projections'][-1]
         self.BookKeeping(TempData)
 
         return self.TempStorage

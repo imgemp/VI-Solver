@@ -15,6 +15,7 @@ from VISolver.Domains.NoisyRosenbrock import NoisyRosenbrock
 # from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 # from VISolver.Solvers.CashKarp import CashKarp
 from VISolver.Solvers.GempRK2 import GempRK2
+from VISolver.Solvers.GempCK import GempCK
 
 from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solve
@@ -30,17 +31,18 @@ def Demo():
 
     # Define Domain
     Domain = NoisySphere(Dim=2,Sigma=5.)
-    Domain = NoisyRosenbrock(Dim=1000,Sigma=1.)
+    Domain = NoisyRosenbrock(Dim=2,Sigma=1.)
 
     # Set Method
     # Method = Euler(Domain=Domain,P=IdentityProjection())
-    # Method = EG(Domain=Domain,P=RPlusProjection())
-    # Method = AG(Domain=Domain,P=RPlusProjection())
-    # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
-    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = EG(Domain=Domain,P=IdentityProjection())
+    # Method = AG(Domain=Domain,P=IdentityProjection())
+    # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
+    # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
+    # Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
     # Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-1)
-    Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
+    # Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
+    Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
 
     # Initialize Starting Point
     Start = 3*np.ones(Domain.Dim)
@@ -48,8 +50,8 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    # Init = Initialization(Step=-01)
-    Term = Termination(MaxIter=10000,Tols=[(Domain.f_Error,1e-3)])
+    # Init = Initialization(Step=-0.1)
+    Term = Termination(MaxIter=200,Tols=[(Domain.f_Error,1e-3)])
     Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()

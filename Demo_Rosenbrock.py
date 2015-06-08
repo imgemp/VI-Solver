@@ -13,8 +13,9 @@ from VISolver.Domains.Rosenbrock import Rosenbrock
 from VISolver.Solvers.HeunEuler import HeunEuler
 # from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
+from VISolver.Solvers.GempCK import GempCK
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -27,15 +28,16 @@ def Demo():
     #__ROSENBROCK__##################################################
 
     # Define Domain
-    Domain = Rosenbrock(Dim=1000)
+    Domain = Rosenbrock(Dim=2)
 
     # Set Method
-    # Method = Euler(Domain=Domain,P=RPlusProjection())
-    # Method = EG(Domain=Domain,P=RPlusProjection())
-    # Method = AG(Domain=Domain,P=RPlusProjection())
-    Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
-    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = Euler(Domain=Domain,P=IdentityProjection())
+    # Method = EG(Domain=Domain,P=IdentityProjection())
+    # Method = AG(Domain=Domain,P=IdentityProjection())
+    # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
+    # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
+    Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
+    # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
 
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)
@@ -66,7 +68,7 @@ def Demo():
     # X = np.arange(-5, 5, 0.25)
     # Y = np.arange(-5, 5, 0.25)
     X = np.arange(-2, 2, 0.25)
-    Y = np.arange(0, 3, 0.25)
+    Y = np.arange(-1, 3, 0.25)
     X, Y = np.meshgrid(X, Y)
     Z = np.zeros_like(X)
     for i in xrange(Z.shape[0]):
