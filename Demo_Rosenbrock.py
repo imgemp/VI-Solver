@@ -36,8 +36,8 @@ def Demo():
     # Method = AG(Domain=Domain,P=IdentityProjection())
     # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
     # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
-    Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
-    # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
+    Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
+    # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)

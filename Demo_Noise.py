@@ -41,8 +41,8 @@ def Demo():
     # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
     # Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-1)
-    # Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
-    Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
+    Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-3)
+    # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = 3*np.ones(Domain.Dim)
@@ -51,9 +51,9 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=200,Tols=[(Domain.f_Error,1e-3)])
+    Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
     Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
-                               'Projections','Data'])
+                               'Projections','Data',Domain.F])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -88,10 +88,16 @@ def Demo():
     trajY = []
     trajZ = []
     for i in xrange(len(data)):
-        trajX.append(data[i][0])
-        trajY.append(data[i][1])
-        trajZ.append(res[i])
+        if not np.isnan(data[i][0]):
+            trajX.append(data[i][0])
+            trajY.append(data[i][1])
+            trajZ.append(res[i])
+        else:
+            break
     ax.plot(trajX,trajY,trajZ)
+    ax.set_xlim(-2,2)
+    ax.set_ylim(0,3)
+    ax.set_zlim(0,3e3)
 
     embed()
 

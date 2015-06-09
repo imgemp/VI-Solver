@@ -21,7 +21,7 @@ class GempRK2(Solver):
         c = 5.*k
         N = max(int((c*self.Sigma)**2./Delta0/1.),1)
         print(N)
-        N /= 100
+        N /= 10000
         self.N = N
 
         self.Proj = P
