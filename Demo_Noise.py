@@ -31,7 +31,7 @@ def Demo():
 
     # Define Domain
     Domain = NoisySphere(Dim=2,Sigma=5.)
-    Domain = NoisyRosenbrock(Dim=2,Sigma=1.)
+    Domain = NoisyRosenbrock(Dim=100,Sigma=1.)
 
     # Set Method
     # Method = Euler(Domain=Domain,P=IdentityProjection())
@@ -41,7 +41,7 @@ def Demo():
     # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-6)
     # Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-1)
-    Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-3)
+    Method = GempRK2(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
     # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
 
     # Initialize Starting Point
@@ -51,7 +51,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.1)
-    Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
+    Term = Termination(MaxIter=30000,Tols=[(Domain.f_Error,1e-6)])
     Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
                                'Projections','Data',Domain.F])
     Misc = Miscellaneous()

@@ -28,7 +28,7 @@ def Demo():
     #__ROSENBROCK__##################################################
 
     # Define Domain
-    Domain = Rosenbrock(Dim=2)
+    Domain = Rosenbrock(Dim=1000)
 
     # Set Method
     # Method = Euler(Domain=Domain,P=IdentityProjection())

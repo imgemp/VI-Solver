@@ -19,9 +19,12 @@ class GempCK(Solver):
         # Determine Batch Size
         k = 3.
         c = 5.*k
-        N = max(int((c*self.Sigma)**2./Delta0/1.),1)
+        N = int((c*self.Sigma)**2./Delta0/1.)
         print(N)
-        N /= 1000000
+        N /= int(1e7)
+        N = 10
+        N = max(N,1)
+        print(N)
         self.N = N
 
         self.Proj = P
