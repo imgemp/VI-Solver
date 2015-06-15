@@ -1,11 +1,11 @@
 __author__ = 'clemens'
 
 import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-import config
-from Options import Reporting
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+from VISolver.Options import Reporting
+import VISolver.config
 # from Estimators import decaying_average_estimator
 
 
@@ -169,14 +169,20 @@ class WPL(Solver):
         iteration = len(record.perm_storage['Policy'])
         lavi = self.compute_last_update_index(self.averaging_window)
 
-        # if iteration <= 5000:
-        #     policy[0] = [1., 0.]
-        # elif iteration <= 10000:
-        #     policy[0] = [0., 1.]
-        # elif iteration % 400 < 200:
-        #     policy[0] = [0., 1.]
-        # else:
-        #     policy[0] = [1., 0.]
+
+        # batch testing options
+        if VISolver.config.batch_testing == 1:
+            # stupid random play
+            if iteration <= 2000:
+                policy[0] = [1., 0.]
+            elif iteration <= 4000:
+                policy[0] = [0., 1.]
+            elif iteration % 400 < 200:
+                policy[0] = [1., 0.]
+            else:
+                policy[0] = [0., 1.]
+        elif VISolver.config.batch_testing == 2:
+            policy[0] = [.5, .5]
 
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
@@ -197,7 +203,7 @@ class WPL(Solver):
         # print '-~-~-~-~-~-~ new iteration ~-~-~-~-~-~-~-~-~-~-~-~-'
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-        if config.debug_output_level >= 1:
+        if VISolver.config.debug_output_level >= 1:
             print '-~-~-~-~-~-~ new iteration (', iteration, ') ~-~-~-~-~-~-~-~-~-~-~-~-'
         # perform the update on the policies:
         for player in range(self.domain.players):
@@ -212,7 +218,7 @@ class WPL(Solver):
             #                                                                       self.amw,
             #                                                                       decaying_rate=1.)
             # learning_rate[player] = 0.12
-            learning_rate[player] = 0.01
+            learning_rate[player] = 0.001
             # computing the policy gradient and the learning rate
             if policy_gradient[player][action[player]] < 0:
                 policy_gradient[player][action[player]] = self.project_error(policy_gradient[player][action[player]])
@@ -232,7 +238,7 @@ class WPL(Solver):
             updated_policy[player] = self.Proj.p(policy[player],
                                                  learning_rate[player],
                                                  policy_gradient[player])
-            if config.debug_output_level >= 1:
+            if VISolver.config.debug_output_level >= 1:
                 print '-> player', player
                 print '   - which update is performed?', policy_gradient[player][action[player]] < 0
                 print '   - temp policies last round:  %.4f' % tmp_pol[-1][player][0]

@@ -3,13 +3,13 @@ __author__ = 'clemens'
 
 
 import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-from Options import Reporting
-from Estimators import decaying_average_estimator
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+from VISolver.Options import Reporting
+from VISolver.Estimators import decaying_average_estimator
 
-import config
+import VISolver.config
 # from pykalman import KalmanFilter as kf
 
 

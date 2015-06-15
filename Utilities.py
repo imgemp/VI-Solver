@@ -71,10 +71,10 @@ def smooth_1d_sequence(sequence, sigma=15):
     return sequence
 
 
-def plot_results(data, vertical_limit=4):
-    if len(data) > vertical_limit:
-        first_dim = np.ceil(len(data)//2)
-        second_dim = 2
+def plot_results(data, columns=2):
+    if columns > 1 and len(data) > 1:
+        first_dim = int(np.ceil(len(data)//columns))
+        second_dim = columns
         ax_indices = []
         for j in range(second_dim):
             for i in range(first_dim):
@@ -83,14 +83,14 @@ def plot_results(data, vertical_limit=4):
         first_dim = len(data)
         second_dim = 1
         ax_indices = range(first_dim)
-
     # creating the indices
 
     def create_plot(ax, points, name, ylimits, smoothing):
         if smoothing != -1:
-            ax.plot(smooth_1d_sequence(points, smoothing))
+            lines = ax.plot(smooth_1d_sequence(points, smoothing))
         else:
-            ax.plot(points)
+            lines = ax.plot(points)
+        plt.setp(lines, linewidth=2)
         ax.set_title(name)
         ax.grid(True)
         if ylimits is not None:
@@ -109,7 +109,10 @@ def plot_results(data, vertical_limit=4):
             try:
                 axe = ax_all[ax_indices[i][0], ax_indices[i][1]]
             except TypeError:
-                axe = ax_all[ax_indices[i]]
+                try:
+                    axe = ax_all[ax_indices[i]]
+                except TypeError:
+                    axe = ax_all
             create_plot(axe,
                         data_processed[i][1],
                         data_processed[i][0],
@@ -121,3 +124,44 @@ def plot_results(data, vertical_limit=4):
 
     # show the plots
     plt.show()
+
+
+def store_results(result, approach, params, folder='./'):
+    """
+    This function stores the given result, with the approach and parameters
+    specified, in a file following this name pattern:
+    '../results/month-day_hour-min-sec_approach_parameters.csv'
+    :param result: the matrix
+    :param approach: the name of the approach
+    :param params: the parameters chosen
+    :param folder: the folder the files are stored in. Defaults to ./
+    :return: None
+    :type result: numpy.ndarray
+    :type approach: str
+    :type params: str
+    :type folder: str
+    :rtype : object
+    """
+    import csv
+    from time import gmtime, strftime
+    # import numpy
+    # if type(result) is numpy.ndarray:
+    #     to_be_stored = result.tolist()
+    # else:
+    #     to_be_stored = result
+    # generating a time-string
+    time_string = strftime('%m-%d_%H-%M-%S', gmtime())
+    # generating the filename
+    file_name = folder + time_string + '_' + approach + '_' + params + '.csv'
+    # opening the csv file
+    o_file = open(file_name, 'w')
+    writer = csv.writer(o_file)
+    try:
+        writer.writerows(result.tolist())
+        # writer.writerow(to_be_stored.tolist())
+    except AttributeError:
+        writer.writerows(result)
+        # writer.writerow(to_be_stored)
+    # and closing it
+    o_file.close()
+    print('Result successfully stored in ' + file_name)

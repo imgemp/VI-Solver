@@ -2,11 +2,11 @@ from __future__ import print_function
 __author__ = 'clemens'
 
 # import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-import config
-from Options import Reporting
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+import VISolver.config
+from VISolver.Options import Reporting
 # from Estimators import decaying_average_estimator
 
 
@@ -40,7 +40,7 @@ class Settings():
         return self.number_of_learnable_nes
 
 
-class BoostedWPL(Solver):
+class LEAP(Solver):
     def __init__(self, domain,
                  P=IdentityProjection(),
                  learning_rate=0.06,
@@ -66,7 +66,8 @@ class BoostedWPL(Solver):
         self.no_forecasters = no_forecasters
         self.lr = learning_rate
         self.estimator_decay = estimator_decay
-        self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .01]]
+        self.learning_settings = [[1., 1., .003], [1., 1., .05], [1., 1., .08], [1., 1., .15], [1., 1., .2]]
+        # self.learning_settings = [[1., .75, .08], [1., .5, .1], [1., 1., .03], [1.5, 2.5, .01], [1.5, 3., .01]]
         # self.learning_settings = [[1., .75, .07], [1., .5, .09], [1., 1., .03]]
         self.value_approx_range = np.array([1./(51-1)*i for i in range(51)])
         self.additive_ = compute_increase_vector(3, .7, .3)
@@ -152,24 +153,34 @@ class BoostedWPL(Solver):
         # computing the policy gradient and the learning rate
         return policy_gradient, self.Proj.p(forecaster_policy, learning_setting[2], policy_gradient)
 
-    def weighted_average_forecaster(self, fc_policies, reward_history, action_history, player, averaging_type=None):
+    def weighted_average_forecaster(self,
+                                    fc_policies,
+                                    reward_history,
+                                    action_history,
+                                    player,
+                                    iteration,
+                                    averaging_type=None):
         # calculating the reward-action space
         fcp = np.array([fc_policies[i, :, action_history[i]]*(.5**(len(action_history)-i-1)) for i in range(len(action_history))])
         weighted_reward = np.array(reward_history)
-        weighted_reward[weighted_reward < np.mean(weighted_reward)] *= 25.
+        weighted_reward[weighted_reward < np.mean(weighted_reward)] *= 10.
         reward_action_function = np.mean(np.multiply(fcp, np.repeat(weighted_reward[None].T,
                                                                     fcp.shape[1], axis=1)),
                                          axis=0)
         # applying the weights
-        weight = 18. #/(reward_action_function.max()+1e-9)
+        # weight = 15. #/(reward_action_function.max()+1e-9)
+        # weight = 15 #/(reward_action_function.max()+1e-9)
+        # weight = max(.015, 15./np.sqrt(iteration)) #/(reward_action_function.max()+1e-9)
+        weight = np.sqrt(8*np.log(self.no_forecasters)*1.5) #/(reward_action_function.max()+1e-9)
+        # weight = 15.
         if averaging_type == 'exponential':
             reward_action_function *= weight
             reward_action_function = np.exp(reward_action_function)
         #       reward_action_function.T[:self.get_forecaster_no(option='w')].shape)
-        best_estimate = np.dot(fc_policies[-1].T[:, :self.get_forecaster_no(option='w')],
+        best_estimate = np.dot((fc_policies[-1]).T[:, :self.get_forecaster_no(option='w')],
                                reward_action_function[None].T[:self.get_forecaster_no(option='w')])
         # returning after projecting back on the simplex
-        best_estimate = best_estimate.T[-1]/(np.sum(best_estimate)+1e-9)
+        best_estimate = (best_estimate.T[-1]/(np.sum(reward_action_function)+1e-9))
 
         # testing the quality of our ne's
         # do we have any ne hypotheses?
@@ -180,8 +191,8 @@ class BoostedWPL(Solver):
                                                    self.get_forecaster_no(player, 'r')].argmax()
             # is the best one in accordance with the current game behavior?
             if np.linalg.norm(best_estimate - fc_policies[-1, best_ne_index]) < .7:
-                return fc_policies[-1, best_ne_index]
-        return best_estimate
+                return fc_policies[-1, best_ne_index-1]
+        return self.Proj.p(best_estimate, 1., 0.)
 
     def equilibrium_testing(self, fc_policies, ne_hypos, player, decision_type='majority', iteration=0):
         """
@@ -218,15 +229,15 @@ class BoostedWPL(Solver):
         # 2. deciding on whether or not the current policies agree according to the chosen strategy
         if decision_type == 'majority' and iteration > self.exploration_trials:
             # the following computes the number of distances greater than a specific threshold
-            if np.sum(distances > .032) < 7:
+            if np.sum(distances > .012) < 7:
                 # this computes the value of a nash equilibrium hypothesis
                 hypo_index = compute_value_index(self.value_approx_range,
                                                  np.mean(fc_policies[:self.get_forecaster_no(player, 'w')], axis=0)[0])
                 # this computes the value function for the hypothesis
-                ne_hypos *= .6
+                ne_hypos *= .9
                 ne_hypos = add_value_vector(ne_hypos, self.additive_, hypo_index)
                 # this computes whether or not the hypothesis is close enough
-                if ne_hypos.max() > .4:
+                if ne_hypos.max() > .7:
                     # if it is, this converts the hypothesis to a policy
                     pol = np.mean(fc_policies[:self.get_forecaster_no(option='w')], axis=0)
                     # is this a new hypothesis?
@@ -288,17 +299,23 @@ class BoostedWPL(Solver):
                                                                     tmp_reward[:, player],
                                                                     tmp_action[:, player],
                                                                     player,
+                                                                    iteration,
                                                                     averaging_type='exponential')
 
-        # stupid random play
-        if iteration <= 2000:
-            policy_taken[0] = [1., 0.]
-        elif iteration <= 4000:
-            policy_taken[0] = [0., 1.]
-        elif iteration % 400 < 200:
-            policy_taken[0] = [1., 0.]
-        else:
-            policy_taken[0] = [0., 1.]
+        # batch testing options
+        if VISolver.config.batch_testing == 1:
+            # stupid random play
+            if iteration <= 2000:
+                policy_taken[0] = [1., 0.]
+            elif iteration <= 4000:
+                policy_taken[0] = [0., 1.]
+            elif iteration % 400 < 200:
+                policy_taken[0] = [1., 0.]
+            else:
+                policy_taken[0] = [0., 1.]
+        elif VISolver.config.batch_testing == 2:
+            policy_taken[0] = [.5, .5]
+
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 2. then play the game
@@ -316,7 +333,7 @@ class BoostedWPL(Solver):
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
         # 4. updating the policies
-        if config.debug_output_level >= 1:
+        if VISolver.config.debug_output_level >= 1:
             print ('-~-~-~-~-~-~ new iteration (', iteration, ') ~-~-~-~-~-~-~-~-~-~-~-~-')
         # perform the update on the policies:
         for player in range(2):
@@ -333,7 +350,7 @@ class BoostedWPL(Solver):
                                                           self.learning_settings[i])
 
             # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-            if config.debug_output_level >= 1:
+            if VISolver.config.debug_output_level >= 1:
                 print ('-> player', player)
                 print ('   - which update is performed?', policy_gradient[player][action[player]] < 0)
                 print ('   - temp policies last round:  %.4f' % tmp_policy[-1][player][0])

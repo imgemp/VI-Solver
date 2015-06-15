@@ -1,12 +1,12 @@
 __author__ = 'clemens'
 
 import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-import config
-from Estimators import decaying_average_estimator
-from Options import Reporting
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+import VISolver.config
+from VISolver.Estimators import decaying_average_estimator
+from VISolver.Options import Reporting
 
 
 class PGA_APP(Solver):

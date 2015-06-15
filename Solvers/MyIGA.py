@@ -1,11 +1,11 @@
 __author__ = 'clemens'
 
 import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-from Options import Reporting
-import config
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+from VISolver.Options import Reporting
+import VISolver.config
 from pykalman import KalmanFilter as kf
 
 

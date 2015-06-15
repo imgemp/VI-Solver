@@ -1,5 +1,5 @@
 import numpy as np
-from Utilities import *
+from VISolver.Utilities import *
 import config
 
 

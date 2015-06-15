@@ -1,8 +1,8 @@
 __author__ = 'clemens'
 
-from Projection import *
-from Solver import Solver
-from Utilities import *
+from VISolver.Projection import *
+from VISolver.Solver import Solver
+from VISolver.Utilities import *
 import numpy as np
 
 

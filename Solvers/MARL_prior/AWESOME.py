@@ -1,13 +1,13 @@
 __author__ = 'clemens'
 
 import numpy as np
-from Projection import *
-from Solvers.Solver import Solver
-from Utilities import *
-from Options import Reporting
+from VISolver.Projection import *
+from VISolver.Solvers.Solver import Solver
+from VISolver.Utilities import *
+from VISolver.Options import Reporting
+from VISolver.Estimators import decaying_average_estimator
 
-import config
-from Estimators import decaying_average_estimator
+import VISolver.config
 
 
 class AWESOME(Solver):
@@ -163,7 +163,7 @@ class AWESOME(Solver):
         # print '-~-~-~-~-~-~ new iteration ~-~-~-~-~-~-~-~-~-~-~-~-'
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-        if config.debug_output_level >= 1:
+        if VISolver.config.debug_output_level >= 1:
             print '-~-~-~-~-~-~ new iteration (', iteration, ') ~-~-~-~-~-~-~-~-~-~-~-~-'
         # perform the update on the policies:
         update = (iteration % self.averaging_window) == 0
@@ -200,7 +200,7 @@ class AWESOME(Solver):
                         phi = self.compute_random_policy()
 
         # -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~- -~*#*~-
-        # if config.debug_output_level >= 1:
+        # if VISolver.config.debug_output_level >= 1:
         #     print '-> player', player
         #     print '   - which update is performed?', policy_gradient[player][action[player]] < 0
         #     print '   - temp policies last round:  %.4f' % tmp_pol[-1][player][0]

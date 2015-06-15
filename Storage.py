@@ -34,5 +34,6 @@ class Storage:
             if req in self.temp_storage:
                 perm_item = self.temp_storage[req][-1]
             else:
+                # print req
                 perm_item = req(new_data)
             self.perm_storage[req].append(perm_item)

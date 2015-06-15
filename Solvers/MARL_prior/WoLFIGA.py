@@ -3,7 +3,7 @@ __author__ = 'clemens'
 from VISolver.Projection import *
 from VISolver.Solvers.Solver import Solver
 from VISolver.Utilities import *
-from Options import Reporting
+from VISolver.Options import Reporting
 
 
 class WoLFIGA(Solver):

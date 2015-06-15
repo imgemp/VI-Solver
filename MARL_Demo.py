@@ -5,29 +5,30 @@ from optparse import OptionParser
 # from Domains.DummyMARL2 import *
 
 from VISolver.Solvers.Solver import solve
-from Domains.MatchingPennies import MatchingPennies
-from Domains.Tricky import Tricky
-from Domains.PrisonersDilemma import PrisonersDilemma
-from Domains.PureStrategyTest import PureStrategyTest
-from Domains.BattleOfTheSexes import BattleOfTheSexes
+from VISolver.Domains.MatchingPennies import MatchingPennies
+from VISolver.Domains.Tricky import Tricky
+from VISolver.Domains.PrisonersDilemma import PrisonersDilemma
+from VISolver.Domains.PureStrategyTest import PureStrategyTest
+from VISolver.Domains.BattleOfTheSexes import BattleOfTheSexes
+from VISolver.Domains.BloodBank import BloodBank, CreateRandomNetwork
 
-from Domains.BloodBank import BloodBank, CreateRandomNetwork
+from VISolver.Solvers.MARL_prior.WPL import *
+from VISolver.Solvers.MARL_prior.WoLFIGA import *
+from VISolver.Solvers.MARL_prior.WoLFGIGA import *
+from VISolver.Solvers.MARL_prior.AWESOME import *
+from VISolver.Solvers.MARL_prior.PGA_APP import *
+from VISolver.Solvers.MultiAgentVI import MultiAgentVI
+from VISolver.Solvers.LEAP import LEAP
+from VISolver.Solvers.MAHT_WPL import MAHT_WPL
 
-from Solvers.MARL_prior.WPL import *
-from Solvers.MARL_prior.WoLFIGA import *
-from Solvers.MARL_prior.AWESOME import *
-from Solvers.MARL_prior.PGA_APP import *
-from Solvers.MultiAgentVI import MultiAgentVI
-from Solvers.BoostedWPL import BoostedWPL
-
-from Options import (
+from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import print_sim_results
+from VISolver.Utilities import *
+import VISolver.config as config
 
-from Utilities import *
 
-
-def demo(domain, method, iterations=500):
+def demo(domain, method, iterations=500, start_strategies=None):
     # __DUMMY_MARL__##################################################
 
     # Set Method
@@ -38,15 +39,17 @@ def demo(domain, method, iterations=500):
 
     # Initialize Starting Point
     # Start = np.array([0,1])
-    start_strategies = np.random.random((domain.players, domain.dim))
-    for i in range(start_strategies.shape[0]):
-        start_strategies[i] /= np.sum(start_strategies[i])
-    # start_strategies = np.array([[.8, .2], [.1, .9]])
+    if start_strategies is None:
+        start_strategies = np.random.random((domain.players, domain.dim))
+        for i in range(start_strategies.shape[0]):
+            start_strategies[i] /= np.sum(start_strategies[i])
+        # start_strategies = np.array([[.99, .01], [.5, .5]])
 
     # Set Options
     initialization_conditions = Initialization(step=1e-4)
     # init = Initialization(Step=-0.1)
-    terminal_conditions = Termination(max_iter=iterations, tols=[(domain.ne_l2error, 1e-3)])
+    # terminal_conditions = Termination(max_iter=iterations, tols=[(domain.ne_l2error, 1e-20)])
+    terminal_conditions = Termination(max_iter=iterations)
     reporting_options = method.reporting_options()
     whatever_this_does = Miscellaneous()
     options = DescentOptions(initialization_conditions, terminal_conditions, reporting_options, whatever_this_does)
@@ -65,13 +68,23 @@ def demo(domain, method, iterations=500):
     if config.debug_output_level != -1:
         print_sim_results(options, marl_results, method, toc)
 
+    # computing the statistics
+    reward = np.array(marl_results.perm_storage['Reward'])
+    win_ratio = np.mean(.5 + .5*reward, axis=0).tolist()#.round(2)
+    print_exception = False
+    if win_ratio[1] < .4 and type(method) is LEAP:
+        print 'Problem:', win_ratio[1]
+        # print_exception = True
+
     # creating plots, if desired:
-    if config.show_plots:
+    if config.show_plots or print_exception:
         policy = np.array(marl_results.perm_storage['Policy'])[:, :, 0]  # Just take probabilities for first action
         if 'Forecaster Policies' in marl_results.perm_storage:
             forecaster = np.array(marl_results.perm_storage['Forecaster Policies'])[:, :, :, 0]  # Just take probabilities for first action
         # policy_est = np.array(marl_results.perm_storage['Policy Estimates'])
-        val_fun = np.array(marl_results.perm_storage['Value Function'])[-1]
+        print marl_results.perm_storage['Value Function'][-1]
+        val_fun = np.array(marl_results.perm_storage['Value Function'][-1])
+        print val_fun
         true_val_fun = np.array(marl_results.perm_storage['True Value Function'])
         # val_var = np.array(marl_results.perm_storage['Value Variance'])
         pol_grad = np.array([[marl_results.perm_storage['Policy Gradient (dPi)'][i][0, 0],
@@ -99,58 +112,81 @@ def demo(domain, method, iterations=500):
 
         printing_data = {}
         # printing_data['The value function'] = {'values': val_fun.T, 'smooth':-1}
-        printing_data['Analytic Value of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': 1}
+        printing_data['Expected Reward of policies played'] = {'values': true_val_fun, 'yLimits': box, 'smooth': -1}
         printing_data['The policies'] = {'values': policy, 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         if 'Forecaster Policies' in marl_results.perm_storage:
-            printing_data['Forecaster - P1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
-            printing_data['Forecaster - P2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
+            printing_data['Hypotheses - Player 1'] = {'values': forecaster[:, 0, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
+            printing_data['Hypotheses - Player 2'] = {'values': forecaster[:, 1, :], 'yLimits': np.array([0, 1]) + epsilon, 'smooth': -1}
         # printing_data['The policy gradient'] = {'values': pol_grad}
         # printing_data['Policy Estimates'] = {'values': policy_est, 'yLimits': box}
         plot_results(printing_data)
-    reward = np.array(marl_results.perm_storage['Reward'])
-    win_ratio = np.mean(.5 + .5*reward, axis=0).round(2)
-    return win_ratio
+
+    # return win_ratio
+    # normalizing the reward
+    # reward_range = reward.max() - reward.min()
+    # reward_offset = reward.min()
+    # reward = (reward - reward_offset) / reward_range
+    return reward
 
 
-def wrapper():
-    # Define Domain
-    # domain = MatchingPennies()
-    domain = PureStrategyTest()
-    # domain = BattleOfTheSexes('traditional')
-    # domain = BattleOfTheSexes('new')
-    # domain = Tricky()
-    # domain = PrisonersDilemma()
-    # Network = CreateRandomNetwork(nC=2,nB=2,nD=2,nR=2,seed=0)
-    # domain = BloodBank(Network=Network,alpha=2)
+def wrapper_batch_testing_helper(domains, trials, iterations, bt_type):
+    for dom in domains:
+        domain = domains[dom]
+        methods = [WPL(domain, P=BoxProjection(low=.001)),
+                   MAHT_WPL(domain, P=LinearProjection()),
+                   LEAP(domain, P=LinearProjection())]
+        config.batch_testing = bt_type
+        results = np.zeros((len(methods), trials, iterations, 2))
+        for trial in range(trials):
+            start_st = np.random.random((domain.players, domain.dim))
+            for k in range(start_st.shape[0]):
+                start_st[k] /= np.sum(start_st[k])
+            start_st = np.array([[.5, .5], [.99, .01]])
+            for method in range(len(methods)):
+                results[method, trial, :, :] = demo(domain, methods[method], iterations, start_st)[1:]
+
+        # store the results
+        np.save(dom+'.WPL-MAHT-LEAP.npy', results)
+
+
+def wrapper_batch_testing():
+    # batch testing global settings
+    config.show_plots = False
+    config.debug_output_level = -1
 
     # method = IGA(domain, P=BoxProjection())
     # method = WoLFIGA(domain, P=BoxProjection(), min_step=1e-4, max_step=1e-3 )
     # method = MySolver(domain, P=BoxProjection())
     # method = MyIGA(domain, P=BoxProjection())
-    # method = MyIGA(domain, P=LinearProjection())
-    # method = WPL(domain, P=LinearProjection(low=.001))
-    method1 = WPL(domain, P=BoxProjection(low=.001))
+    # method1 = WPL(domain, P=BoxProjection(low=.001))
     # method = AWESOME(domain, P=LinearProjection())
     # method = PGA_APP(domain, P=LinearProjection())
     # method = MultiAgentVI(domain, P=LinearProjection())
-    method2 = BoostedWPL(domain, P=LinearProjection())
-    results1 = []
-    results2 = []
-    iterations = 100
-    for i in range(20):
-        results1.append(demo(domain, method1, iterations))
-        results2.append(demo(domain, method2, iterations))
+    # method2 = LEAP(domain, P=LinearProjection())
 
-    print 'first method'
-    print 'max values', np.array(results1).max(axis=0)
-    print 'min values', np.array(results1).min(axis=0)
-    print 'averages', np.mean(results1, axis=0)
-    print 'median', np.median(results1, axis=0)
-    print 'second method'
-    print 'max values', np.array(results2).max(axis=0)
-    print 'min values', np.array(results2).min(axis=0)
-    print 'averages', np.mean(results2, axis=0)
-    print 'median', np.median(results2, axis=0)
+    domains = {'tricky':    Tricky(),
+               'mp':        MatchingPennies(),
+               'battle':    BattleOfTheSexes(),
+               'pure':      PureStrategyTest()}
+    domains_b = {'deficientMP': MatchingPennies()}
+    # results = [[] for _ in range(len(methods))]
+    wrapper_batch_testing_helper(domains, 200, 200, 2)
+    wrapper_batch_testing_helper(domains_b, 200, 8000, 1)
+
+
+def wrapper_singular_runs():
+    # domain = PureStrategyTest()
+    domain = MatchingPennies()
+    # start_st = np.array([[.5, .5], [.01, .99]])
+    start_st = None
+    # domain = Tricky()
+    # domain = PrisonersDilemma()
+    # method2 = WoLFGIGA(domain, P=LinearProjection())
+    # method2 = LEAP(domain, P=LinearProjection())
+    # method2 = WPL(domain, P=LinearProjection())
+    method2 = MAHT_WPL(domain, P=LinearProjection())
+    # config.batch_testing = 1
+    demo(domain, method2, 1000, start_strategies=start_st)
 
 if __name__ == '__main__':
     parser = OptionParser()
@@ -159,10 +195,8 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     config.debug_output_level = options.debug
     config.show_plots = options.plot
-    # domain = PureStrategyTest()
-    domain = MatchingPennies()
-    # domain = Tricky()
-    method2 = BoostedWPL(domain, P=LinearProjection())
-    # method2 = WPL(domain, P=LinearProjection())
 
-    demo(domain, method2, 6000)
+    # wrapper_batch_testing()
+    wrapper_singular_runs()
+    # import Analyses as ana
+    # ana.do_analysis()
