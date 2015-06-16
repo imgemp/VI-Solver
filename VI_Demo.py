@@ -1,6 +1,6 @@
 import time
 
-from VISolver.Domains.Sphere import *
+from Domains.Analytical.Sphere import *
 from VISolver.Domains.Watson import *
 from VISolver.Domains.KojimaShindo import *
 from VISolver.Domains.Sun import *

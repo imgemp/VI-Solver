@@ -4,7 +4,8 @@ from VISolver.Solvers.Extragradient import *
 from VISolver.Solvers.CashKarp import *
 from VISolver.Solvers.Solver import solve
 from VISolver.Log import *
-from VISolver.Domains.BloodBank import BloodBank, CreateRandomNetwork
+from Domains.Analytical.BloodBank import CreateRandomNetwork
+from Domains.Analytical import BloodBank
 from VISolver.Solvers.CashKarp import CashKarp
 from VISolver.Projection import RPlusProjection
 from VISolver.Solver import *

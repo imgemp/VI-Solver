@@ -5,24 +5,15 @@ from optparse import OptionParser
 # from Domains.DummyMARL2 import *
 
 from VISolver.Solvers.Solver import solve
-from VISolver.Domains.MatchingPennies import MatchingPennies
-from VISolver.Domains.Tricky import Tricky
-from VISolver.Domains.PrisonersDilemma import PrisonersDilemma
-from VISolver.Domains.PureStrategyTest import PureStrategyTest
-from VISolver.Domains.BattleOfTheSexes import BattleOfTheSexes
-from VISolver.Domains.BloodBank import BloodBank, CreateRandomNetwork
+from Domains.Stochastic import BattleOfTheSexes, MatchingPennies, PureStrategyTest, Tricky
 
 from VISolver.Solvers.MARL_prior.WPL import *
-from VISolver.Solvers.MARL_prior.WoLFIGA import *
-from VISolver.Solvers.MARL_prior.WoLFGIGA import *
-from VISolver.Solvers.MARL_prior.AWESOME import *
 from VISolver.Solvers.MARL_prior.PGA_APP import *
-from VISolver.Solvers.MultiAgentVI import MultiAgentVI
 from VISolver.Solvers.LEAP import LEAP
 from VISolver.Solvers.MAHT_WPL import MAHT_WPL
 
 from VISolver.Options import (
-    DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
+    DescentOptions, Miscellaneous, Termination, Initialization)
 from VISolver.Log import print_sim_results
 from VISolver.Utilities import *
 import VISolver.config as config
