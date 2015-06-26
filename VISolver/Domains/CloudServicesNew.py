@@ -300,15 +300,15 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
     # c_bizes = np.random.rand(nBiz,3)*[0,0.2,0.1]+[0,0,0]
     # c_bizes = np.zeros((nBiz,3))
     c_bizes = np.array([[[0.,4.5],[0.,2.]],
-                         [[0.,2.0],[0.,2.2]],
-                         [[0.,3.0],[0.,2.1]],
-                         [[0.,4.5],[0.,2.]],
-                         [[0.,2.0],[0.,2.2]],
-                         [[0.,3.0],[0.,2.1]],
-                         [[0.,4.5],[0.,2.]],
-                         [[0.,2.0],[0.,2.2]],
-                         [[0.,3.0],[0.,2.1]],
-                         [[0.,4.5],[0.,2.]]])
+                        [[0.,2.0],[0.,2.2]],
+                        [[0.,3.0],[0.,2.1]],
+                        [[0.,4.5],[0.,2.]],
+                        [[0.,2.0],[0.,2.2]],
+                        [[0.,3.0],[0.,2.1]],
+                        [[0.,4.5],[0.,2.]],
+                        [[0.,2.0],[0.,2.2]],
+                        [[0.,3.0],[0.,2.1]],
+                        [[0.,4.5],[0.,2.]]])
 
     # Business demand distribution function means, mu_biz, and
     # standard deviations, sigma_biz
@@ -332,15 +332,15 @@ def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
     # = lam_biz[0]*E_surplus + lam_biz[1]*E_shortage
     # lam_bizes = np.random.rand(nBiz,2)*[0,0.01]+[0,0.005]
     lam_bizes = 1e2*np.array([[.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1],
-                          [.1,.1]])
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1],
+                              [.1,.1]])
 
     # Business sale prices, p_biz
     # p_bizes = np.random.rand(nBiz)*1+5
