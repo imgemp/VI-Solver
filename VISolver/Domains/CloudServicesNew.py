@@ -276,7 +276,7 @@ class CloudServices(Domain):
             return res.x
 
 
-def CreateRandomNetwork(nClouds=3,nBiz=10,seed=None):
+def CreateRandomNetwork(nClouds=2,nBiz=10,seed=None):
 
     if seed is not None:
         np.random.seed(seed)
