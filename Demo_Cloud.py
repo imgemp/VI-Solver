@@ -1,14 +1,14 @@
 import time
 import numpy as np
 
-from VISolver.Domains.CloudServicesNew import CloudServices, CreateRandomNetwork
+from VISolver.Domains.CloudServices3 import CloudServices, CreateRandomNetwork
 
-from VISolver.Solvers.Euler import Euler
+# from VISolver.Solvers.Euler import Euler
 # from VISolver.Solvers.Extragradient import EG
 # from VISolver.Solvers.AcceleratedGradient import AG
 # from VISolver.Solvers.HeunEuler import HeunEuler
 # from VISolver.Solvers.AdamsBashforthEuler import ABEuler
-# from VISolver.Solvers.CashKarp import CashKarp
+from VISolver.Solvers.CashKarp import CashKarp
 
 from VISolver.Projection import RPlusProjection
 from VISolver.Solver import Solve
@@ -26,19 +26,19 @@ def Demo():
     #__CLOUD_SERVICES__##################################################
 
     # Define Network and Domain
-    Network = CreateRandomNetwork()
-    Domain = CloudServices(Network=Network,alpha=2)
+    Network = CreateRandomNetwork(5,20)
+    Domain = CloudServices(Network=Network,gap_alpha=2)
 
     # Set Method
-    Method = Euler(Domain=Domain,P=RPlusProjection())
+    # Method = Euler(Domain=Domain,P=RPlusProjection())
     # Method = EG(Domain=Domain,P=RPlusProjection())
     # Method = AG(Domain=Domain,P=RPlusProjection())
     # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
     # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-8)
-    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = .2*np.ones(Domain.Dim)
+    Start = 4*np.ones(Domain.Dim)
 
     # Calculate Initial Gap
     # print('comp gap')
@@ -46,13 +46,13 @@ def Demo():
     # print('done')
     print(Domain.CloudProfits(Start))
     print(Domain.dCloudProfits(Start))
-    print(Domain.maxfirm_profits(Start))
-    print(Domain.argmax_firm_profits(Start))
+    # print(Domain.maxfirm_profits(Start))
+    # print(Domain.argmax_firm_profits(Start))
 
     # Set Options
-    # Init = Initialization(Step=-1e-10)
-    Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=5,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Init = Initialization(Step=-1e-10)
+    # Init = Initialization(Step=-0.00001)
+    Term = Termination(MaxIter=1e5)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
@@ -70,11 +70,18 @@ def Demo():
     PrintSimResults(Options,CloudServices_Results,Method,toc)
 
     x = CloudServices_Results.PermStorage['Data'][-1]
-    # print(x)
+    print('[p...q]')
+    print(x)
+    print('Qj')
+    print(Domain.Demand(x))
+    print('Profits')
     print(Domain.CloudProfits(x))
+    print('[dpj...dqj')
     print(Domain.dCloudProfits(x))
-    print(Domain.maxfirm_profits(x))
-    print(Domain.argmax_firm_profits(x))
+    print('Qij')
+    print(Domain.Demand_IJ(x))
+    # print(Domain.maxfirm_profits(x))
+    # print(Domain.argmax_firm_profits(x))
 
     # print('Testing New Domain')
     # Network = CreateRandomNetwork(nClouds=2)
@@ -99,7 +106,11 @@ def Demo():
     # plt.title("pivot='mid'; every third arrow; units='inches'")
     # plt.show()
 
-    embed()
+    print(Domain.c_clouds)
+    print(Domain.pref_bizes)
+
+    plt.plot(CloudServices_Results.PermStorage['Data'])
+    plt.show()
 
 if __name__ == '__main__':
     Demo()
