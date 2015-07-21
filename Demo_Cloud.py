@@ -52,7 +52,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=1e5)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=2e5)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
