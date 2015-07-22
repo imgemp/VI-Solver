@@ -73,10 +73,10 @@ class CloudServices(Domain):
         market = self.pref_bizes*supply
         Qij = 1.10**(-market**2.)*self.H
 
-        pfac = (2*np.mean(p)-p/self.nClouds)/(p*np.mean(p))
-        qfac = (2*np.mean(q)-q/self.nClouds)/(q*np.mean(q))
-        dfpj = -2*market**2*pfac*np.log(1.10)
-        dfqj = -2*market**2*qfac*np.log(1.10)
+        pfac = (2/p-1/np.sum(p))*2
+        qfac = (2/q-1/np.sum(q))*2
+        dfpj = -market**2*pfac*np.log(1.10)
+        dfqj = -market**2*qfac*np.log(1.10)
 
         c = self.c_clouds
 
