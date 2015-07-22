@@ -7,7 +7,7 @@ from VISolver.Domains.CloudServices3 import CloudServices, CreateRandomNetwork
 # from VISolver.Solvers.Extragradient import EG
 # from VISolver.Solvers.AcceleratedGradient import AG
 # from VISolver.Solvers.HeunEuler import HeunEuler
-# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
+from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
 
 from VISolver.Projection import RPlusProjection
@@ -34,11 +34,11 @@ def Demo():
     # Method = EG(Domain=Domain,P=RPlusProjection())
     # Method = AG(Domain=Domain,P=RPlusProjection())
     # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-8)
-    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-8)
+    # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = 4*np.ones(Domain.Dim)
+    Start = 2*np.ones(Domain.Dim)
 
     # Calculate Initial Gap
     # print('comp gap')
@@ -52,7 +52,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=2e5)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=15e4)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
@@ -60,6 +60,8 @@ def Demo():
 
     # Print Stats
     PrintSimStats(Domain,Method,Options)
+
+    # embed()
 
     # Start Solver
     tic = time.time()
@@ -109,8 +111,25 @@ def Demo():
     print(Domain.c_clouds)
     print(Domain.pref_bizes)
 
+    data = CloudServices_Results.PermStorage['Data']
+    eigs = np.zeros((len(data),2))
+    eig_test = np.zeros(len(data))
+    for i in xrange(len(data)):
+        hess = -Domain.Hess(data[i])
+        eigs_r = np.real(np.linalg.eigvals(hess))
+        eigs[i,:] = [min(eigs_r),max(eigs_r)]
+
+        temp = np.diag(hess) - np.sum(np.abs(hess),axis=1) +\
+            np.abs(np.diag(hess))
+        eig_test[i] = min(temp)
+
+    plt.figure(1)
     plt.plot(CloudServices_Results.PermStorage['Data'])
+    plt.figure(2)
+    plt.plot(eigs)
     plt.show()
+
+    embed()
 
 if __name__ == '__main__':
     Demo()
