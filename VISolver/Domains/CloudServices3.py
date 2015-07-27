@@ -1,10 +1,6 @@
 from __future__ import division
 import numpy as np
-# from IPython import embed
 from VISolver.Domain import Domain
-
-# import warnings
-# warnings.filterwarnings('error')
 
 
 class CloudServices(Domain):
@@ -28,15 +24,19 @@ class CloudServices(Domain):
 
     # Functions used to Initialize the Cloud Network and Calculate F
 
-    def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes):
+    def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes,base_bizes):
         self.nClouds = nClouds
         self.nBiz = nBiz
         self.c_clouds = c_clouds
         self.H = H
         self.pref_bizes = pref_bizes
+        self.base_bizes = base_bizes
 
     def CalculateNetworkSize(self):
         return 2*self.nClouds
+
+    def bexp(self,x):
+        return self.base_bizes**x
 
     def Demand_IJ(self,Data):
         p = Data[:self.nClouds]
@@ -45,8 +45,7 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        return np.exp(-market**2.)*self.H
-        # return 1.10**(-market**2.)*self.H
+        return self.H*self.bexp(-market**2)
 
     def Demand(self,Data):
         p = Data[:self.nClouds]
@@ -55,8 +54,7 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        return np.sum(np.exp(-market**2.)*self.H,axis=0)
-        # return np.sum(1.10**(-market**2.)*self.H,axis=0)
+        return np.sum(self.H*self.bexp(-market**2),axis=0)
 
     def CloudProfits(self,Data):
         p = Data[:self.nClouds]
@@ -73,15 +71,12 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        Qij = np.exp(-market**2.)*self.H
-        # Qij = 1.10**(-market**2.)*self.H
+        Qij = self.H*self.bexp(-market**2)
 
         pfac = (2/p-1/np.sum(p))*2
         qfac = (2/q-1/np.sum(q))*2
-        dfpj = -market**2*pfac
-        dfqj = -market**2*qfac
-        # dfpj = -market**2*pfac*np.log(1.10)
-        # dfqj = -market**2*qfac*np.log(1.10)
+        dfpj = -market**2*pfac*np.log(self.base_bizes)
+        dfqj = -market**2*qfac*np.log(self.base_bizes)
 
         c = self.c_clouds
 
@@ -90,9 +85,7 @@ class CloudServices(Domain):
 
         return np.hstack([dpj,dqj])
 
-    def Hess(self,Data):
-
-        # only for base e right now
+    def Jac(self,Data):
 
         p = Data[:self.nClouds]
         q = Data[self.nClouds:]
@@ -103,17 +96,18 @@ class CloudServices(Domain):
         market = self.pref_bizes*supply
         fij = -market**2
 
-        Qij = np.exp(fij)*self.H
+        Qij = self.H*self.bexp(fij)
 
         ps = np.sum(p)
         qs = np.sum(q)
+
+        fij = fij*np.log(self.base_bizes)
 
         dfij_dpj = 2*fij*(2/p-1/ps)
         dfij_dqj = 2*fij*(2/q-1/qs)
         dfij_dpk = 2*fij*(-1/ps)  # same for every k
         dfij_dqk = 2*fij*(-1/qs)  # same for every k
 
-        # maybe the problem is in these next 3
         d2fij_dpj2 = 2*fij*(6/(p**2)-8/(p*ps)+3/(ps**2))
         d2fij_dqj2 = 2*fij*(6/(q**2)-8/(q*qs)+3/(qs**2))
 
@@ -135,29 +129,26 @@ class CloudServices(Domain):
         dqjdpk = Qij*(a*dfij_dpk+(d2fij_dqjdpk+dfij_dqj*dfij_dpk)*x)
         dqjdqk = Qij*(a*dfij_dqk+(d2fij_dqjdqk+dfij_dqj*dfij_dqk)*x)
 
-        # the next 3 have errors somewhere
         dpj2 = Qij*(2*dfij_dpj+(d2fij_dpj2+dfij_dpj**2)*x)
         dqj2 = Qij*(2*a*dfij_dqj-3*a/q+(d2fij_dqj2+dfij_dqj**2)*x)
 
         dpjdqj = Qij*(a*dfij_dpj+dfij_dqj+(d2fij_dpjdqj+dfij_dpj*dfij_dqj)*x)
 
-        # sum over i (rows) to get derivatives
-
         nc = self.nClouds
-        Hessian = np.zeros((2*nc,2*nc))
-        Hessian[:nc,:nc] = np.sum(dpjdpk,axis=0)[:,None]
-        Hessian[:nc,nc:] = np.sum(dpjdqk,axis=0)[:,None]
+        Jacobian = np.zeros((2*nc,2*nc))
+        Jacobian[:nc,:nc] = np.sum(dpjdpk,axis=0)[:,None]
+        Jacobian[:nc,nc:] = np.sum(dpjdqk,axis=0)[:,None]
 
-        Hessian[nc:,:nc] = np.sum(dqjdpk,axis=0)[:,None]
-        Hessian[nc:,nc:] = np.sum(dqjdqk,axis=0)[:,None]
+        Jacobian[nc:,:nc] = np.sum(dqjdpk,axis=0)[:,None]
+        Jacobian[nc:,nc:] = np.sum(dqjdqk,axis=0)[:,None]
 
-        np.fill_diagonal(Hessian[:nc,:nc],np.sum(dpj2,axis=0))
-        np.fill_diagonal(Hessian[:nc,nc:],np.sum(dpjdqj,axis=0))
+        np.fill_diagonal(Jacobian[:nc,:nc],np.sum(dpj2,axis=0))
+        np.fill_diagonal(Jacobian[:nc,nc:],np.sum(dpjdqj,axis=0))
 
-        np.fill_diagonal(Hessian[nc:,:nc],np.sum(dpjdqj,axis=0))
-        np.fill_diagonal(Hessian[nc:,nc:],np.sum(dqj2,axis=0))
+        np.fill_diagonal(Jacobian[nc:,:nc],np.sum(dpjdqj,axis=0))
+        np.fill_diagonal(Jacobian[nc:,nc:],np.sum(dqj2,axis=0))
 
-        return Hessian
+        return Jacobian
 
     def approx_jacobian(self,x,epsilon=np.sqrt(np.finfo(float).eps),*args):
         """Approximate the Jacobian matrix of callable function func
@@ -177,7 +168,7 @@ class CloudServices(Domain):
              The approximation is done using forward differences
 
         """
-        func = self.F
+        func = -self.F
         x0 = np.asfarray(x)
         f0 = func(*((x0,)+args))
         jac = np.zeros([len(x0),len(f0)])
@@ -188,11 +179,26 @@ class CloudServices(Domain):
             dx[i] = 0.0
         return jac.transpose()
 
-    def eigstats(self,Data):
+    def eig_stats(self,Data):
 
-        hess = self.Hess(Data)
-        eigs_r = np.real(np.linalg.eigvals(hess))
-        print('min: %g, max: %g' % (min(eigs_r),max(eigs_r)))
+        jac = -self.Jac(Data)
+        eigs = np.real_if_close(np.linalg.eigvals(jac))
+        eigs_r = np.real(eigs)
+        eigs_i = np.imag(eigs)
+
+        eig_min = min(eigs_r)
+        eig_max = max(eigs_r)
+        N_real = sum(np.abs(eigs_i) == 0.)
+        N_imag = len(eigs) - N_real
+        N_neg = sum(eigs_r < 0.)
+        N_zer = sum(eigs_r == 0.)
+        N_pos = len(eigs) - N_neg - N_zer
+        div_trace = sum(eigs_r)
+
+        return np.array([eig_min,eig_max,
+                         N_real,N_imag,
+                         N_neg,N_zer,N_pos,
+                         div_trace])
 
 
 def CreateNetworkExample():
@@ -208,7 +214,11 @@ def CreateNetworkExample():
     H = np.array([[10,10],
                   [10,10]])
 
-    return (2,2,c_clouds,H,pref_bizes)
+    # Business bases
+    base_bizes = np.array([[1.8,1.8],
+                           [1.5,1.5]])
+
+    return (2,2,c_clouds,H,pref_bizes,base_bizes)
 
 
 def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
@@ -225,4 +235,7 @@ def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
     # Business scale factors
     H = np.tile(np.random.rand(nBiz)*10+5,(nClouds,1)).T
 
-    return (nClouds,nBiz,c_clouds,H,pref_bizes)
+    # Business bases
+    base_bizes = np.random.rand(nBiz,nClouds)*.2+1.05
+
+    return (nClouds,nBiz,c_clouds,H,pref_bizes,base_bizes)
