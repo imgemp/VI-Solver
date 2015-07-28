@@ -51,3 +51,15 @@ class EuclideanSimplexProjection(Projection):
         # compute the projection by thresholding Data using theta
         w = (Data - theta).clip(min=0)
         return w
+
+
+class LyapunovGSRProjection(Projection):
+
+    def P(self,Data,Step,Direc):
+        # figure out intelligent slicing later
+        # this only works with euler - the other ones update Domain.Lyapunov
+        # multiple times per update which is wrong
+        psi = Data[2:].reshape(2,2)
+        psi, R = np.linalg.qr(psi)
+        Data[2:] = psi.flatten()
+        return Data+Step*Direc

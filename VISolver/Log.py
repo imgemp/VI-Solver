@@ -37,7 +37,7 @@ def PrintSimResults(Options, Results, Method, Time):
                 print('%s: %s' % (req_str, Results.PermStorage[req][-1]))
     print('Steps: %d' % Results.thisPermIndex)
     if 'Step' in Options.Repo.PermRequests:
-        print('Step Length: %g' % sum(Results.TempStorage['Step']))
+        print('Step Length: %g' % sum(Results.PermStorage['Step']))
     print('Min |X*|: %.3f' % min(abs(Results.TempStorage['Data'][-1])))
     print('Max |X*|: %.3f' % max(abs(Results.TempStorage['Data'][-1])))
     print('-------------------------------------------------------------------')
