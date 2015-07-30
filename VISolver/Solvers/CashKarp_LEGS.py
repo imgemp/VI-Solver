@@ -60,6 +60,21 @@ class CashKarp_LEGS(Solver):
 
     # BookKeeping(self,TempData) defined in super class 'Solver'
 
+    def GramSchmidt(self,A,normalize=True):
+
+        U = A.copy()
+        for i in xrange(A.shape[0]):
+            vi = A[:,i]
+            proj = 0*vi
+            for j in xrange(i):
+                uj = U[:,j]
+                proj += np.dot(vi,uj)/np.dot(uj,uj)*uj
+            U[:,i] = vi - proj
+
+        if normalize:
+            return U/np.linalg.norm(U,axis=0)
+        return U
+
     def Update(self,Record):
 
         # Retrieve Necessary Data
@@ -90,16 +105,18 @@ class CashKarp_LEGS(Solver):
         _NewData_psi = Data_psi+Step_L*0.5*np.sum(Fs_psi,axis=0)
 
         # Orthogonalize Psi, Record Lyapunov Exponents, Normalize Psi
-        u1 = NewData_psi_rsh[:,0]
-        v2 = NewData_psi_rsh[:,1]
-        e1 = u1/np.linalg.norm(u1)
-        u2 = v2 - np.dot(v2,e1)*e1
-        e2 = u2/np.linalg.norm(u2)
-        NewData_psi_rsh[:,1] = u2
+        # u1 = NewData_psi_rsh[:,0]
+        # v2 = NewData_psi_rsh[:,1]
+        # e1 = u1/np.linalg.norm(u1)
+        # u2 = v2 - np.dot(v2,e1)*e1
+        # e2 = u2/np.linalg.norm(u2)
+        # NewData_psi_rsh[:,1] = u2
+        NewData_psi_rsh = self.GramSchmidt(NewData_psi_rsh,normalize=False)
         NewLyapunov = np.log(np.linalg.norm(NewData_psi_rsh,axis=0))*Step/Step_L
-        Psi = NewData_psi_rsh.copy()
-        Psi[:,0] = e1
-        Psi[:,1] = e2
+        # Psi = NewData_psi_rsh.copy()
+        # Psi[:,0] = e1
+        # Psi[:,1] = e2
+        Psi = NewData_psi_rsh/np.linalg.norm(NewData_psi_rsh,axis=0)
 
         # Adjust Stepsize
         Delta = max(abs(NewData_psi-_NewData_psi))

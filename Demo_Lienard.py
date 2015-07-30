@@ -38,8 +38,7 @@ def Demo():
     # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
     # Method = CashKarp(Domain=Domain,P=LyapunovGSRProjection(),Delta0=1e-6)
     # Method = Euler_LEGS(Domain=Domain)
-    Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-6,Delta0_L=1e-4,
-                           GrowthLimit=2,MinStep=1e-3,MaxStep=1)
+    Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-6,Delta0_L=1e-4)
 
     # Initialize Starting Point (includes psi)
     # Start = np.array([0,-1.0,1,0,0,1])
