@@ -27,3 +27,10 @@ def GramSchmidt(A,normalize=True):
     if normalize:
         return U/np.linalg.norm(U,axis=0)
     return U
+
+
+def ListONP2NP(L):
+    arr = np.empty((len(L),)+L[0].shape)
+    for idx,x in enumerate(L):
+        arr[idx] = x
+    return arr

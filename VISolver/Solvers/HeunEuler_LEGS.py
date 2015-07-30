@@ -5,9 +5,9 @@ from VISolver.Solver import Solver
 from VISolver.Utilities import GramSchmidt
 
 
-class CashKarp_LEGS(Solver):
+class HeunEuler_LEGS(Solver):
 
-    def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-4,
+    def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-2,
                  GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
 
         self.F = Domain.F
@@ -27,16 +27,6 @@ class CashKarp_LEGS(Solver):
         self.MinStep = MinStep
 
         self.MaxStep = MaxStep
-
-        self.BT = np.array([
-            [1./5.,0.,0.,0.,0.,0.],
-            [3./40.,9./40.,0.,0.,0.,0.],
-            [3./10.,-9./10.,6./5.,0.,0.,0.],
-            [-11./54.,5./2.,-70./27.,35./27.,0.,0.],
-            [1631./55296.,175./512.,575./13824.,44275./110592.,253./4096.,0.],
-            [37./378.,0.,250./621.,125./594.,0.,512./1771.],
-            [2825./27648.,0.,18575./48384.,13525./55296.,277./14336.,0.25]
-        ])
 
     def InitTempStorage(self,Start,Domain,Options):
 
@@ -67,10 +57,10 @@ class CashKarp_LEGS(Solver):
         T = Record.TempStorage['T'][-1]
         dim = Data_x.size
 
-        Fs_x = np.zeros((6,Data_x.shape[0]))
+        Fs_x = np.zeros((2,Data_x.shape[0]))
         Fs_x[0,:] = Record.TempStorage[self.F][-1]
 
-        Fs_psi = np.zeros((6,Data_psi.shape[0]))
+        Fs_psi = np.zeros((2,Data_psi.shape[0]))
         Fs_psi[0,:] = Record.TempStorage['dPsi'][-1]
 
         Step = Record.TempStorage['Step'][-1]
@@ -78,28 +68,16 @@ class CashKarp_LEGS(Solver):
         # Initialize Storage
         TempData = {}
 
-        # Calculate k values (gradients)
-        for i in xrange(5):
-            direction_x = np.einsum('i,i...', self.BT[i,:i+1], Fs_x[:i+1])
-            direction_psi = np.einsum('i,i...', self.BT[i,:i+1], Fs_psi[:i+1])
+        # Perform Update
+        _NewData_x = self.Proj.P(Data_x,Step,Fs_x[0,:])
+        _NewData_psi = Data_psi+Step*Fs_psi[0,:]
 
-            _NewData_x = self.Proj.P(Data_x, Step, direction_x)
-            _NewData_psi = (Data_psi+Step*direction_psi).reshape((dim,-1))
+        Fs_x[1,:] = self.F(_NewData_x)
+        _NewData_psi_rsh = _NewData_psi.reshape((dim,-1))
+        Fs_psi[1,:] = np.dot(self.Jac(_NewData_x),_NewData_psi_rsh).flatten()
 
-            Fs_x[i+1,:] = self.F(_NewData_x)
-            Fs_psi[i+1,:] = np.dot(self.Jac(_NewData_x),_NewData_psi).flatten()
-
-        # Compute order-p, order-p+1 data points
-        direction_x = np.einsum('i,i...', self.BT[6,:6], Fs_x[:6])
-        _NewData_x = self.Proj.P(Data_x, Step, direction_x)
-        direction_x = np.einsum('i,i...', self.BT[5,:6], Fs_x[:6])
-        NewData_x = self.Proj.P(Data_x, Step, direction_x)
-
-        # Compute order-p, order-p+1 psi
-        direction_psi = np.einsum('i,i...', self.BT[6,:6], Fs_psi[:6])
-        _NewData_psi = Data_psi+Step*direction_psi
-        direction_psi = np.einsum('i,i...', self.BT[5,:6], Fs_psi[:6])
-        NewData_psi = Data_psi+Step*direction_psi
+        NewData_x = self.Proj.P(Data_x,Step,0.5*np.sum(Fs_x,axis=0))
+        NewData_psi = Data_psi+Step*0.5*np.sum(Fs_psi,axis=0)
 
         # Compute Deltas
         Delta_x = max(abs(NewData_x-_NewData_x))
@@ -118,7 +96,7 @@ class CashKarp_LEGS(Solver):
         if Delta == 0:
             growth = self.GrowthLimit
         else:
-            growth = min((self.Delta0/Delta)**0.2, self.GrowthLimit)
+            growth = min((self.Delta0/Delta)**0.5, self.GrowthLimit)
         Step = np.clip(growth*Step,self.MinStep,self.MaxStep)
 
         # Store Data
@@ -129,8 +107,8 @@ class CashKarp_LEGS(Solver):
         TempData['Lyapunov'] = NewLyapunov
         TempData['T'] = Tnew
         TempData['Step'] = Step
-        TempData['F Evaluations'] = 6 + self.TempStorage['F Evaluations'][-1]
-        TempData['Projections'] = 6 + self.TempStorage['Projections'][-1]
+        TempData['F Evaluations'] = 2 + self.TempStorage['F Evaluations'][-1]
+        TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
         self.BookKeeping(TempData)
 
         return self.TempStorage

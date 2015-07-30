@@ -72,11 +72,11 @@ class CashKarp(Solver):
 
         # Adjust Stepsize
         Delta = max(abs(NewData-_NewData))
-        if Delta == 0.:
-            Step = 2. * Step
+        if Delta == 0:
+            growth = self.GrowthLimit
         else:
-            growth = min(self.GrowthLimit, (self.Delta0/Delta)**0.2)
-            Step = max(min(Step*growth, self.MaxStep), self.MinStep)
+            growth = min((self.Delta0/Delta)**0.2, self.GrowthLimit)
+        Step = np.clip(growth*Step,self.MinStep,self.MaxStep)
 
         # Store Data
         TempData['Data'] = NewData
