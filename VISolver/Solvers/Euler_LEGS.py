@@ -2,7 +2,7 @@ import numpy as np
 
 from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solver
-
+from IPython import embed
 
 class Euler_LEGS(Solver):
 
@@ -62,6 +62,7 @@ class Euler_LEGS(Solver):
             s += 1
         scount += 1
         Step = self.InitStep/s
+        # Step = self.InitStep
 
         # Initialize Storage
         TempData = {}
@@ -70,10 +71,19 @@ class Euler_LEGS(Solver):
         NewData_x = self.Proj.P(Data_x,Step,F_x)
         NewData_psi = Data_psi+Step*F_psi
         Psi = NewData_psi.reshape((dim,-1))
-
+        # print(Psi)
         # Record Lyapunov exponent and Orthonormalize Psi
         NewLyapunov = np.log(np.linalg.norm(Psi,axis=0))  # /Step
-        Psi, R = np.linalg.qr(Psi)
+        if s % 1 == 0:
+            Psi, R = np.linalg.qr(Psi)
+            # Psi_0 = Psi.copy()
+            # e1 = Psi[:,0]/np.linalg.norm(Psi[:,0])
+            # u2 = Psi[:,1]-np.dot(e1,Psi[:,1])/np.dot(e1,e1)*Psi[:,1]
+            # e2 = u2/np.linalg.norm(u2)
+            # Psi[:,0] = e1
+            # Psi[:,1] = e2
+            # embed()
+            # assert False
 
         # Store Data
         TempData['Data'] = NewData_x

@@ -37,20 +37,22 @@ def Demo():
     # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
     # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-4)
     # Method = CashKarp(Domain=Domain,P=LyapunovGSRProjection(),Delta0=1e-6)
-    Method = Euler_LEGS(Domain=Domain)
-    # Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-8,Delta0_L=1e-6)
+    # Method = Euler_LEGS(Domain=Domain)
+    Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-6,Delta0_L=1e-4,
+                           GrowthLimit=2,MinStep=1e-3,MaxStep=1)
 
     # Initialize Starting Point (includes psi)
     # Start = np.array([0,-1.0,1,0,0,1])
+    Start = np.array([0,-1.0e-0])
     # Start = np.array([0,-2.0e-0])
     # Start = np.array([1.05151222,2.11233182])
-    Start = np.array([0,0])
+    # Start = np.array([0,0])
 
     # Set Options
-    # Init = Initialization(Step=1e-10)
-    Init = Initialization(Step=0.1)
-    Term = Termination(MaxIter=1e4)
-    Repo = Reporting(Requests=['Step','Data','Lyapunov'])  # ,'L-Step'])
+    Init = Initialization(Step=1e-3)
+    # Init = Initialization(Step=0.1)
+    Term = Termination(MaxIter=1e5)
+    Repo = Reporting(Requests=['Step','Data','Lyapunov','L-Step'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -97,6 +99,7 @@ def Demo():
             Lyapunov[idL,:] = L/T_elapsed[idL-1]
         # Lyapunov[idL,:] = L/max(1,idL)
     print(Lyapunov[-1])
+    # embed()
 
     data = np.zeros((iters+1,2))
     for idx,x in enumerate(Lienard_Results.PermStorage['Data']):

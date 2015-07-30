@@ -82,24 +82,32 @@ class CashKarp_LEGS(Solver):
         TempData = {}
 
         # Update Psi
-        # Step_L = .00001
+        # Step_L = 1.
         NewData_psi = Data_psi+Step_L*Fs_psi[0,:]
         NewData_psi_rsh = NewData_psi.reshape((dim,-1))
         _NewData_x = self.Proj.P(Data_x, Step_L, Fs_x[0,:])
         Fs_psi[1,:] = np.dot(self.Jac(_NewData_x),NewData_psi_rsh).flatten()
         _NewData_psi = Data_psi+Step_L*0.5*np.sum(Fs_psi,axis=0)
 
-        # Record Lyapunov exponent and Orthonormalize Psi
+        # Orthogonalize Psi, Record Lyapunov Exponents, Normalize Psi
+        u1 = NewData_psi_rsh[:,0]
+        v2 = NewData_psi_rsh[:,1]
+        e1 = u1/np.linalg.norm(u1)
+        u2 = v2 - np.dot(v2,e1)*e1
+        e2 = u2/np.linalg.norm(u2)
+        NewData_psi_rsh[:,1] = u2
         NewLyapunov = np.log(np.linalg.norm(NewData_psi_rsh,axis=0))*Step/Step_L
-        Psi, R = np.linalg.qr(NewData_psi_rsh)
+        Psi = NewData_psi_rsh.copy()
+        Psi[:,0] = e1
+        Psi[:,1] = e2
 
         # Adjust Stepsize
         Delta = max(abs(NewData_psi-_NewData_psi))
         if Delta == 0:
-            Step_L = self.GrowthLimit * Step_L
+            growth = self.GrowthLimit
         else:
             growth = min((self.Delta0_L/Delta)**0.5, self.GrowthLimit)
-            Step_L = np.clip(Step_L*growth, self.MinStep, self.MaxStep)
+        Step_L = np.clip(growth*Step_L,self.MinStep,self.MaxStep)
 
         # Calculate k values (gradients)
         for i in xrange(5):
@@ -131,10 +139,10 @@ class CashKarp_LEGS(Solver):
         # Adjust Stepsize
         Delta = max(abs(NewData_x-_NewData_x))
         if Delta == 0.:
-            Step = self.GrowthLimit * Step
+            growth = self.GrowthLimit
         else:
-            growth = min(self.GrowthLimit, (self.Delta0/Delta)**0.2)
-            Step = np.clip(Step*growth,self.MinStep,self.MaxStep)
+            growth = min((self.Delta0/Delta)**0.2, self.GrowthLimit)
+        Step = np.clip(growth*Step,self.MinStep,self.MaxStep)
 
         # Store Data
         TempData['Data'] = NewData_x
