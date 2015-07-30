@@ -10,6 +10,11 @@ from VISolver.Domains.CloudServices3 import CloudServices, CreateRandomNetwork
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 # from VISolver.Solvers.CashKarp import CashKarp
 
+# from VISolver.Solvers.Euler_LEGS import Euler_LEGS
+# from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
+from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
+# from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
+
 from VISolver.Projection import RPlusProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
@@ -37,8 +42,13 @@ def Demo():
     Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-4)
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
+    # Method = Euler_LEGS(Domain=Domain)
+    # Method = HeunEuler_LEGS(Domain=Domain,Delta0=1e-5)
+    Method = ABEuler_LEGS(Domain=Domain,Delta0=1e-4)
+    # Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-6)
+
     # Initialize Starting Point
-    Start = 2*np.ones(Domain.Dim)
+    Start = 2.5*np.ones(Domain.Dim)
 
     # Calculate Initial Gap
     # gap_0 = Domain.gap_rplus(Start)
@@ -50,7 +60,8 @@ def Demo():
     # Init = Initialization(Step=-0.00001)
     Term = Termination(MaxIter=10e4)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
-                               'Projections','Data',Domain.eig_stats])
+                               'Projections','Data',Domain.eig_stats,
+                               'Lyapunov'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -82,6 +93,10 @@ def Demo():
 
     data = CloudServices_Results.PermStorage['Data']
     plt.plot(data)
+    plt.show()
+
+    # Plot Lyapunov Exponents
+    plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
     plt.show()
 
     embed()
