@@ -2,12 +2,13 @@ import numpy as np
 
 from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solver
+from VISolver.Utilities import GramSchmidt
 
 
 class CashKarp_LEGS(Solver):
 
     def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-4,
-                 Delta0_L=1e-4, GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
+                 GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):
 
         self.F = Domain.F
 
@@ -20,8 +21,6 @@ class CashKarp_LEGS(Solver):
         self.TempStorage = {}
 
         self.Delta0 = Delta0
-
-        self.Delta0_L = Delta0_L
 
         self.GrowthLimit = GrowthLimit
 
@@ -50,7 +49,6 @@ class CashKarp_LEGS(Solver):
         self.TempStorage['Psi'] = self.StorageSize*[Psi_0.flatten()]
         self.TempStorage['dPsi'] = self.StorageSize*[dPsi_0.flatten()]
         self.TempStorage['Lyapunov'] = self.StorageSize*[0*Start]
-        self.TempStorage['L-Step'] = self.StorageSize*[Options.Init.Step]
 
         self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
         self.TempStorage['F Evaluations'] = self.StorageSize*[1]
@@ -59,21 +57,6 @@ class CashKarp_LEGS(Solver):
         return self.TempStorage
 
     # BookKeeping(self,TempData) defined in super class 'Solver'
-
-    def GramSchmidt(self,A,normalize=True):
-
-        U = A.copy()
-        for i in xrange(A.shape[0]):
-            vi = A[:,i]
-            proj = 0*vi
-            for j in xrange(i):
-                uj = U[:,j]
-                proj += np.dot(vi,uj)/np.dot(uj,uj)*uj
-            U[:,i] = vi - proj
-
-        if normalize:
-            return U/np.linalg.norm(U,axis=0)
-        return U
 
     def Update(self,Record):
 
@@ -86,75 +69,47 @@ class CashKarp_LEGS(Solver):
         Fs_x = np.zeros((6,Data_x.shape[0]))
         Fs_x[0,:] = Record.TempStorage[self.F][-1]
 
-        Fs_psi = np.zeros((2,Data_psi.shape[0]))
+        Fs_psi = np.zeros((6,Data_psi.shape[0]))
         Fs_psi[0,:] = Record.TempStorage['dPsi'][-1]
-        # F_psi = Record.TempStorage['dPsi'][-1]
 
         Step = Record.TempStorage['Step'][-1]
-        Step_L = Record.TempStorage['L-Step'][-1]
 
         # Initialize Storage
         TempData = {}
 
-        # Update Psi
-        # Step_L = 1.
-        NewData_psi = Data_psi+Step_L*Fs_psi[0,:]
-        NewData_psi_rsh = NewData_psi.reshape((dim,-1))
-        _NewData_x = self.Proj.P(Data_x, Step_L, Fs_x[0,:])
-        Fs_psi[1,:] = np.dot(self.Jac(_NewData_x),NewData_psi_rsh).flatten()
-        _NewData_psi = Data_psi+Step_L*0.5*np.sum(Fs_psi,axis=0)
-
-        # Orthogonalize Psi, Record Lyapunov Exponents, Normalize Psi
-        # u1 = NewData_psi_rsh[:,0]
-        # v2 = NewData_psi_rsh[:,1]
-        # e1 = u1/np.linalg.norm(u1)
-        # u2 = v2 - np.dot(v2,e1)*e1
-        # e2 = u2/np.linalg.norm(u2)
-        # NewData_psi_rsh[:,1] = u2
-        NewData_psi_rsh = self.GramSchmidt(NewData_psi_rsh,normalize=False)
-        NewLyapunov = np.log(np.linalg.norm(NewData_psi_rsh,axis=0))*Step/Step_L
-        # Psi = NewData_psi_rsh.copy()
-        # Psi[:,0] = e1
-        # Psi[:,1] = e2
-        Psi = NewData_psi_rsh/np.linalg.norm(NewData_psi_rsh,axis=0)
-
-        # Adjust Stepsize
-        Delta = max(abs(NewData_psi-_NewData_psi))
-        if Delta == 0:
-            growth = self.GrowthLimit
-        else:
-            growth = min((self.Delta0_L/Delta)**0.5, self.GrowthLimit)
-        Step_L = np.clip(growth*Step_L,self.MinStep,self.MaxStep)
-
         # Calculate k values (gradients)
         for i in xrange(5):
             direction_x = np.einsum('i,i...', self.BT[i,:i+1], Fs_x[:i+1])
-            # direction_psi = np.einsum('i,i...', self.BT[i,:i+1], Fs_psi[:i+1])
+            direction_psi = np.einsum('i,i...', self.BT[i,:i+1], Fs_psi[:i+1])
 
             _NewData_x = self.Proj.P(Data_x, Step, direction_x)
-            # _NewData_psi = (Data_psi+Step*direction_psi).reshape((dim,-1))
+            _NewData_psi = (Data_psi+Step*direction_psi).reshape((dim,-1))
 
             Fs_x[i+1,:] = self.F(_NewData_x)
-            #Fs_psi[i+1,:] = np.dot(self.Jac(_NewData_x),_NewData_psi).flatten()
+            Fs_psi[i+1,:] = np.dot(self.Jac(_NewData_x),_NewData_psi).flatten()
 
         # Compute order-p, order-p+1 data points
         direction_x = np.einsum('i,i...', self.BT[6,:6], Fs_x[:6])
         _NewData_x = self.Proj.P(Data_x, Step, direction_x)
         direction_x = np.einsum('i,i...', self.BT[5,:6], Fs_x[:6])
         NewData_x = self.Proj.P(Data_x, Step, direction_x)
+        Delta_x = max(abs(NewData_x-_NewData_x))
 
-        # Compute order-p+1 for psi
-        # direction_psi = np.einsum('i,i...', self.BT[5,:6], Fs_psi[:6])
-        # NewData_psi = Data_psi+Step*direction_psi
-        # NewData_psi = Data_psi+.0001*F_psi
-        # Psi = NewData_psi.reshape((dim,-1))
+        # Compute order-p, order-p+1 psi
+        direction_psi = np.einsum('i,i...', self.BT[6,:6], Fs_psi[:6])
+        _NewData_psi = Data_psi+Step*direction_psi
+        direction_psi = np.einsum('i,i...', self.BT[5,:6], Fs_psi[:6])
+        NewData_psi = Data_psi+Step*direction_psi
+        Delta_psi = max(abs(NewData_psi-_NewData_psi))
 
-        # # Record Lyapunov exponent and Orthonormalize Psi
-        # NewLyapunov = np.log(np.linalg.norm(Psi,axis=0))/.0001
-        # Psi, R = np.linalg.qr(Psi)
+        # Orthogonalize Psi, Record Lyapunov Exponents, Normalize Psi
+        NewData_psi_rsh = NewData_psi.reshape((dim,-1))
+        NewData_psi_rsh = GramSchmidt(NewData_psi_rsh,normalize=False)
+        NewLyapunov = np.log(np.linalg.norm(NewData_psi_rsh,axis=0))
+        Psi = NewData_psi_rsh/np.linalg.norm(NewData_psi_rsh,axis=0)
 
         # Adjust Stepsize
-        Delta = max(abs(NewData_x-_NewData_x))
+        Delta = max(Delta_x,Delta_psi)
         if Delta == 0.:
             growth = self.GrowthLimit
         else:
@@ -168,7 +123,6 @@ class CashKarp_LEGS(Solver):
         TempData['dPsi'] = np.dot(self.Jac(NewData_x),Psi).flatten()
         TempData['Lyapunov'] = Lyapunov + NewLyapunov
         TempData['Step'] = Step
-        TempData['L-Step'] = Step_L
         TempData['F Evaluations'] = 6 + self.TempStorage['F Evaluations'][-1]
         TempData['Projections'] = 6 + self.TempStorage['Projections'][-1]
         self.BookKeeping(TempData)
