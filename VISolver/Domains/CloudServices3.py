@@ -148,7 +148,7 @@ class CloudServices(Domain):
         np.fill_diagonal(Jacobian[nc:,:nc],np.sum(dpjdqj,axis=0))
         np.fill_diagonal(Jacobian[nc:,nc:],np.sum(dqj2,axis=0))
 
-        return -Jacobian
+        return Jacobian
 
     def approx_jacobian(self,x,epsilon=np.sqrt(np.finfo(float).eps),*args):
         """Approximate the Jacobian matrix of callable function func
@@ -168,7 +168,7 @@ class CloudServices(Domain):
              The approximation is done using forward differences
 
         """
-        func = self.F
+        func = -self.F
         x0 = np.asfarray(x)
         f0 = func(*((x0,)+args))
         jac = np.zeros([len(x0),len(f0)])
