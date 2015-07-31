@@ -48,7 +48,8 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = 2.5*np.ones(Domain.Dim)
+    # Start = 2.5*np.ones(Domain.Dim)
+    Start = 3*np.random.rand(Domain.Dim)
 
     # Calculate Initial Gap
     # gap_0 = Domain.gap_rplus(Start)

@@ -75,7 +75,7 @@ class Euler_LEGS(Solver):
         # Orthogonalize Psi, Record Lyapunov Exponents, Normalize Psi
         NewData_psi = GramSchmidt(NewData_psi,normalize=False)
         LEDT = np.log(np.linalg.norm(NewData_psi,axis=0))
-        Tnew = T + Step
+        Tnew = T + abs(Step)
         NewLyapunov = (Lyapunov*T+LEDT)/Tnew
         NewData_psi = NewData_psi/np.linalg.norm(NewData_psi,axis=0)
 
