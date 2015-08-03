@@ -49,7 +49,7 @@ def Demo():
 
     # Initialize Starting Point
     # Start = 2.5*np.ones(Domain.Dim)
-    Start = 3*np.random.rand(Domain.Dim)
+    Start = 10*np.random.rand(Domain.Dim)
 
     # Calculate Initial Gap
     # gap_0 = Domain.gap_rplus(Start)
@@ -59,10 +59,11 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-10)
     # Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=10e4)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
-    Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
-                               'Projections','Data',Domain.eig_stats,
-                               'Lyapunov'])
+    Term = Termination(MaxIter=1e7)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    # Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
+    #                            'Projections','Data',Domain.eig_stats,
+    #                            'Lyapunov'])
+    Repo = Reporting()
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
@@ -77,28 +78,28 @@ def Demo():
     # Print Results
     PrintSimResults(Options,CloudServices_Results,Method,toc)
 
-    x = CloudServices_Results.PermStorage['Data'][-1]
-    print('[p...q]')
-    print(x)
-    print('Qj')
-    print(Domain.Demand(x))
-    print('Profits')
-    print(Domain.CloudProfits(x))
-    print('[dpj...dqj')
-    print(Domain.dCloudProfits(x))
-    print('Qij')
-    print(Domain.Demand_IJ(x))
+    # x = CloudServices_Results.PermStorage['Data'][-1]
+    # print('[p...q]')
+    # print(x)
+    # print('Qj')
+    # print(Domain.Demand(x))
+    # print('Profits')
+    # print(Domain.CloudProfits(x))
+    # print('[dpj...dqj')
+    # print(Domain.dCloudProfits(x))
+    # print('Qij')
+    # print(Domain.Demand_IJ(x))
 
-    print(Domain.c_clouds)
-    print(Domain.pref_bizes)
+    # print(Domain.c_clouds)
+    # print(Domain.pref_bizes)
 
-    data = CloudServices_Results.PermStorage['Data']
-    plt.plot(data)
-    plt.show()
+    # data = CloudServices_Results.PermStorage['Data']
+    # plt.plot(data)
+    # plt.show()
 
-    # Plot Lyapunov Exponents
-    plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
-    plt.show()
+    # # Plot Lyapunov Exponents
+    # plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
+    # plt.show()
 
     embed()
 
