@@ -53,13 +53,11 @@ class EuclideanSimplexProjection(Projection):
         return w
 
 
-class LyapunovGSRProjection(Projection):
+class BoxProjection(Projection):
+
+    def __init__(self,low=0,hi=1):
+        self.min = low
+        self.max = hi
 
     def P(self,Data,Step,Direc):
-        # figure out intelligent slicing later
-        # this only works with euler - the other ones update Domain.Lyapunov
-        # multiple times per update which is wrong
-        psi = Data[2:].reshape(2,2)
-        psi, R = np.linalg.qr(psi)
-        Data[2:] = psi.flatten()
-        return Data+Step*Direc
+        return np.clip(Data+Step*Direc,self.min,self.max)

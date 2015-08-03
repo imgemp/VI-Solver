@@ -115,7 +115,7 @@ class ABEuler_LEGS(Solver):
 
             # Record Projections
             TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
-
+        # print(max(NewLyapunov))
         # Store Data
         TempData['Data'] = NewData_x
         TempData[self.F] = self.F(NewData_x)

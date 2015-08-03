@@ -64,6 +64,7 @@ class Euler_LEGS(Solver):
             s += 1
         scount += 1
         Step = self.InitStep/s
+        # Step = self.InitStep
 
         # Initialize Storage
         TempData = {}
