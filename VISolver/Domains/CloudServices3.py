@@ -197,20 +197,90 @@ class CloudServices(Domain):
                          div_trace])
 
 
-def CreateNetworkExample():
+def CreateNetworkExample(ex=1):
+    '''
+    Ex1: There are two clouds, one with higher costs than the other. The
+    businesses prefer the cloud with the higher costs, maybe because it's
+    greener (which is why it has higher costs).
+    Ex2: There are 5 clouds whose costs range from low to high. There are
+    four businesses in the market:
+        Biz 1: Big buyer loyal to clouds with 3 lowest cost functions, less
+            sensitive to price than average
+        Biz 2: Medium buyer indifferent to clouds, more sensitive to price
+        Biz 3: Small buyer indifferent to clouds, even more sensitive to price
+        Biz 4: Big buyer loyal to single seller, average sensitivity
+    Ex3: Same as ex2 except Biz 1 has flipped its affinity so that it's now
+        only loyal to cloud 5 (the cloud with the highest cost)
+    '''
 
-    # Cloud cost function coefficients
-    c_clouds = np.array([1,.75])
+    if ex == 1:
 
-    # Business preferences
-    pref_bizes = np.array([[.7,1],
-                           [.7,1]])
+        # Cloud cost function coefficients
+        c_clouds = np.array([1,.75])
 
-    # Business scale factors
-    H = np.array([[10,10],
-                  [10,10]])
+        # Business preferences
+        pref_bizes = np.array([[.7,1],
+                               [.7,1]])
 
-    return (2,2,c_clouds,H,pref_bizes)
+        # Business scale factors
+        H = np.array([[10,10],
+                      [10,10]])
+
+    elif ex == 4:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([.5,.6,.7])
+
+        # Business preferences
+        pref_bizes = np.array([[.1,.1,.2],
+                               [.25,.25,.25],
+                               [.3,.3,.3],
+                               [.15,.2,.2]])
+
+        # Business scale factors
+        H = np.array([[10,10,10],
+                      [8,8,8],
+                      [5,5,5],
+                      [10,10,10]])
+
+    elif ex == 2:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([.5,.6,.7,.8,.9])
+
+        # Business preferences
+        pref_bizes = np.array([[.1,.1,.1,.2,.2],
+                               [.25,.25,.25,.25,.25],
+                               [.3,.3,.3,.3,.3],
+                               [.15,.2,.2,.2,.2]])
+
+        # Business scale factors
+        H = np.array([[10,10,10,10,10],
+                      [8,8,8,8,8],
+                      [5,5,5,5,5],
+                      [10,10,10,10,10]])
+
+    else:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([.5,.6,.7,.8,.9])
+
+        # Business preferences
+        pref_bizes = np.array([[.2,.2,.2,.2,.05],
+                               [.25,.25,.25,.25,.25],
+                               [.3,.3,.3,.3,.3],
+                               [.15,.2,.2,.2,.2]])
+
+        # Business scale factors
+        H = np.array([[10,10,10,10,10],
+                      [8,8,8,8,8],
+                      [5,5,5,5,5],
+                      [10,10,10,10,10]])
+
+    nClouds = pref_bizes.shape[1]
+    nBiz = pref_bizes.shape[0]
+
+    return (nClouds,nBiz,c_clouds,H,pref_bizes)
 
 
 def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
