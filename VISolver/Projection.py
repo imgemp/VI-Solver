@@ -20,7 +20,7 @@ class IdentityProjection(Projection):
 class RPlusProjection(Projection):
 
     def P(self,Data,Step,Direc):
-        return np.maximum(0,Data+Step*Direc)
+        return np.maximum(0.01,Data+Step*Direc)
 
 
 class EntropicProjection(Projection):
@@ -55,8 +55,8 @@ class EuclideanSimplexProjection(Projection):
 
 class BoxProjection(Projection):
 
-    def __init__(self,low=0,hi=1):
-        self.min = low
+    def __init__(self,lo=-np.inf,hi=np.inf):
+        self.min = lo
         self.max = hi
 
     def P(self,Data,Step,Direc):

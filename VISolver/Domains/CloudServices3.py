@@ -24,19 +24,15 @@ class CloudServices(Domain):
 
     # Functions used to Initialize the Cloud Network and Calculate F
 
-    def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes,base_bizes):
+    def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes):
         self.nClouds = nClouds
         self.nBiz = nBiz
         self.c_clouds = c_clouds
         self.H = H
         self.pref_bizes = pref_bizes
-        self.base_bizes = base_bizes
 
     def CalculateNetworkSize(self):
         return 2*self.nClouds
-
-    def bexp(self,x):
-        return self.base_bizes**x
 
     def Demand_IJ(self,Data):
         p = Data[:self.nClouds]
@@ -45,7 +41,7 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        return self.H*self.bexp(-market**2)
+        return self.H*np.exp(-market**2)
 
     def Demand(self,Data):
         p = Data[:self.nClouds]
@@ -54,7 +50,7 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        return np.sum(self.H*self.bexp(-market**2),axis=0)
+        return np.sum(self.H*np.exp(-market**2),axis=0)
 
     def CloudProfits(self,Data):
         p = Data[:self.nClouds]
@@ -71,12 +67,12 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
-        Qij = self.H*self.bexp(-market**2)
+        Qij = self.H*np.exp(-market**2)
 
         pfac = (2/p-1/np.sum(p))*2
         qfac = (2/q-1/np.sum(q))*2
-        dfpj = -market**2*pfac*np.log(self.base_bizes)
-        dfqj = -market**2*qfac*np.log(self.base_bizes)
+        dfpj = -market**2*pfac
+        dfqj = -market**2*qfac
 
         c = self.c_clouds
 
@@ -96,12 +92,12 @@ class CloudServices(Domain):
         market = self.pref_bizes*supply
         fij = -market**2
 
-        Qij = self.H*self.bexp(fij)
+        Qij = self.H*np.exp(fij)
 
         ps = np.sum(p)
         qs = np.sum(q)
 
-        fij = fij*np.log(self.base_bizes)
+        fij = fij
 
         dfij_dpj = 2*fij*(2/p-1/ps)
         dfij_dqj = 2*fij*(2/q-1/qs)
@@ -214,11 +210,7 @@ def CreateNetworkExample():
     H = np.array([[10,10],
                   [10,10]])
 
-    # Business bases
-    base_bizes = np.array([[1.8,1.8],
-                           [1.5,1.5]])
-
-    return (2,2,c_clouds,H,pref_bizes,base_bizes)
+    return (2,2,c_clouds,H,pref_bizes)
 
 
 def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
@@ -230,12 +222,9 @@ def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
     c_clouds = np.random.rand(nClouds)+.5
 
     # Business preferences
-    pref_bizes = np.random.rand(nBiz,nClouds)+.5
+    pref_bizes = np.random.rand(nBiz,nClouds)*.15+.2
 
     # Business scale factors
     H = np.tile(np.random.rand(nBiz)*10+5,(nClouds,1)).T
 
-    # Business bases
-    base_bizes = np.random.rand(nBiz,nClouds)*.2+1.05
-
-    return (nClouds,nBiz,c_clouds,H,pref_bizes,base_bizes)
+    return (nClouds,nBiz,c_clouds,H,pref_bizes)

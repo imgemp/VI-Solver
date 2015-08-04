@@ -7,7 +7,7 @@ from VISolver.Utilities import GramSchmidt
 
 class Euler_LEGS(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection()):
+    def __init__(self,Domain,P=IdentityProjection(),FixStep=False):
 
         self.F = Domain.F
 
@@ -18,6 +18,8 @@ class Euler_LEGS(Solver):
         self.StorageSize = 1
 
         self.TempStorage = {}
+
+        self.FixStep = FixStep
 
     def InitTempStorage(self,Start,Domain,Options):
 
@@ -58,13 +60,14 @@ class Euler_LEGS(Solver):
         scount = self.TempStorage['scount'][-1]
         s = self.TempStorage['s'][-1]
 
-        # Use Decreasing Step Size Scheme
-        if scount >= s:
-            scount = 0
-            s += 1
-        scount += 1
-        Step = self.InitStep/s
-        # Step = self.InitStep
+        if self.FixStep:
+            Step = self.InitStep
+        else:  # Use Decreasing Step Size Scheme
+            if scount >= s:
+                scount = 0
+                s += 1
+            scount += 1
+            Step = self.InitStep/s
 
         # Initialize Storage
         TempData = {}

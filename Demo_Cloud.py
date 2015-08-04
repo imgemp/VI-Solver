@@ -15,11 +15,13 @@ from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
 from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
 from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimResults, PrintSimStats
+
+from VISolver.Utilities import ListONP2NP
 
 from matplotlib import pyplot as plt
 
@@ -42,18 +44,18 @@ def Demo():
     # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-4)
     # Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
-    Method = Euler_LEGS(Domain=Domain,P=RPlusProjection())
+    Method = Euler_LEGS(Domain=Domain,P=BoxProjection())
     # Method = HeunEuler_LEGS(Domain=Domain,P=RPlusProjection(),Delta0=1e-1)
-    # Method = ABEuler_LEGS(Domain=Domain,P=RPlusProjection(),Delta0=1e-1)
+    # Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(),Delta0=1e-1)
     # Method = CashKarp_LEGS(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
 
     # Initialize Starting Point
     # Start = 2.5*np.ones(Domain.Dim)
-    # Start = 10*np.random.rand(Domain.Dim)
+    Start = 10*np.random.rand(Domain.Dim)
     # Start = np.array([9.52791657,11.63158087,12.42043654,10.46083131,23.0806941,
     #                   2.53941643,0.45046114,0.41310984,0.44217791,0.26479585])
-    Start = np.array([9.52791657,11.73396707,12.53424296,10.55151842,23.44745641,
-                      2.53941643,0.44840324,0.41112556,0.44019972,0.26233588])
+    # Start = np.array([9.52791657,11.73396707,12.53424296,10.55151842,23.44745641,
+    #                   2.53941643,0.44840324,0.41112556,0.44019972,0.26233588])
     # Start = np.array([9.52791657,12.,13.,11.,24.,
     #                   2.53941643,.5,0.5,0.5,0.26])
    #  9.52791657,11.82611837,12.63622284,10.63321631,23.77959998
@@ -67,7 +69,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-5)
     # Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=1e4)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=1e5)  # ,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data',Domain.eig_stats,
                                'Lyapunov'])
@@ -107,6 +109,11 @@ def Demo():
 
     # Plot Lyapunov Exponents
     plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
+    plt.show()
+
+    data = ListONP2NP(data)
+    for i in xrange(data.shape[1]/2):
+        plt.plot(data[:,i],data[:,i+data.shape[1]/2])
     plt.show()
 
     embed()

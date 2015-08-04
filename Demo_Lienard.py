@@ -33,8 +33,8 @@ def Demo():
 
     # Initialize Starting Point
     # Start = np.array([0,-1.0e-0])
-    # Start = np.array([0,-2.0e-0])
-    Start = np.array([1.05151222,2.11233182])
+    Start = np.array([0,-2.0e-0])
+    # Start = np.array([1.05151222,2.11233182])
     # Start = np.array([0,0])
 
     # Set Options
