@@ -1,8 +1,9 @@
 import numpy as np
 
-import matplotlib as mpl; mpl.use("Agg")
+import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.collections  as mc
+import matplotlib.collections as mc
 import matplotlib.cm as cm
 
 from VISolver.Domain import Domain

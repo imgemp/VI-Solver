@@ -17,12 +17,6 @@ class IdentityProjection(Projection):
         return Data+Step*Direc
 
 
-class RPlusProjection(Projection):
-
-    def P(self,Data,Step,Direc):
-        return np.maximum(0.01,Data+Step*Direc)
-
-
 class EntropicProjection(Projection):
 
     def P(self,Data,Step,Direc):

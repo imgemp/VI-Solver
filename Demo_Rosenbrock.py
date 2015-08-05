@@ -10,7 +10,6 @@ from VISolver.Domains.Rosenbrock import Rosenbrock
 # from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
 
-from VISolver.Projection import RPlusProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -25,12 +24,12 @@ def Demo():
     Domain = Rosenbrock(Dim=1000)
 
     # Set Method
-    # Method = Euler(Domain=Domain,P=RPlusProjection())
-    # Method = EG(Domain=Domain,P=RPlusProjection())
-    # Method = AG(Domain=Domain,P=RPlusProjection())
-    # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
-    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
-    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+    # Method = Euler(Domain=Domain)
+    # Method = EG(Domain=Domain)
+    # Method = AG(Domain=Domain)
+    # Method = HeunEuler(Domain=Domain,Delta0=1e-6)
+    # Method = ABEuler(Domain=Domain,Delta0=1e-5)
+    Method = CashKarp(Domain=Domain,Delta0=1e-6)
 
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)

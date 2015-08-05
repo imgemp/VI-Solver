@@ -11,7 +11,7 @@ from VISolver.Domains.SupplyChain import (
 # from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -27,12 +27,12 @@ def Demo():
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
-    # Method = Euler(Domain=Domain,P=RPlusProjection())
-    # Method = EG(Domain=Domain,P=RPlusProjection())
-    # Method = AG(Domain=Domain,P=RPlusProjection())
-    # Method = HeunEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
-    # Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
-    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    # Method = Euler(Domain=Domain,P=BoxProjection(lo=0))
+    # Method = EG(Domain=Domain,P=BoxProjection(lo=0))
+    # Method = AG(Domain=Domain,P=BoxProjection(lo=0))
+    # Method = HeunEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-2)
+    # Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-2)
+    Method = CashKarp(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
 
     # Initialize Starting Point
     x = 10*np.ones(np.product(Domain.x_shape))

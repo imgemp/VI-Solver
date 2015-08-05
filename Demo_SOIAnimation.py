@@ -5,7 +5,7 @@ from VISolver.Domains.SOI import SOI, CreateNetworkExample
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -29,7 +29,7 @@ def Demo():
     Domain = SOI(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-2)
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
@@ -65,7 +65,7 @@ def Demo():
     Domain = SOI(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = SOI_Results_Phase1.PermStorage['Data'][-1]
