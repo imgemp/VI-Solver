@@ -1,222 +1,289 @@
+from __future__ import division
 import numpy as np
-from scipy.special import erf
-
 from VISolver.Domain import Domain
-
-# Scrapped - see CloudServicesNew for 'working' version
 
 
 class CloudServices(Domain):
 
-    def __init__(self,Network,alpha=2):
-        raise NotImplementedError('Under construction.')
+    def __init__(self,Network,gap_alpha=2):
         self.UnpackNetwork(*Network)
         self.Network = (Network[0],Network[1])
         self.Dim = self.CalculateNetworkSize()
-        self.alpha = alpha
+        self.gap_alpha = gap_alpha
 
-    def F(self,Data,FDs=None):
-        return -np.concatenate((self.dCloudProfit(Data),self.dBizProfits(Data)))
+    def F(self,Data):
+        return -self.dCloudProfits(Data)
 
-    def gap_rplus(self,Data):
-        X = Data
-        dFdX = self.F(Data)
+    def gap_rplus(self,X):
+        dFdX = self.F(X)
 
-        Y = np.maximum(0,X - dFdX/self.alpha)
+        Y = np.maximum(0,X - dFdX/self.gap_alpha)
         Z = X - Y
 
-        return np.dot(dFdX,Z) - self.alpha/2.*np.dot(Z,Z)
+        return np.dot(dFdX,Z) - self.gap_alpha/2.*np.dot(Z,Z)
 
     # Functions used to Initialize the Cloud Network and Calculate F
 
-    def UnpackNetwork(self,nClouds,nBiz,c_clouds,c_bizes,dist_bizes,
-                      lam_bizes,p_bizes):
+    def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes):
         self.nClouds = nClouds
         self.nBiz = nBiz
         self.c_clouds = c_clouds
-        self.c_bizes = c_bizes
-        self.dist_bizes = dist_bizes
-        self.lam_bizes = lam_bizes
-        self.p_bizes = p_bizes
+        self.H = H
+        self.pref_bizes = pref_bizes
 
     def CalculateNetworkSize(self):
-        return 2*self.nClouds*(self.nBiz + 1)
+        return 2*self.nClouds
 
-    def CloudProfit(self,Data):
-        Q_L = self.QL_Cloud(Data)
-        Q_S = self.QS_Cloud(Data)
-        p_L = self.pL_Cloud(Data)
-        p_S = self.pS_Cloud(Data)
-        Revenue = p_L*Q_L + p_S*Q_S
-        Cost = self.Quadratic(self.c_clouds,p_L+p_S)
+    def Demand_IJ(self,Data):
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
+        relprice = p/np.mean(p)
+        relquali = q/np.mean(q)
+        supply = p*q*relprice*relquali
+        market = self.pref_bizes*supply
+        return self.H*np.exp(-market**2)
+
+    def Demand(self,Data):
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
+        relprice = p/np.mean(p)
+        relquali = q/np.mean(q)
+        supply = p*q*relprice*relquali
+        market = self.pref_bizes*supply
+        return np.sum(self.H*np.exp(-market**2),axis=0)
+
+    def CloudProfits(self,Data):
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
+        Q = self.Demand(Data)
+        Revenue = p*Q
+        Cost = self.c_clouds*Q*q**(-2)
         return Revenue - Cost
 
-    def dCloudProfit(self,Data):
-        dCP = np.empty((2*self.nClouds,))
-        dCP[0::2] = self.dCloudProfitdPL(Data)
-        dCP[1::2] = self.dCloudProfitdPS(Data)
-        return dCP
+    def dCloudProfits(self,Data):
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
+        relprice = p/np.mean(p)
+        relquali = q/np.mean(q)
+        supply = p*q*relprice*relquali
+        market = self.pref_bizes*supply
+        Qij = self.H*np.exp(-market**2)
 
-    def dCloudProfitdPL(self,Data):
-        Q_L = self.QL_Cloud(Data)
-        p_L = Data[0:2*self.nClouds:2]
-        p_S = Data[1:2*self.nClouds:2]
-        dCost = self.dQuadratic(self.c_clouds,p_L+p_S)
-        return Q_L + p_L*self.dQLdpL - dCost
+        pfac = (2/p-1/np.sum(p))*2
+        qfac = (2/q-1/np.sum(q))*2
+        dfpj = -market**2*pfac
+        dfqj = -market**2*qfac
 
-    def dCloudProfitdPS(self,Data):
-        Q_S = self.QS_Cloud(Data)
-        p_L = Data[0:2*self.nClouds:2]
-        p_S = Data[1:2*self.nClouds:2]
-        dCost = self.dQuadratic(self.c_clouds,p_L+p_S)
-        return Q_S + p_S*self.dQSdpS - dCost
+        c = self.c_clouds
 
-    def BizProfits(self,Data):
-        q_L = self.qL_Biz(Data)
-        q_S = self.qS_Biz(Data)
-        Revenue = self.p_bizes*(q_L+q_S)
-        Cloud_Costs = np.sum( Data[:2*self.nClouds] * np.reshape( Data[2*self.nClouds:], (self.nBiz,2*self.nClouds) ), axis=1)
-        Operating_Costs = self.Quadratic(self.c_bizes,q_L+q_S)
-        Forecast_Costs = self.lam_bizes[:,0]*self.E_shortage(self.dist_bizes,q_L+q_S) \
-                       + self.lam_bizes[:,1]*self.E_surplus(self.dist_bizes,q_L+q_S)
-        return Revenue - Cloud_Costs - Operating_Costs - Forecast_Costs
+        dpj = np.sum(Qij*(1+dfpj*(p-c*q**(-2))),axis=0)
+        dqj = np.sum(Qij*(2*c*q**(-3)+dfqj*(p-c*q**(-2))),axis=0)
 
-    def dBizProfits(self,Data):
-        dBP = np.empty((2*self.nBiz*self.nClouds,))
-        dBP[0::2] = self.dBizProfitsdQL(Data)
-        dBP[1::2] = self.dBizProfitsdQS(Data)
-        return dBP
+        return np.hstack([dpj,dqj])
 
-    def dBizProfitsdQL(self,Data):
-        q_L = self.qL_Biz(Data)
-        q_S = self.qS_Biz(Data)
-        dRevenue = np.repeat( self.p_bizes, self.nClouds )
-        dCloud_Costs = np.tile( Data[0:2*self.nClouds:2], self.nBiz )
-        dOperating_Costs = np.repeat( self.dQuadratic(self.c_bizes,q_L+q_S), self.nClouds )
-        dForecast_Costs = np.repeat(
-                                self.lam_bizes[:,0]*self.dE_shortage(self.dist_bizes,q_L+q_S)
-                              + self.lam_bizes[:,1]*self.dE_surplus(self.dist_bizes,q_L)
-                        , self.nClouds )
-        return dRevenue - dCloud_Costs - dOperating_Costs - dForecast_Costs
+    def Jac(self,Data):
 
-    def dBizProfitsdQS(self,Data):
-        q_L = self.qL_Biz(Data)
-        q_S = self.qS_Biz(Data)
-        dRevenue = np.repeat( self.p_bizes, self.nClouds )
-        dCloud_Costs = np.tile( Data[1:2*self.nClouds:2], self.nBiz )
-        dOperating_Costs = np.repeat( self.dQuadratic(self.c_bizes,q_L+q_S), self.nClouds )
-        dForecast_Costs = np.repeat( self.lam_bizes[:,0]*self.dE_shortage(self.dist_bizes,q_L+q_S), self.nClouds )
-        return dRevenue - dCloud_Costs - dOperating_Costs
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
 
-    def E_shortage(self,dists,q_L):
-        mu = dists[:,0]
-        sigma = dists[:,1]
-        try:
-            out = np.empty(q_L.shape)
-            zero = (q_L<=0.)
-            out[zero] = np.exp(mu[zero]+0.5*sigma[zero]**2)
-            out[~zero] = np.exp(mu[~zero]+0.5*sigma[~zero]**2)*self.Normal_CDF( (mu[~zero] + sigma[~zero]**2 - np.log(q_L[~zero]))/sigma[~zero] ) \
-                       - q_L[~zero]*(1 - self.LogNormal_CDF(mu[~zero],sigma[~zero],q_L[~zero]))
-            return out
-        except AttributeError:
-            if q_L<=0.:
-                return np.exp(mu+0.5*sigma**2)
-            else:
-                return np.exp(mu+0.5*sigma**2)*self.Normal_CDF( (mu + sigma**2 - np.log(q_L))/sigma ) \
-                     - q_L*(1 - self.LogNormal_CDF(mu,sigma,q_L))
+        relprice = p/np.mean(p)
+        relquali = q/np.mean(q)
+        supply = p*q*relprice*relquali
+        market = self.pref_bizes*supply
+        fij = -market**2
 
-    def E_surplus(self,dists,q_L):
-        mu = dists[:,0]
-        sigma = dists[:,1]
-        try:
-            out = np.empty(q_L.shape)
-            zero = (q_L<=0.)
-            out[zero] = 0.
-            out[~zero] = q_L[~zero]*self.LogNormal_CDF(mu[~zero],sigma[~zero],q_L[~zero]) \
-                       + np.exp(mu[~zero]+0.5*sigma[~zero]**2)*self.Normal_CDF( (mu[~zero] + sigma[~zero]**2 - np.log(q_L[~zero]))/sigma[~zero] ) \
-                       - np.exp(mu[~zero]+0.5*sigma[~zero]**2)
-            return out
-        except AttributeError:
-            if q_L<=0.:
-                return 0.
-            else:
-                return q_L*self.LogNormal_CDF(mu,sigma,q_L) \
-                     + np.exp(mu+0.5*sigma**2)*self.Normal_CDF( (mu + sigma**2 - np.log(q_L))/sigma ) \
-                     - np.exp(mu+0.5*sigma**2)
+        Qij = self.H*np.exp(fij)
 
-    def dE_shortage(self,dists,q_L):
-        return self.LogNormal_CDF(dists[:,0],dists[:,1],q_L) - 1
+        ps = np.sum(p)
+        qs = np.sum(q)
 
-    def dE_surplus(self,dists,q_L):
-        return self.LogNormal_CDF(dists[:,0],dists[:,1],q_L)
+        fij = fij
 
-    def Normal_CDF(self,x):
-        return 0.5* ( 1 + erf( x/np.sqrt(2) ) )
+        dfij_dpj = 2*fij*(2/p-1/ps)
+        dfij_dqj = 2*fij*(2/q-1/qs)
+        dfij_dpk = 2*fij*(-1/ps)  # same for every k
+        dfij_dqk = 2*fij*(-1/qs)  # same for every k
 
-    def LogNormal_CDF(self,mu,sigma,x):
-        try:
-            out = np.zeros(x.shape)
-            pos = (x>0.)
-            out[pos] = 0.5*( 1 + erf( (np.log(x[pos]) - mu[pos])/(sigma[pos]*np.sqrt(2)) ) )
-            return out
-        except AttributeError:
-            if x<=0.:
-                return 0.
-            else:
-                return 0.5*( 1 + erf( (np.log(x) - mu)/(sigma*np.sqrt(2)) ) )
+        d2fij_dpj2 = 2*fij*(6/(p**2)-8/(p*ps)+3/(ps**2))
+        d2fij_dqj2 = 2*fij*(6/(q**2)-8/(q*qs)+3/(qs**2))
 
-    def Quadratic(self,c,x):
-        if len(c.shape) == 1:
-            return c[0] + x*( c[1] + x*c[2] )
-        else:
-            return c[:,0] + x*( c[:,1] + x*c[:,2] )
+        d2fij_dpjdqj = 2*fij*2*(2/q-1/qs)*(2/p-1/ps)
 
-    def dQuadratic(self,c,x):
-        if len(c.shape) == 1:
-            return c[1] + 2*x*c[2]
-        else:
-            return c[:,1] + 2*x*c[:,2]
+        d2fij_dpjdpk = 2*fij*(-4/(p*ps)+3/(ps**2))
+        d2fij_dpjdqk = 2*fij*2*(-1/qs)*(2/p-1/ps)
 
-    def QL_Cloud(self,Data):
-        return np.array( [ np.sum(Data[2*(c+self.nClouds)::2*self.nClouds]) for c in xrange(self.nClouds) ] )
+        d2fij_dqjdqk = 2*fij*(-4/(q*qs)+3/(qs**2))
+        d2fij_dqjdpk = 2*fij*2*(-1/ps)*(2/q-1/qs)
 
-    def QS_Cloud(self,Data):
-        return np.array( [ np.sum(Data[2*(c+self.nClouds)+1::2*self.nClouds]) for c in xrange(self.nClouds) ] )
+        c = self.c_clouds
+        x = (p-c/(q**2))
+        a = 2*c/(q**3)
 
-    def pL_Cloud(self,Data):
-        return Data[0:2*self.nClouds:2]
+        dpjdpk = Qij*(dfij_dpk+(d2fij_dpjdpk+dfij_dpj*dfij_dpk)*x)
+        dpjdqk = Qij*(dfij_dqk+(d2fij_dpjdqk+dfij_dpj*dfij_dqk)*x)
 
-    def pS_Cloud(self,Data):
-        return Data[1:2*self.nClouds:2]
+        dqjdpk = Qij*(a*dfij_dpk+(d2fij_dqjdpk+dfij_dqj*dfij_dpk)*x)
+        dqjdqk = Qij*(a*dfij_dqk+(d2fij_dqjdqk+dfij_dqj*dfij_dqk)*x)
 
-    def qL_Biz(self,Data):
-        return np.array( [ np.sum(Data[2*self.nClouds*(b+1):2*self.nClouds*(b+2):2]) for b in xrange(self.nBiz) ] )
+        dpj2 = Qij*(2*dfij_dpj+(d2fij_dpj2+dfij_dpj**2)*x)
+        dqj2 = Qij*(2*a*dfij_dqj-3*a/q+(d2fij_dqj2+dfij_dqj**2)*x)
 
-    def qS_Biz(self,Data):
-        return np.array( [ np.sum(Data[2*self.nClouds*(b+1)+1:2*self.nClouds*(b+2):2]) for b in xrange(self.nBiz) ] )
+        dpjdqj = Qij*(a*dfij_dpj+dfij_dqj+(d2fij_dpjdqj+dfij_dpj*dfij_dqj)*x)
 
-def CreateRandomNetwork(nClouds,nBiz,seed=None):
+        nc = self.nClouds
+        Jacobian = np.zeros((2*nc,2*nc))
+        Jacobian[:nc,:nc] = np.sum(dpjdpk,axis=0)[:,None]
+        Jacobian[:nc,nc:] = np.sum(dpjdqk,axis=0)[:,None]
+
+        Jacobian[nc:,:nc] = np.sum(dqjdpk,axis=0)[:,None]
+        Jacobian[nc:,nc:] = np.sum(dqjdqk,axis=0)[:,None]
+
+        np.fill_diagonal(Jacobian[:nc,:nc],np.sum(dpj2,axis=0))
+        np.fill_diagonal(Jacobian[:nc,nc:],np.sum(dpjdqj,axis=0))
+
+        np.fill_diagonal(Jacobian[nc:,:nc],np.sum(dpjdqj,axis=0))
+        np.fill_diagonal(Jacobian[nc:,nc:],np.sum(dqj2,axis=0))
+
+        return -Jacobian
+
+    def approx_jacobian(self,x,epsilon=np.sqrt(np.finfo(float).eps),*args):
+        """Approximate the Jacobian matrix of callable function func
+           * Rob Falck's implementation as a part of scipy.optimize.fmin_slsqp
+           * Parameters
+             x       - The state vector at which the Jacobian matrix is
+             desired
+             func    - A vector-valued function of the form f(x,*args)
+             epsilon - The peturbation used to determine the partial derivatives
+             *args   - Additional arguments passed to func
+
+           * Returns
+             An array of dimensions (lenf, lenx) where lenf is the length
+             of the outputs of func, and lenx is the number of
+
+           * Notes
+             The approximation is done using forward differences
+
+        """
+        func = self.F
+        x0 = np.asfarray(x)
+        f0 = func(*((x0,)+args))
+        jac = np.zeros([len(x0),len(f0)])
+        dx = np.zeros(len(x0))
+        for i in range(len(x0)):
+            dx[i] = epsilon
+            jac[i] = (func(*((x0+dx,)+args)) - f0)/epsilon
+            dx[i] = 0.0
+        return jac.transpose()
+
+    def eig_stats(self,Data):
+
+        jac = self.Jac(Data)
+        eigs = np.real_if_close(np.linalg.eigvals(jac))
+        eigs_r = np.real(eigs)
+        eigs_i = np.imag(eigs)
+
+        eig_min = min(eigs_r)
+        eig_max = max(eigs_r)
+        N_real = sum(np.abs(eigs_i) == 0.)
+        N_imag = len(eigs) - N_real
+        N_neg = sum(eigs_r < 0.)
+        N_zer = sum(eigs_r == 0.)
+        N_pos = len(eigs) - N_neg - N_zer
+        div_trace = sum(eigs_r)
+
+        return np.array([eig_min,eig_max,
+                         N_real,N_imag,
+                         N_neg,N_zer,N_pos,
+                         div_trace])
+
+
+def CreateNetworkExample(ex=1):
+    '''
+    Ex1: There are two clouds, one with higher costs than the other. The
+    businesses prefer the cloud with the higher costs, maybe because it's
+    greener (which is why it has higher costs).
+    Ex2: There are 5 clouds - 3 of which are large providers with highly
+    optimized servicing abilities, while the other 2 are newcomers to the
+    market trying to fill a niche with higher cost green-tech.
+    There are four businesses in the market:
+        Biz 1: Big buyer loyal to clouds with 3 lowest cost functions
+        Biz 2: Medium buyer with slight preference towards green-tech
+        Biz 3: Small buyer prefers green-tech, not opposed to large corp though
+        Biz 4: Big buyer loyal to single cloud, green is lesser of 2 evils
+    Ex3: Same as Ex3 except Biz 1 has flipped its affinity so that it's now
+        only loyal to cloud 5 (the cloud with the highest cost)
+    *** Want to explore Ex2 in a bounded region, p in (eps,10) / q in (eps,2),
+        to find BofA(s)
+    '''
+
+    if ex == 1:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([1,.75])
+
+        # Business preferences
+        pref_bizes = np.array([[.7,1],
+                               [.7,1]])
+
+        # Business scale factors
+        H = np.array([[10,10],
+                      [10,10]])
+
+    elif ex == 2:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([1.05,1.1,.95,1.15,1.2])
+
+        # Business preferences
+        pref_bizes = np.array([[.27,.27,.27,.38,.38],
+                               [.34,.34,.34,.31,.31],
+                               [.33,.33,.33,.26,.26],
+                               [.25,.40,.40,.34,.34]])
+
+        # Business scale factors
+        H = np.array([[11,11,11,11,11],
+                      [9,9,9,9,9],
+                      [6,6,6,6,6],
+                      [12,12,12,12,12]])
+
+    elif ex == 3:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([1.05,1.1,.95,1.15,1.2])
+
+        # Business preferences
+        pref_bizes = np.array([[.38,.38,.38,.38,.27],
+                               [.34,.34,.34,.31,.31],
+                               [.33,.33,.33,.26,.26],
+                               [.25,.40,.40,.34,.34]])
+
+        # Business scale factors
+        H = np.array([[11,11,11,11,11],
+                      [9,9,9,9,9],
+                      [6,6,6,6,6],
+                      [12,12,12,12,12]])
+
+    else:
+        raise NotImplementedError('There are only 3 predefined examples (1-3)')
+
+    nClouds = pref_bizes.shape[1]
+    nBiz = pref_bizes.shape[0]
+
+    return (nClouds,nBiz,c_clouds,H,pref_bizes)
+
+
+def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
 
     if seed is not None:
         np.random.seed(seed)
 
-    # Cloud quadratic cost functions = c_cloud[0] + c_cloud[1]*Q + c_cloud[2]*Q**2
-    c_clouds = 0*( np.random.rand(nClouds,3)*[0,.5,.2]+[1,1,1] )
+    # Cloud cost function coefficients
+    c_clouds = np.random.rand(nClouds)+.5
 
-    # Business quadratic cost functions = c_biz[0] + c_biz[1]*Q_biz + c_biz[2]*Q_biz**2
-    c_bizes = np.random.rand(nBiz,3)*[0,0.2,0.1]+[0,0,0]
+    # Business preferences
+    pref_bizes = np.random.rand(nBiz,nClouds)*.15+.2
 
-    # Business demand distribution function means, mu_biz, and standard deviations, sigma_biz
-    dist_bizes = np.random.rand(nBiz,2)*[0.2,0.02]+[2,.8]
-    # mu = dist_bizes[:,0]
-    # sigma = dist_bizes[:,1]
-    # means = np.exp(mu+0.5*sigma**2)
-    # variances = (np.exp(sigma**2)-1)*(means**2)
+    # Business scale factors
+    H = np.tile(np.random.rand(nBiz)*10+5,(nClouds,1)).T
 
-    # Business forecasting cost functions = lam_biz[0]*E_shortage + lam_biz[1]*E_surplus
-    lam_bizes = np.random.rand(nBiz,2)*[0,0.01]+[0,0.005]
-
-    # Business sale prices, p_biz
-    p_bizes = np.random.rand(nBiz)*1+5
-
-    return (nClouds,nBiz,c_clouds,c_bizes,dist_bizes,lam_bizes,p_bizes)
+    return (nClouds,nBiz,c_clouds,H,pref_bizes)
