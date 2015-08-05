@@ -15,11 +15,11 @@ class Euler_LEGS(Solver):
 
         self.Proj = P
 
+        self.FixStep = FixStep
+
         self.StorageSize = 1
 
         self.TempStorage = {}
-
-        self.FixStep = FixStep
 
     def InitTempStorage(self,Start,Domain,Options):
 

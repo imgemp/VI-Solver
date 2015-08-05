@@ -202,15 +202,18 @@ def CreateNetworkExample(ex=1):
     Ex1: There are two clouds, one with higher costs than the other. The
     businesses prefer the cloud with the higher costs, maybe because it's
     greener (which is why it has higher costs).
-    Ex2: There are 5 clouds whose costs range from low to high. There are
-    four businesses in the market:
-        Biz 1: Big buyer loyal to clouds with 3 lowest cost functions, less
-            sensitive to price than average
-        Biz 2: Medium buyer indifferent to clouds, more sensitive to price
-        Biz 3: Small buyer indifferent to clouds, even more sensitive to price
-        Biz 4: Big buyer loyal to single seller, average sensitivity
-    Ex3: Same as ex2 except Biz 1 has flipped its affinity so that it's now
+    Ex2: There are 5 clouds - 3 of which are large providers with highly
+    optimized servicing abilities, while the other 2 are newcomers to the
+    market trying to fill a niche with higher cost green-tech.
+    There are four businesses in the market:
+        Biz 1: Big buyer loyal to clouds with 3 lowest cost functions
+        Biz 2: Medium buyer with slight preference towards green-tech
+        Biz 3: Small buyer prefers green-tech, not opposed to large corp though
+        Biz 4: Big buyer loyal to single cloud, green is lesser of 2 evils
+    Ex3: Same as Ex3 except Biz 1 has flipped its affinity so that it's now
         only loyal to cloud 5 (the cloud with the highest cost)
+    *** Want to explore Ex2 in a bounded region, p in (eps,10) / q in (eps,2),
+        to find BofA(s)
     '''
 
     if ex == 1:
@@ -226,56 +229,42 @@ def CreateNetworkExample(ex=1):
         H = np.array([[10,10],
                       [10,10]])
 
-    elif ex == 4:
-
-        # Cloud cost function coefficients
-        c_clouds = np.array([.5,.6,.7])
-
-        # Business preferences
-        pref_bizes = np.array([[.1,.1,.2],
-                               [.25,.25,.25],
-                               [.3,.3,.3],
-                               [.15,.2,.2]])
-
-        # Business scale factors
-        H = np.array([[10,10,10],
-                      [8,8,8],
-                      [5,5,5],
-                      [10,10,10]])
-
     elif ex == 2:
 
         # Cloud cost function coefficients
-        c_clouds = np.array([.5,.6,.7,.8,.9])
+        c_clouds = np.array([1.05,1.1,.95,1.15,1.2])
 
         # Business preferences
-        pref_bizes = np.array([[.1,.1,.1,.2,.2],
-                               [.25,.25,.25,.25,.25],
-                               [.3,.3,.3,.3,.3],
-                               [.15,.2,.2,.2,.2]])
+        pref_bizes = np.array([[.27,.27,.27,.38,.38],
+                               [.34,.34,.34,.31,.31],
+                               [.33,.33,.33,.26,.26],
+                               [.25,.40,.40,.34,.34]])
 
         # Business scale factors
-        H = np.array([[10,10,10,10,10],
-                      [8,8,8,8,8],
-                      [5,5,5,5,5],
-                      [10,10,10,10,10]])
+        H = np.array([[11,11,11,11,11],
+                      [9,9,9,9,9],
+                      [6,6,6,6,6],
+                      [12,12,12,12,12]])
 
-    else:
+    elif ex == 3:
 
         # Cloud cost function coefficients
-        c_clouds = np.array([.5,.6,.7,.8,.9])
+        c_clouds = np.array([1.05,1.1,.95,1.15,1.2])
 
         # Business preferences
-        pref_bizes = np.array([[.2,.2,.2,.2,.05],
-                               [.25,.25,.25,.25,.25],
-                               [.3,.3,.3,.3,.3],
-                               [.15,.2,.2,.2,.2]])
+        pref_bizes = np.array([[.38,.38,.38,.38,.27],
+                               [.34,.34,.34,.31,.31],
+                               [.33,.33,.33,.26,.26],
+                               [.25,.40,.40,.34,.34]])
 
         # Business scale factors
-        H = np.array([[10,10,10,10,10],
-                      [8,8,8,8,8],
-                      [5,5,5,5,5],
-                      [10,10,10,10,10]])
+        H = np.array([[11,11,11,11,11],
+                      [9,9,9,9,9],
+                      [6,6,6,6,6],
+                      [12,12,12,12,12]])
+
+    else:
+        raise NotImplementedError('There are only 3 predefined examples (1-3)')
 
     nClouds = pref_bizes.shape[1]
     nBiz = pref_bizes.shape[0]
