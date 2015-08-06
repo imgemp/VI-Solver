@@ -68,5 +68,9 @@ def Demo():
     ax.set_ylim([-3,3])
     plt.show()
 
+    # probs = [1/50] * 50
+    # np.random.multinomial(1, probs).argmax()
+    # np.random.choice(50, p=probs)
+
 if __name__ == '__main__':
     Demo()

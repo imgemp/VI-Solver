@@ -103,8 +103,6 @@ def Demo():
     plt.plot(gaps)
     plt.show()
 
-    # a = (i%npoints)*((endpoint-startpoint)/(npoints-1))
-
     embed()
 
 if __name__ == '__main__':
