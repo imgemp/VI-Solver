@@ -71,6 +71,9 @@ def Demo():
     # probs = [1/50] * 50
     # np.random.multinomial(1, probs).argmax()
     # np.random.choice(50, p=probs)
+    # grid = [np.array([.1,10.,6])]*5+[np.array([.1,1.,6])]*5
+    # grid = ListONP2NP(grid)
+    # Dinv = np.diag(grid[:,3])
 
 if __name__ == '__main__':
     Demo()
