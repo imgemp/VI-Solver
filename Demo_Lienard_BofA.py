@@ -74,7 +74,7 @@ def Demo():
     ax = plt.gca()
     ax.set_xlim([-3,3])
     ax.set_ylim([-3,3])
-    plt.show()
+    plt.savefig()
 
     embed()
 
