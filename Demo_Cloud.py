@@ -1,13 +1,13 @@
 import time
 import numpy as np
 
-from VISolver.Domains.CloudServices3 import \
-    CloudServices, CreateRandomNetwork, CreateNetworkExample
+from VISolver.Domains.CloudServices import (
+    CloudServices, CreateRandomNetwork, CreateNetworkExample)
 
-from VISolver.Solvers.Euler_LEGS import Euler_LEGS
-from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
+# from VISolver.Solvers.Euler_LEGS import Euler_LEGS
+# from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
 from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
-from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
+# from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
 
 from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
@@ -27,7 +27,7 @@ def Demo():
     #__CLOUD_SERVICES__##################################################
 
     # Define Network and Domain
-    # Network = CreateRandomNetwork(5,4,seed=0)
+    Network = CreateRandomNetwork(5,4,seed=0)
     Network = CreateNetworkExample(ex=2)
     Domain = CloudServices(Network=Network,gap_alpha=2)
 

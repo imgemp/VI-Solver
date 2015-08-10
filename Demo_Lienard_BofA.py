@@ -68,13 +68,13 @@ def Demo():
         for sample in data[hash(str(LE))]:
             print(sample)
 
-    for sample in data[hash(str(ref[1]))]:
+    for sample in data[hash(str(ref[0]))]:
         plt.plot([sample[0][0]],[sample[0][1]],'*r')
         plt.plot([sample[1][0]],[sample[1][1]],'ob')
     ax = plt.gca()
     ax.set_xlim([-3,3])
     ax.set_ylim([-3,3])
-    plt.savefig()
+    plt.savefig('bndry_pts.png',format='png')
 
     embed()
 

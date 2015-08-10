@@ -105,11 +105,11 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    Frames = np.concatenate((SOI_Results_Phase1.PermStorage['Data'],
-                             [SOI_Results_Phase1.PermStorage['Data'][-1]]*fps*frame_skip*freeze,
-                             SOI_Results_Phase2.PermStorage['Data'],
-                             [SOI_Results_Phase2.PermStorage['Data'][-1]]*fps*frame_skip*freeze),
-                            axis=0)[::frame_skip]
+    Dyn_1 = SOI_Results_Phase1.PermStorage['Data']
+    Frz_1 = [Dyn_1[-1]]*fps*frame_skip*freeze
+    Dyn_2 = SOI_Results_Phase2.PermStorage['Data']
+    Frz_2 = [Dyn_2[-1]]*fps*frame_skip*freeze
+    Frames = np.concatenate((Dyn_1,Frz_1,Dyn_2,Frz_2),axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
     Domain.FlowNormalizeColormap(Frames,cm.rainbow)
@@ -119,16 +119,24 @@ def Demo():
     t2 = t1 + len(SOI_Results_Phase1.PermStorage['Data']) // frame_skip
     t3 = t2 + fps*freeze
     t4 = t3 + len(SOI_Results_Phase2.PermStorage['Data']) // frame_skip
-    anns = sorted([(t1, plt.title, 'Control Network\n(Equilibrating)'),
-                   (t2, plt.title, 'Control Network\n(Converged)'),
-                   (t3, plt.title, 'Market 1 Increases Demand for Service 1 by Provider 1\n(Equilibrating)'),
-                   (t4, plt.title, 'Market 1 Increases Demand for Service 1 by Provider 1\n(Converged)')],
+    Dyn_1_ann = 'Control Network\n(Equilibrating)'
+    Frz_1_ann = 'Control Network\n(Converged)'
+    Dyn_2_ann = 'Market 1 Increases Demand for Service 1 by Provider 1' + \
+                '\n(Equilibrating)'
+    Frz_2_ann = 'Market 1 Increases Demand for Service 1 by Provider 1' + \
+                '\n(Converged)'
+    anns = sorted([(t1, plt.title, Dyn_1_ann),
+                   (t2, plt.title, Frz_1_ann),
+                   (t3, plt.title, Dyn_2_ann),
+                   (t4, plt.title, Frz_2_ann)],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File
     fig, ax = plt.subplots()
-    SOI_ani = animation.FuncAnimation(fig, Domain.UpdateVisual, init_func=Domain.InitVisual,
-                                             frames=len(Frames), fargs=(ax, Frames, anns), blit=True)
+    SOI_ani = animation.FuncAnimation(fig, Domain.UpdateVisual,
+                                      init_func=Domain.InitVisual,
+                                      frames=len(Frames),
+                                      fargs=(ax, Frames, anns), blit=True)
     SOI_ani.save('Videos/SOI.mp4', writer=writer)
 
 if __name__ == '__main__':

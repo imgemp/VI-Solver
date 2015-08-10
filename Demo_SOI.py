@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from VISolver.Domains.SOI import SOI, CreateRandomNetwork, CreateNetworkExample
+from VISolver.Domains.SOI import SOI, CreateRandomNetwork
 
 # from VISolver.Solvers.Euler import Euler
 # from VISolver.Solvers.Extragradient import EG
@@ -16,18 +16,13 @@ from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimResults, PrintSimStats
 
-import matplotlib.animation as animation
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-
 
 def Demo():
 
-    #__SERVICE_ORIENTED_INTERNET__##################################################
+    #__SERVICE_ORIENTED_INTERNET__##############################################
 
     # Define Network and Domain
-    # Network = CreateRandomNetwork(m=3,n=2,o=2,seed=0)
-    Network = CreateNetworkExample()
+    Network = CreateRandomNetwork(m=3,n=2,o=2,seed=0)
     Domain = SOI(Network=Network,alpha=2)
 
     # Set Method

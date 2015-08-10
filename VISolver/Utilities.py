@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import itertools
-import multiprocessing as mp
+import pathos.multiprocessing as mp
 
 
 #Utilities
@@ -197,20 +197,16 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
 
 
 def compLEs(x):
-    center_inds,sim,args,grid,shape,eps,q,r,Dinv = x
-    groups = []
-    for center_ind in center_inds:
-        selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
-        group_inds = [center_ind] + selected
-        group_ids = [ind2int(ind,shape) for ind in group_inds]
-        group_pts = [ind2pt(ind,grid) for ind in group_inds]
-        print(group_pts)
-        lams = []
-        for start in group_pts:
-            results = sim(start,*args)
-            lams += [results.TempStorage['Lyapunov'][-1]]
-        groups += [[group_ids,lams]]
-    return groups
+    center_ind,sim,args,grid,shape,eps,q,r,Dinv = x
+    selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
+    group_inds = [center_ind] + selected
+    group_ids = [ind2int(ind,shape) for ind in group_inds]
+    group_pts = [ind2pt(ind,grid) for ind in group_inds]
+    lams = []
+    for start in group_pts:
+        results = sim(start,*args)
+        lams += [results.TempStorage['Lyapunov'][-1]]
+    return [group_ids,lams]
 
 
 def MCLE_BofA_ID_par(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
@@ -223,11 +219,11 @@ def MCLE_BofA_ID_par(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     data = {}
     B_pairs = 0
 
-    pool = mp.Pool(processes=25)
+    pool = mp.ProcessingPool(nodes=8)
 
     i = 0
     avg = np.inf
-    while (i <= limit) or (avg > AVG):
+    while (i < limit) or (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]

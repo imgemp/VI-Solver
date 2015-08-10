@@ -1,8 +1,9 @@
 import numpy as np
 
-import matplotlib as mpl; mpl.use("Agg")
+import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.collections  as mc
+import matplotlib.collections as mc
 import matplotlib.cm as cm
 
 from VISolver.Domain import Domain
@@ -235,6 +236,7 @@ class SOI(Domain):
                 -self.dNetworkProvderProfitdQuality_dU2dq(Q,q,Pi),
                 -self.dNetworkProvderProfitdDemandPrice_dU2dPi(Q,q,Pi)]
 
+
 def CreateNetworkExample(ex=1):
 
     m = 3
@@ -273,7 +275,7 @@ def CreateNetworkExample(ex=1):
 
     coeff_rho_const = np.zeros((3,2,2))
     coeff_rho_const[0,0,0] = 100.
-    if ex==2:
+    if ex == 2:
         coeff_rho_const[0,0,0] = 200.
     coeff_rho_const[0,0,1] = 200.
     coeff_rho_const[0,1,0] = 100.
@@ -348,6 +350,7 @@ def CreateNetworkExample(ex=1):
             coeff_c_q_pow1,coeff_c_q_pow2,coeff_oc_Pi,
             drhodQ_ind_I,dcdq_ind,
             ind_IJ_I,ind_IJ_J,ind_JK_J,ind_JK_K]
+
 
 def CreateRandomNetwork(m,n,o,seed):
 
