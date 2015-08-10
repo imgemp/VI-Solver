@@ -16,7 +16,7 @@ from VISolver.Log import PrintSimStats
 # from VISolver.Utilities import ListONP2NP, aug_grid, int2ind, ind2int, ind2pt,
 #     neighbors, pairwise, update_LamRef, adjustLams2Ref, update_Prob_Data, \
 #     MCLE_BofA_Identification
-from VISolver.Utilities import ListONP2NP, aug_grid, MCLE_BofA_Identification
+from VISolver.Utilities import ListONP2NP, aug_grid, MCLE_BofA_ID_par
 
 from matplotlib import pyplot as plt
 from IPython import embed
@@ -53,9 +53,9 @@ def Demo():
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_Identification(sim,args,grid,limit=200,AVG=.01,
-                                       eta_1=1.2,eta_2=.95,eps=1.,
-                                       L=1,q=2,r=1.1,Dinv=Dinv)
+    results = MCLE_BofA_ID_par(sim,args,grid,limit=40,AVG=.01,
+                               eta_1=1.2,eta_2=.95,eps=1.,
+                               L=50,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg = results
 
     # for key, datum in data.iteritems():

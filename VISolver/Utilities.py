@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import itertools
+import multiprocessing as mp
 
 
 #Utilities
@@ -184,7 +185,62 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
             adjustLams2Ref(ref,lams)
         for group in groups:
             group_ids, group_lams = group
+            p, data, b_pairs = update_Prob_Data(group_ids,shape,grid,
+                                                group_lams,eps,
+                                                p,eta_1,eta_2,
+                                                data)
+            B_pairs += b_pairs
+        p = p/np.sum(p)
+        i += 1
+        avg = B_pairs/((q+1)*L*i)
+    return ref, data, p, i, avg
 
+
+def compLEs(x):
+    center_inds,sim,args,grid,shape,eps,q,r,Dinv = x
+    groups = []
+    for center_ind in center_inds:
+        selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
+        group_inds = [center_ind] + selected
+        group_ids = [ind2int(ind,shape) for ind in group_inds]
+        group_pts = [ind2pt(ind,grid) for ind in group_inds]
+        print(group_pts)
+        lams = []
+        for start in group_pts:
+            results = sim(start,*args)
+            lams += [results.TempStorage['Lyapunov'][-1]]
+        groups += [[group_ids,lams]]
+    return groups
+
+
+def MCLE_BofA_ID_par(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+                     eps=1.,L=1,q=2,r=1.1,Dinv=1):
+    shape = tuple(grid[:,2])
+    p = np.ones(np.prod(shape))/np.prod(shape)
+    ids = range(int(np.prod(shape)))
+
+    ref = None
+    data = {}
+    B_pairs = 0
+
+    pool = mp.Pool(processes=25)
+
+    i = 0
+    avg = np.inf
+    while (i <= limit) or (avg > AVG):
+        print(i)
+        center_ids = np.random.choice(ids,size=L,p=p)
+        center_inds = [int2ind(center_id,shape) for center_id in center_ids]
+        x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
+        groups = pool.map(compLEs,x)
+        for group in groups:
+            lams = group[1]
+            ref, data = update_LamRef(ref,lams,eps,data)
+        for group in groups:
+            lams = group[1]
+            adjustLams2Ref(ref,lams)
+        for group in groups:
+            group_ids, group_lams = group
             p, data, b_pairs = update_Prob_Data(group_ids,shape,grid,
                                                 group_lams,eps,
                                                 p,eta_1,eta_2,
