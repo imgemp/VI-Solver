@@ -209,7 +209,7 @@ def compLEs(x):
     return [group_ids,lams]
 
 
-def MCLE_BofA_ID_par(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                      eps=1.,L=1,q=2,r=1.1,Dinv=1):
     shape = tuple(grid[:,2])
     p = np.ones(np.prod(shape))/np.prod(shape)
@@ -219,7 +219,7 @@ def MCLE_BofA_ID_par(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     data = {}
     B_pairs = 0
 
-    pool = mp.ProcessingPool(nodes=8)
+    pool = mp.ProcessingPool(nodes=nodes)
 
     i = 0
     avg = np.inf
