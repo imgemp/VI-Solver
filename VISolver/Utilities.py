@@ -175,7 +175,7 @@ def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
             p[ids[pair[1]]] *= eta_2
     for z in toZero:
         p[z] = 0
-    return p, data, boundry_pairs
+    return p, data, boundry_pairs, toZero
 
 
 def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
@@ -212,10 +212,10 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
             adjustLams2Ref(ref,lams)
         for group in groups:
             group_ids, group_lams = group
-            p, data, b_pairs = update_Prob_Data(group_ids,shape,grid,
-                                                group_lams,eps,
-                                                p,eta_1,eta_2,
-                                                data)
+            p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
+                                                           group_lams,eps,
+                                                           p,eta_1,eta_2,
+                                                           data)
             B_pairs += b_pairs
         p = p/np.sum(p)
         i += 1
@@ -264,10 +264,10 @@ def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
             adjustLams2Ref(ref,lams)
         for group in groups:
             group_ids, group_lams = group
-            p, data, b_pairs = update_Prob_Data(group_ids,shape,grid,
-                                                group_lams,eps,
-                                                p,eta_1,eta_2,
-                                                data)
+            p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
+                                                           group_lams,eps,
+                                                           p,eta_1,eta_2,
+                                                           data)
             B_pairs += b_pairs
         p = p/np.sum(p)
         i += 1
@@ -318,6 +318,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
 
     i = 0
     avg = np.inf
+    # bndry_ids_master = set() - bndry stuff isn't quite right
     while (i < limit) or (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
@@ -330,7 +331,8 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
             bnd_ind_sum = group[2]
             for key,val in bnd_ind_sum.iteritems():
                 if not (key in bnd_ind_sum_master):
-                    bnd_ind_sum_master[key] = [0,0]
+                    parent = group[0][0]
+                    bnd_ind_sum_master[key] = [0,0,parent]
                 bnd_ind_sum_master[key][0] += val[0]
                 bnd_ind_sum_master[key][1] += val[1]
         for group in groups:
@@ -339,16 +341,27 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         for group in groups:
             lams = group[1]
             adjustLams2Ref(ref,lams)
+        p_old = np.array(p)
+        bndry_ids_all = set()
         for group in groups:
             group_ids, group_lams = group[:2]
-            p, data, b_pairs = update_Prob_Data(group_ids,shape,grid,
-                                                group_lams,eps,
-                                                p,eta_1,eta_2,
-                                                data)
+            p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
+                                                           group_lams,eps,
+                                                           p,eta_1,eta_2,
+                                                           data)
             B_pairs += b_pairs
+            bndry_ids_all |= bndry_ids
+        chng = np.empty(len(p))
+        for idx,_p in enumerate(p_old):
+            if _p == 0:
+                chng[idx] = 1
+            elif idx in bndry_ids_all:
+                chng[idx] = eta_1
+            else:
+                chng[idx] = p[idx]/_p
         for key,val in bnd_ind_sum_master.iteritems():
             _int = ind2int(key,shape)
-            p[_int] *= val[0]/val[1]
+            p[_int] *= val[0]/val[1]*chng[val[2]]
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)

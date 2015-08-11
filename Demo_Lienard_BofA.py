@@ -50,9 +50,9 @@ def Demo():
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=25,limit=10,AVG=.01,
+    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=5,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
-                                L=25,q=2,r=1.1,Dinv=Dinv)
+                                L=8,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg = results
 
     for sample in data[hash(str(ref[0]))]:
@@ -62,6 +62,11 @@ def Demo():
     ax.set_xlim([-2.5,2.5])
     ax.set_ylim([-2.5,2.5])
     plt.savefig('bndry_pts.png',format='png')
+
+    pmap = np.reshape(p,tuple(grid[:,2]))
+    plt.figure()
+    plt.imshow(pmap,'cool')
+    plt.show()
 
     embed()
 
