@@ -318,14 +318,13 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
 
     i = 0
     avg = np.inf
-    # bndry_ids_master = set() - bndry stuff isn't quite right
+    bndry_ids_master = set()
     while (i < limit) or (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
         groups = pool.map(compLEs2,x)
-        # groups = [compLEs2(xi) for xi in x]
         bnd_ind_sum_master = {}
         for group in groups:
             bnd_ind_sum = group[2]
@@ -365,4 +364,5 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)
-    return ref, data, p, i, avg
+        bndry_ids_master |= bndry_ids_all
+    return ref, data, p, i, avg, bndry_ids_master
