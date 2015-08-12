@@ -299,7 +299,7 @@ def compLEs2(x):
                 if not (bnd_ind in bnd_ind_sum):
                     bnd_ind_sum[bnd_ind] = [0,0]
                 if ti < T:
-                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*i/T)*dt
+                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T)*dt
                 bnd_ind_sum[bnd_ind][1] += dt
     return [group_ids,lams,bnd_ind_sum]
 
