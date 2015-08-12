@@ -34,7 +34,7 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=1e-5)
-    Term = Termination(MaxIter=1e5)
+    Term = Termination(MaxIter=5e4)
     Repo = Reporting(Requests=['Data','Step'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
@@ -44,38 +44,32 @@ def Demo():
     # Print Stats
     PrintSimStats(Domain,Method,Options)
 
-    # grid = [np.array([-2.5,2.5,51])]*2
-    grid = [np.array([-2.5,2.5,167])]*2
+    grid = [np.array([-2.5,2.5,51])]*2
+    # grid = [np.array([-2.5,2.5,167])]*2
     grid = ListONP2NP(grid)
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
     results = MCLE_BofA_ID_par2(sim,args,grid,nodes=25,limit=10,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
-                                L=50,q=2,r=1.1,Dinv=Dinv)
+                                L=25,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg, bndry_ids = results
 
-    # for sample in data[hash(str(ref[0]))]:
-    #     plt.plot([sample[0][0]],[sample[0][1]],'*r')
-    #     plt.plot([sample[1][0]],[sample[1][1]],'ob')
-    # ax = plt.gca()
-    # ax.set_xlim([-2.5,2.5])
-    # ax.set_ylim([-2.5,2.5])
-    # plt.savefig('bndry_pts.png',format='png')
+    for sample in data[hash(str(ref[0]))]:
+        plt.plot([sample[0][0]],[sample[0][1]],'*r')
+        plt.plot([sample[1][0]],[sample[1][1]],'ob')
+    ax = plt.gca()
+    ax.set_xlim([-2.5,2.5])
+    ax.set_ylim([-2.5,2.5])
+    ax.set_aspect('equal')
+    plt.savefig('bndry_pts.png',format='png')
 
-    # pmap = np.reshape(p,tuple(grid[:,2]))
-    # plt.figure()
-    # plt.imshow(pmap,'cool')
-    # plt.show()
+    pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
+    plt.figure()
+    plt.imshow(pmap,'jet',origin='lower')
+    plt.gca().set_aspect('equal')
 
-    # p2 = p.copy()
-    # for idx in bndry_ids:
-    #     p2[idx] = 1
-    # p2 = p2/np.sum(p2)
-    # pmap2 = np.reshape(p2,tuple(grid[:,2]))
-    # plt.figure()
-    # plt.imshow(pmap2,'cool')
-    # plt.show()
+    plt.show()
 
     embed()
 

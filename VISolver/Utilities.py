@@ -281,6 +281,7 @@ def compLEs2(x):
     group_inds = [center_ind] + selected
     group_ids = [ind2int(ind,shape) for ind in group_inds]
     group_pts = [ind2pt(ind,grid) for ind in group_inds]
+    dmax = np.linalg.norm(grid[:,3])*.5
     print(group_pts[0])
     lams = []
     bnd_ind_sum = {}
@@ -296,10 +297,15 @@ def compLEs2(x):
             dt = results.PermStorage['Step'][i]
             bnd_inds = pt2inds(pt,grid)
             for bnd_ind in bnd_inds:
+                bnd_pt = ind2pt(bnd_ind,grid)
+                d = np.linalg.norm(pt-bnd_pt)
+                d_fac = max(1-d/dmax,0)
                 if not (bnd_ind in bnd_ind_sum):
                     bnd_ind_sum[bnd_ind] = [0,0]
                 if ti < T:
-                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T)*dt
+                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T*d_fac)*dt
+                else:
+                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*d_fac)*dt
                 bnd_ind_sum[bnd_ind][1] += dt
     return [group_ids,lams,bnd_ind_sum]
 
@@ -360,7 +366,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                 chng[idx] = p[idx]/_p
         for key,val in bnd_ind_sum_master.iteritems():
             _int = ind2int(key,shape)
-            p[_int] *= val[0]/val[1]*chng[val[2]]
+            p[_int] *= val[0]/val[1]  # *chng[val[2]]
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)

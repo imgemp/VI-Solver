@@ -33,14 +33,15 @@ def Demo():
 
     # Initialize Starting Point
     # Start = np.array([0,-1.0e-0])
-    Start = np.array([0,-2.0e-0])
+    # Start = np.array([0,-2.0e-0])
     # Start = np.array([1.05151222,2.11233182])
     # Start = np.array([0,0])
+    Start = np.array([-.1,1.0])
 
     # Set Options
-    # Init = Initialization(Step=1e-3)
-    Init = Initialization(Step=.1)
-    Term = Termination(MaxIter=1e5)
+    Init = Initialization(Step=1e-3)
+    # Init = Initialization(Step=.1)
+    Term = Termination(MaxIter=1e4)
     Repo = Reporting(Requests=['Step','Data','Lyapunov'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
@@ -64,8 +65,9 @@ def Demo():
     data = ListONP2NP(Lienard_Results.PermStorage['Data'])
     plt.plot(data[:,0],data[:,1])
     ax = plt.gca()
-    ax.set_xlim([-3,3])
-    ax.set_ylim([-3,3])
+    ax.set_xlim([-2.5,2.5])
+    ax.set_ylim([-2.5,2.5])
+    ax.set_aspect('equal')
     plt.show()
 
     # probs = [1/50] * 50
