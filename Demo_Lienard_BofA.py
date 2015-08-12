@@ -44,15 +44,15 @@ def Demo():
     # Print Stats
     PrintSimStats(Domain,Method,Options)
 
-    grid = [np.array([-2.5,2.5,51])]*2
-    # grid = [np.array([-2.5,2.5,167])]*2
+    # grid = [np.array([-2.5,2.5,51])]*2
+    grid = [np.array([-2.5,2.5,167])]*2
     grid = ListONP2NP(grid)
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=25,limit=40,AVG=.01,
+    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=50,limit=40,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
-                                L=25,q=2,r=1.1,Dinv=Dinv)
+                                L=50,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg, bndry_ids = results
 
     for sample in data[hash(str(ref[0]))]:
