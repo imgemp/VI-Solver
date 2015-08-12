@@ -55,27 +55,27 @@ def Demo():
                                 L=50,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg, bndry_ids = results
 
-    for sample in data[hash(str(ref[0]))]:
-        plt.plot([sample[0][0]],[sample[0][1]],'*r')
-        plt.plot([sample[1][0]],[sample[1][1]],'ob')
-    ax = plt.gca()
-    ax.set_xlim([-2.5,2.5])
-    ax.set_ylim([-2.5,2.5])
-    plt.savefig('bndry_pts.png',format='png')
+    # for sample in data[hash(str(ref[0]))]:
+    #     plt.plot([sample[0][0]],[sample[0][1]],'*r')
+    #     plt.plot([sample[1][0]],[sample[1][1]],'ob')
+    # ax = plt.gca()
+    # ax.set_xlim([-2.5,2.5])
+    # ax.set_ylim([-2.5,2.5])
+    # plt.savefig('bndry_pts.png',format='png')
 
-    pmap = np.reshape(p,tuple(grid[:,2]))
-    plt.figure()
-    plt.imshow(pmap,'cool')
-    plt.show()
+    # pmap = np.reshape(p,tuple(grid[:,2]))
+    # plt.figure()
+    # plt.imshow(pmap,'cool')
+    # plt.show()
 
-    p2 = p.copy()
-    for idx in bndry_ids:
-        p2[idx] = 1
-    p2 = p2/np.sum(p2)
-    pmap2 = np.reshape(p2,tuple(grid[:,2]))
-    plt.figure()
-    plt.imshow(pmap2,'cool')
-    plt.show()
+    # p2 = p.copy()
+    # for idx in bndry_ids:
+    #     p2[idx] = 1
+    # p2 = p2/np.sum(p2)
+    # pmap2 = np.reshape(p2,tuple(grid[:,2]))
+    # plt.figure()
+    # plt.imshow(pmap2,'cool')
+    # plt.show()
 
     embed()
 
