@@ -158,7 +158,8 @@ def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
     for pair in pairwise(np.arange(len(lams))):
         lam_a = lams[pair[0]]
         lam_b = lams[pair[1]]
-        same = np.linalg.norm(lam_a - lam_b) <= eps
+        same = all(lam_a == lam_b)
+        # same = np.linalg.norm(lam_a - lam_b) <= eps
         if not same:
             boundry_pairs += 1
             id_a = ids[pair[0]]
@@ -332,12 +333,14 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
         groups = pool.map(compLEs2,x)
         bnd_ind_sum_master = {}
+        # mixing and matching parents is bad - trajectories with different
+        # origins could pass by same index
         for group in groups:
             bnd_ind_sum = group[2]
             for key,val in bnd_ind_sum.iteritems():
                 if not (key in bnd_ind_sum_master):
                     parent = group[0][0]
-                    bnd_ind_sum_master[key] = [0,0,parent]
+                    bnd_ind_sum_master[key] = [0,0,parent]  # not right
                 bnd_ind_sum_master[key][0] += val[0]
                 bnd_ind_sum_master[key][1] += val[1]
         for group in groups:
