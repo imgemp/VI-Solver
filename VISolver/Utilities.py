@@ -139,7 +139,8 @@ def adjustLams2Ref(ref,lams):
 def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
     toZero = set()
     boundry_pairs = 0
-    for pair in pairwise(np.arange(len(lams))):
+    # for pair in pairwise(np.arange(len(lams))):
+    for pair in itertools.combinations(np.arange(len(lams)),2):
         lam_a = lams[pair[0]]
         lam_b = lams[pair[1]]
         same = all(lam_a == lam_b)
