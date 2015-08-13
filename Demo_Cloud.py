@@ -33,7 +33,6 @@ def Demo():
 
     # Set Method
     eps = 1e-2
-
     # Method = Euler_LEGS(Domain=Domain,P=BoxProjection(lo=eps))
     # Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
     Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)

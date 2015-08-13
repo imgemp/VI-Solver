@@ -2,7 +2,6 @@ import numpy as np
 import random
 import itertools
 import pathos.multiprocessing as mp
-from IPython import embed
 
 
 #Utilities
@@ -80,28 +79,13 @@ def ind2int(ind,shape):
 
 
 def pt2inds(pt,grid):
-    # pt = np.clip(pt,grid[:,0],grid[:,1])
     lo = np.array([int(i) for i in (pt-grid[:,0])//grid[:,3]])
-    # hi = np.minimum(lo + 1,grid[:,2]-1)
-    # rng = 2*np.ones(len(lo)) - (lo == hi)
     rng = 2*np.ones(len(lo))
     bnds = []
     for idx in np.ndindex(*rng):
         vert = tuple(np.add(idx,lo))
         if all(i >= 0 and i < grid[j,2] for j,i in enumerate(vert)):
             bnds.append(vert)
-    # bnds = [tuple(np.add(idx,lo)) for idx in np.ndindex(*rng)]
-    for bnd in bnds:
-        for idx,dim in enumerate(bnd):
-            if dim >= grid[idx,2] or dim < 0:
-                print(dim)
-                print(pt)
-                print(lo)
-                # print(hi)
-                print(rng)
-                print(bnds)
-                # embed()
-                assert False
     return bnds
 
 
@@ -138,8 +122,8 @@ def update_LamRef(ref,lams,eps,data):
         ref = lams[0].copy()[None]
         data[hash(str(lams[0]))] = []
     for lam in lams:
-        diff = ref - lam
-        if all(np.linalg.norm(diff,axis=1) > eps*diff.shape[1]):
+        same = [np.allclose(lam,_ref,rtol=.2,atol=1.) for _ref in ref]
+        if not any(same):
             ref = np.concatenate((ref,[lam]))
             data[hash(str(lam))] = []
     return ref, data
@@ -159,7 +143,6 @@ def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
         lam_a = lams[pair[0]]
         lam_b = lams[pair[1]]
         same = all(lam_a == lam_b)
-        # same = np.linalg.norm(lam_a - lam_b) <= eps
         if not same:
             boundry_pairs += 1
             id_a = ids[pair[0]]

@@ -18,6 +18,8 @@ from VISolver.Utilities import ListONP2NP, aug_grid, MCLE_BofA_ID_par2
 from matplotlib import pyplot as plt
 from IPython import embed
 
+from sklearn.svm import SVC
+
 
 def Demo():
 
@@ -45,27 +47,56 @@ def Demo():
     PrintSimStats(Domain,Method,Options)
 
     # grid = [np.array([-2.5,2.5,51])]*2
-    grid = [np.array([-2.5,2.5,167])]*2
+    # grid = [np.array([-2.5,2.5,167])]*2
+    grid = [np.array([-2.5,2.5,13])]*2
     grid = ListONP2NP(grid)
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=50,limit=40,AVG=.01,
+    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=10,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
-                                L=50,q=2,r=1.1,Dinv=Dinv)
+                                L=8,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg, bndry_ids = results
 
-    for sample in data[hash(str(ref[0]))]:
-        plt.plot([sample[0][0]],[sample[0][1]],'*r')
-        plt.plot([sample[1][0]],[sample[1][1]],'ob')
+    plt.figure()
+    c = plt.cm.hsv(np.random.rand(len(ref)))
+    for cat,lam in enumerate(ref):
+
+        samples = data[hash(str(lam))]
+        n = len(samples)
+        X = np.empty((len(samples)*2,2))
+        for idx,sample in enumerate(samples):
+            X[idx] = sample[0]
+            X[idx+len(samples)] = sample[1]
+        Y = np.zeros(len(samples)*2)
+        Y[:n] = 1
+
+        clf = SVC()
+        clf.fit(X,Y)
+
+        xx, yy = np.meshgrid(np.linspace(grid[0,0],grid[0,1],500),
+                             np.linspace(grid[1,0],grid[1,1],500))
+        Z = clf.decision_function(np.c_[xx.ravel(),yy.ravel()])
+        Z = Z.reshape(xx.shape)
+        Zma = np.ma.masked_where(Z < 0,Z)
+
+        plt.imshow(Zma, interpolation='nearest',
+                   extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+                   aspect='auto', origin='lower', cmap='bone_r', zorder=0)
+        plt.contour(xx, yy, Z, colors='k', levels=[0], linewidths=2,
+                    linetypes='-.', zorder=1)
+        plt.scatter(X[:n, 0], X[:n, 1], s=30, c=c[cat], zorder=2)
+
+    plt.xticks(())
+    plt.yticks(())
     ax = plt.gca()
     ax.set_xlim([-2.5,2.5])
     ax.set_ylim([-2.5,2.5])
     ax.set_aspect('equal')
     plt.savefig('bndry_pts.png',format='png')
 
-    pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
     plt.figure()
+    pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
     plt.imshow(pmap,'jet',origin='lower')
     plt.gca().set_aspect('equal')
 
