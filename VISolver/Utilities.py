@@ -1,7 +1,9 @@
 import numpy as np
 import random
 import itertools
+# https://github.com/uqfoundation/pathos
 import pathos.multiprocessing as mp
+import time
 
 
 #Utilities
@@ -273,6 +275,8 @@ def compLEs2(x):
     for start in group_pts:
         results = sim(start,*args)
         lam = results.TempStorage['Lyapunov'][-1]
+        print('sim complete')
+        tic0 = time.time()
         lams += [lam]
         c = np.max(np.abs(lam))
         t = np.cumsum([0]+results.PermStorage['Step'][:-1])
@@ -280,18 +284,19 @@ def compLEs2(x):
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
+            tic = time.time()
             bnd_inds = pt2inds(pt,grid)
+            print(time.time()-tic)
             for bnd_ind in bnd_inds:
                 bnd_pt = ind2pt(bnd_ind,grid)
                 d = np.linalg.norm(pt-bnd_pt)
                 d_fac = max(1-d/dmax,0)
                 if not (bnd_ind in bnd_ind_sum):
                     bnd_ind_sum[bnd_ind] = [0,0]
-                if ti < T:
-                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T*d_fac)*dt
-                else:
-                    bnd_ind_sum[bnd_ind][0] += np.exp(-c*d_fac)*dt
+                bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                 bnd_ind_sum[bnd_ind][1] += dt
+        print(time.time()-tic0)
+        print('data calcs complete')
     return [group_ids,lams,bnd_ind_sum]
 
 
@@ -316,7 +321,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
         groups = pool.map(compLEs2,x)
-        print('sims complete')
+        print('compLEs2 complete')
         bnd_ind_sum_master = {}
         # mixing and matching parents is bad - trajectories with different
         # origins could pass by same index
