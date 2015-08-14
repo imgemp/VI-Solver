@@ -316,7 +316,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     data = {}
     B_pairs = 0
 
-    pool = mp.ProcessingPool(nodes=nodes)
+    # pool = mp.ProcessingPool(nodes=nodes)
 
     i = 0
     avg = np.inf
@@ -326,7 +326,8 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         center_ids = np.random.choice(ids,size=L,p=p)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
-        groups = pool.map(compLEs2,x)
+        # groups = pool.map(compLEs2,x)
+        groups = [compLEs2(xi) for xi in x]
         print('compLEs2 complete')
         bnd_ind_sum_master = {}
         # mixing and matching parents is bad - trajectories with different
