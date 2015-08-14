@@ -332,16 +332,17 @@ def compLEs2(x):
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
             # try:
             inbnds = np.all(np.logical_and(cube_pts >= grid[:,0],
-                                               cube_pts <= grid[:,1]),
-                                axis=1)
+                                           cube_pts <= grid[:,1]),
+                            axis=1)
             # except ValueError('inbnds error'):
                 # embed()
                 # assert False
-            try:
-                bnd_inds = cube_inds[inbnds]
-            except TypeError('type error'):
-                embed()
-                assert False
+            if np.all(inbnds):
+                bnd_inds = cube_inds.copy()
+            else:
+                bnd_inds = []
+                for idx, val in enumerate(inbnds):
+                    bnd_inds += [cube_inds[idx]]
             ds = ds[inbnds]
             # print(time.time()-tic)
             # print('4')
