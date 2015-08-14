@@ -331,8 +331,9 @@ def compLEs2(x):
                 cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
             try:
-                inbnds = np.all(cube_pts >= grid[:,0] and cube_pts <= grid[:,1],
-                            axis=1)
+                inbnds = np.all(np.logical_and(cube_pts >= grid[:,0],
+                                               cube_pts <= grid[:,1]),
+                                axis=1)
             except ValueError:
                 embed()
                 assert False
