@@ -40,7 +40,7 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=1e-5)
-    Term = Termination(MaxIter=1e5,Tols=[(Domain.valid,False)])
+    Term = Termination(MaxIter=1e5)  # ,Tols=[(Domain.valid,False)])
     Repo = Reporting(Requests=['Data','Step'])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
