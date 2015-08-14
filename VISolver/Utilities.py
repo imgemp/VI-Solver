@@ -289,6 +289,8 @@ def compLEs2(x):
             dt = results.PermStorage['Step'][i]
             # tic = time.time()
             print('1')
+            print(pt.shape)
+            print(bnd_pts.shape)
             ds = np.linalg.norm(pt-bnd_pts,axis=1)
             print('2')
             if any(ds > np.sqrt(len(pt))):
