@@ -304,7 +304,7 @@ def compLEs2(x):
         # bnd_inds = pt2inds(pt0,grid)
         # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
 
-        cube_inds = np.array(pt2inds2(pt0,grid))
+        cube_inds = pt2inds2(pt0,grid)
         cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
@@ -327,7 +327,7 @@ def compLEs2(x):
                 # print('3')
                 # bnd_inds = pt2inds(pt,grid)
                 # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
-                cube_inds = np.array(pt2inds2(pt,grid))
+                cube_inds = pt2inds2(pt,grid)
                 cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
             # try:
