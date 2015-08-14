@@ -284,9 +284,9 @@ def compLEs2(x):
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
-            tic = time.time()
+            # tic = time.time()
             bnd_inds = pt2inds(pt,grid)
-            print(time.time()-tic)
+            # print(time.time()-tic)
             for bnd_ind in bnd_inds:
                 bnd_pt = ind2pt(bnd_ind,grid)
                 d = np.linalg.norm(pt-bnd_pt)
