@@ -288,19 +288,27 @@ def compLEs2(x):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
             # tic = time.time()
+            print('1')
             ds = np.linalg.norm(pt-bnd_pts,axis=1)
+            print('2')
             if any(ds > np.sqrt(len(pt))):
+                print('3')
                 bnd_inds = pt2inds(pt,grid)
                 bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
             # print(time.time()-tic)
+            print('4')
             for idx, bnd_ind in enumerate(bnd_inds):
                 # bnd_pt = ind2pt(bnd_ind,grid)
                 d = ds[idx]
+                print('5')
                 d_fac = max(1-d/dmax,0)
+                print('6')
                 if not (bnd_ind in bnd_ind_sum):
                     bnd_ind_sum[bnd_ind] = [0,0]
+                print('7')
                 bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                 bnd_ind_sum[bnd_ind][1] += dt
+                print('8')
         print(time.time()-tic0)
         print('data calcs complete')
     return [group_ids,lams,bnd_ind_sum]
