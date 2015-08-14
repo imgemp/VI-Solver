@@ -300,66 +300,27 @@ def compLEs2(x):
         t = np.cumsum([0]+results.PermStorage['Step'][:-1])
         T = t[-1]
         pt0 = results.PermStorage['Data'][0]
-
-        # bnd_inds = pt2inds(pt0,grid)
-        # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
-
         cube_inds = pt2inds2(pt0,grid)
         cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
-            # tic = time.time()
-            # if len(bnd_pts) > 0:
-                # do everything (otherwise do nothing)
-            # try:
-            #     ds = np.linalg.norm(pt-bnd_pts,axis=1)
-            # except ValueError:
-            #     print(pt)
-            #     print(pt.shape)
-            #     print(bnd_pts.shape)
-            #     print(i)
-            #     print(len(results.PermStorage['Data'])-1)
-            #     embed()
-            #     assert False
             ds = np.linalg.norm(pt-cube_pts,axis=1)
             if any(ds > np.sqrt(len(pt))):
-                # print('3')
-                # bnd_inds = pt2inds(pt,grid)
-                # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
                 cube_inds = pt2inds2(pt,grid)
                 cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
-            # try:
             inbnds = np.all(np.logical_and(cube_pts >= grid[:,0],
                                            cube_pts <= grid[:,1]),
                             axis=1)
-            # except ValueError('inbnds error'):
-                # embed()
-                # assert False
-            # if np.all(inbnds):
-            #     bnd_inds = cube_inds.copy()
-            # else:
-            #     bnd_inds = []
-            #     for idx, val in enumerate(inbnds):
-            #         if val:
-            #             bnd_inds += [cube_inds[idx]]
-            # ds = ds[inbnds]
-            # print(time.time()-tic)
-            # print('4')
             for idx, cube_ind in enumerate(cube_inds):
                 if inbnds[idx]:
-                    # bnd_pt = ind2pt(bnd_ind,grid)
                     d = ds[idx]
-                    # print('5')
                     d_fac = max(1-d/dmax,0)
-                    # print('6')
                     if not (cube_ind in bnd_ind_sum):
                         bnd_ind_sum[cube_ind] = [0,0]
-                    # print('7')
                     bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                     bnd_ind_sum[cube_ind][1] += dt
-                    # print('8')
         print(time.time()-tic0)
         print('data calcs complete')
     return [group_ids,lams,bnd_ind_sum]
@@ -375,7 +336,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     data = {}
     B_pairs = 0
 
-    # pool = mp.ProcessingPool(nodes=nodes)
+    pool = mp.ProcessingPool(nodes=nodes)
 
     i = 0
     avg = np.inf
@@ -385,8 +346,8 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         center_ids = np.random.choice(ids,size=L,p=p)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
-        # groups = pool.map(compLEs2,x)
-        groups = [compLEs2(xi) for xi in x]
+        groups = pool.map(compLEs2,x)
+        # groups = [compLEs2(xi) for xi in x]
         print('compLEs2 complete')
         bnd_ind_sum_master = {}
         # mixing and matching parents is bad - trajectories with different
