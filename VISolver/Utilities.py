@@ -337,7 +337,11 @@ def compLEs2(x):
             # except ValueError('inbnds error'):
                 # embed()
                 # assert False
-            bnd_inds = cube_inds[inbnds]
+            try:
+                bnd_inds = cube_inds[inbnds]
+            except TypeError('type error'):
+                embed()
+                assert False
             ds = ds[inbnds]
             # print(time.time()-tic)
             # print('4')
