@@ -73,6 +73,12 @@ def ind2pt(ind,grid):
     return grid[:,0] + np.multiply(ind,grid[:,3])
 
 
+# grid is column array of start, end, N, inc
+def ind2pt2(ind,grid):
+    assert len(ind) == grid.shape[0]
+    return grid[:,0] + np.multiply(ind,grid[:,3])
+
+
 def ind2int(ind,shape):
     assert len(ind) == len(shape)
     assert all(x < y for x,y in zip(ind,shape))
@@ -299,7 +305,7 @@ def compLEs2(x):
         # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
 
         cube_inds = np.array(pt2inds2(pt0,grid))
-        cube_pts = np.array([ind2pt(ind,grid) for ind in cube_inds])
+        cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
@@ -322,7 +328,7 @@ def compLEs2(x):
                 # bnd_inds = pt2inds(pt,grid)
                 # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
                 cube_inds = np.array(pt2inds2(pt,grid))
-                cube_pts = np.array([ind2pt(ind,grid) for ind in cube_inds])
+                cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
 
             inbnds = np.all(cube_pts >= grid[:,0] and cube_pts <= grid[:,1],
