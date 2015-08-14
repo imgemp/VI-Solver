@@ -92,6 +92,17 @@ def pt2inds(pt,grid):
     return bnds
 
 
+def pt2inds2(pt,grid):
+    lo = np.array([int(i) for i in (pt-grid[:,0])//grid[:,3]])
+    rng = 2*np.ones(len(lo))
+    # bnds = []
+    # for idx in np.ndindex(*rng):
+    #     vert = tuple(np.add(idx,lo))
+    #     if all(i >= 0 and i < grid[j,2] for j,i in enumerate(vert)):
+    #         bnds.append(vert)
+    return [tuple(np.add(idx,lo)) for idx in np.ndindex(*rng)]
+
+
 def neighbors(ind,grid,r,q=None,Dinv=1):
     lo = grid[:,0]
     hi = grid[:,1]
@@ -283,26 +294,41 @@ def compLEs2(x):
         t = np.cumsum([0]+results.PermStorage['Step'][:-1])
         T = t[-1]
         pt0 = results.PermStorage['Data'][0]
-        bnd_inds = pt2inds(pt0,grid)
-        bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
+
+        # bnd_inds = pt2inds(pt0,grid)
+        # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
+
+        cube_inds = np.array(pt2inds2(pt0,grid))
+        cube_pts = np.array([ind2pt(ind,grid) for ind in cube_inds])
         for i, pt in enumerate(results.PermStorage['Data']):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
             # tic = time.time()
-            try:
-                ds = np.linalg.norm(pt-bnd_pts,axis=1)
-            except ValueError:
-                print(pt)
-                print(pt.shape)
-                print(bnd_pts.shape)
-                print(i)
-                print(len(results.PermStorage['Data'])-1)
-                embed()
-                assert False
+            # if len(bnd_pts) > 0:
+                # do everything (otherwise do nothing)
+            # try:
+            #     ds = np.linalg.norm(pt-bnd_pts,axis=1)
+            # except ValueError:
+            #     print(pt)
+            #     print(pt.shape)
+            #     print(bnd_pts.shape)
+            #     print(i)
+            #     print(len(results.PermStorage['Data'])-1)
+            #     embed()
+            #     assert False
+            ds = np.linalg.norm(pt-cube_pts,axis=1)
             if any(ds > np.sqrt(len(pt))):
                 # print('3')
-                bnd_inds = pt2inds(pt,grid)
-                bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
+                # bnd_inds = pt2inds(pt,grid)
+                # bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
+                cube_inds = np.array(pt2inds2(pt,grid))
+                cube_pts = np.array([ind2pt(ind,grid) for ind in cube_inds])
+                ds = np.linalg.norm(pt-cube_pts,axis=1)
+
+            inbnds = np.all(cube_pts >= grid[:,0] and cube_pts <= grid[:,1],
+                            axis=1)
+            bnd_inds = cube_inds[inbnds]
+            ds = ds[inbnds]
             # print(time.time()-tic)
             # print('4')
             for idx, bnd_ind in enumerate(bnd_inds):
