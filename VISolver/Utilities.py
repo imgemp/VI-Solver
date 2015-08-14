@@ -289,7 +289,9 @@ def compLEs2(x):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
             # tic = time.time()
-            if pt.shape[0] != bnd_pts.shape[1]:
+            try:
+                ds = np.linalg.norm(pt-bnd_pts,axis=1)
+            except ValueError:
                 print(pt)
                 print(pt.shape)
                 print(bnd_pts.shape)
@@ -297,7 +299,6 @@ def compLEs2(x):
                 print(len(results.PermStorage['Data'])-1)
                 embed()
                 assert False
-            ds = np.linalg.norm(pt-bnd_pts,axis=1)
             if any(ds > np.sqrt(len(pt))):
                 # print('3')
                 bnd_inds = pt2inds(pt,grid)
