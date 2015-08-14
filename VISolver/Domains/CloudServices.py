@@ -22,6 +22,9 @@ class CloudServices(Domain):
 
         return np.dot(dFdX,Z) - self.gap_alpha/2.*np.dot(Z,Z)
 
+    def valid(self,X):
+        return not any(np.isnan(X) or np.isinf(X))
+
     # Functions used to Initialize the Cloud Network and Calculate F
 
     def UnpackNetwork(self,nClouds,nBiz,c_clouds,H,pref_bizes):

@@ -289,28 +289,30 @@ def compLEs2(x):
             dt = results.PermStorage['Step'][i]
             # tic = time.time()
             print('1')
+            print(i)
+            print(pt)
             print(pt.shape)
             print(bnd_pts.shape)
             ds = np.linalg.norm(pt-bnd_pts,axis=1)
             print('2')
             if any(ds > np.sqrt(len(pt))):
-                print('3')
+                # print('3')
                 bnd_inds = pt2inds(pt,grid)
                 bnd_pts = np.array([ind2pt(ind,grid) for ind in bnd_inds])
             # print(time.time()-tic)
-            print('4')
+            # print('4')
             for idx, bnd_ind in enumerate(bnd_inds):
                 # bnd_pt = ind2pt(bnd_ind,grid)
                 d = ds[idx]
-                print('5')
+                # print('5')
                 d_fac = max(1-d/dmax,0)
-                print('6')
+                # print('6')
                 if not (bnd_ind in bnd_ind_sum):
                     bnd_ind_sum[bnd_ind] = [0,0]
-                print('7')
+                # print('7')
                 bnd_ind_sum[bnd_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                 bnd_ind_sum[bnd_ind][1] += dt
-                print('8')
+                # print('8')
         print(time.time()-tic0)
         print('data calcs complete')
     return [group_ids,lams,bnd_ind_sum]
@@ -326,7 +328,7 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     data = {}
     B_pairs = 0
 
-    pool = mp.ProcessingPool(nodes=nodes)
+    # pool = mp.ProcessingPool(nodes=nodes)
 
     i = 0
     avg = np.inf
@@ -336,8 +338,8 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         center_ids = np.random.choice(ids,size=L,p=p)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
-        groups = pool.map(compLEs2,x)
-        # groups = [compLEs2(xi) for xi in x]
+        # groups = pool.map(compLEs2,x)
+        groups = [compLEs2(xi) for xi in x]
         print('compLEs2 complete')
         bnd_ind_sum_master = {}
         # mixing and matching parents is bad - trajectories with different
