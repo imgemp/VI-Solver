@@ -87,8 +87,8 @@ def Demo():
                     linetypes='-.', zorder=1)
         plt.scatter(X[:n, 0], X[:n, 1], s=30, c=c[cat], zorder=2)
 
-    plt.xticks(())
-    plt.yticks(())
+    # plt.xticks(())
+    # plt.yticks(())
     ax = plt.gca()
     ax.set_xlim([-2.5,2.5])
     ax.set_ylim([-2.5,2.5])

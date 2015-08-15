@@ -55,18 +55,19 @@ def Demo():
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=20,AVG=.01,
+    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=50,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
                                 L=8,q=2,r=1.1,Dinv=Dinv)
     ref, data, p, i, avg, bndry_ids = results
 
     # plt.figure()
+    # obs = (0,1)
     # c = plt.cm.hsv(np.random.rand(len(ref)))
     # for cat,lam in enumerate(ref):
 
     #     samples = data[hash(str(lam))]
     #     n = len(samples)
-    #     X = np.empty((len(samples)*2,2))
+    #     X = np.empty((len(samples)*2,len(samples[0][0])))
     #     for idx,sample in enumerate(samples):
     #         X[idx] = sample[0]
     #         X[idx+len(samples)] = sample[1]
@@ -76,9 +77,20 @@ def Demo():
     #     clf = SVC()
     #     clf.fit(X,Y)
 
-    #     xx, yy = np.meshgrid(np.linspace(grid[0,0],grid[0,1],500),
-    #                          np.linspace(grid[1,0],grid[1,1],500))
-    #     Z = clf.decision_function(np.c_[xx.ravel(),yy.ravel()])
+    #     xx, yy = np.meshgrid(np.linspace(grid[obs[0],0],grid[obs[0],1],500),
+    #                          np.linspace(grid[obs[1],0],grid[obs[1],1],500))
+    #     padding = np.ones(len(xx.ravel()))
+    #     test = ()
+    #     for i in xrange(Domain.Dim):
+    #         if i == obs[0]:
+    #             test += (xx.ravel(),)
+    #         elif i == obs[1]:
+    #             test += (yy.ravel(),)
+    #         else:
+    #             test += (padding,)
+    #     test = np.vstack(test).T
+    #     # test = np.vstack((xx.ravel(),yy.ravel())+(padding,)*(Domain.Dim-2)).T
+    #     Z = clf.decision_function(test)
     #     Z = Z.reshape(xx.shape)
     #     Zma = np.ma.masked_where(Z < 0,Z)
 
@@ -87,13 +99,13 @@ def Demo():
     #                aspect='auto', origin='lower', cmap='bone_r', zorder=0)
     #     plt.contour(xx, yy, Z, colors='k', levels=[0], linewidths=2,
     #                 linetypes='-.', zorder=1)
-    #     plt.scatter(X[:n, 0], X[:n, 1], s=30, c=c[cat], zorder=2)
+    #     plt.scatter(X[:n, obs[0]], X[:n, obs[1]], s=30, c=c[cat], zorder=2)
 
-    # plt.xticks(())
-    # plt.yticks(())
+    # # plt.xticks(())
+    # # plt.yticks(())
     # ax = plt.gca()
-    # ax.set_xlim([-2.5,2.5])
-    # ax.set_ylim([-2.5,2.5])
+    # ax.set_xlim([grid[obs[0],0],grid[obs[0],1]])
+    # ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
     # ax.set_aspect('equal')
     # plt.savefig('bndry_pts.png',format='png')
 
