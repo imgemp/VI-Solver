@@ -130,13 +130,6 @@ def neighbors(ind,grid,r,q=None,Dinv=1):
     return selected, neigh
 
 
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return itertools.izip(a, b)
-
-
 def update_LamRef(ref,lams,eps,data):
     if ref is None:
         ref = lams[0].copy()[None]
@@ -159,7 +152,6 @@ def adjustLams2Ref(ref,lams):
 def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
     toZero = set()
     boundry_pairs = 0
-    # for pair in pairwise(np.arange(len(lams))):
     for pair in itertools.combinations(np.arange(len(lams)),2):
         lam_a = lams[pair[0]]
         lam_b = lams[pair[1]]
@@ -183,8 +175,8 @@ def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
     return p, data, boundry_pairs, toZero
 
 
-def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
-                             eps=1.,L=1,q=2,r=1.1,Dinv=1):
+def MCLE_BofA_ID(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+                 eps=1.,L=1,q=2,r=1.1,Dinv=1):
     shape = tuple(grid[:,2])
     p = np.ones(np.prod(shape))/np.prod(shape)
     ids = range(int(np.prod(shape)))
@@ -195,9 +187,12 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
 
     i = 0
     avg = np.inf
+    bndry_ids_master = set()
+    starts = set()
     while (i <= limit) or (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
+        starts |= set(center_ids)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         groups = []
         for center_ind in center_inds:
@@ -215,6 +210,7 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         for group in groups:
             lams = group[1]
             adjustLams2Ref(ref,lams)
+        bndry_ids_all = set()
         for group in groups:
             group_ids, group_lams = group
             p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
@@ -222,10 +218,12 @@ def MCLE_BofA_Identification(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                                                            p,eta_1,eta_2,
                                                            data)
             B_pairs += b_pairs
+            bndry_ids_all |= bndry_ids
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)
-    return ref, data, p, i, avg
+        bndry_ids_master |= bndry_ids_all
+    return ref, data, p, i, avg, bndry_ids_master, starts
 
 
 def compLEs(x):
@@ -255,9 +253,12 @@ def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
 
     i = 0
     avg = np.inf
+    bndry_ids_master = set()
+    starts = set()
     while (i < limit) or (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
+        starts |= set(center_ids)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
         groups = pool.map(compLEs,x)
@@ -267,6 +268,7 @@ def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         for group in groups:
             lams = group[1]
             adjustLams2Ref(ref,lams)
+        bndry_ids_all = set()
         for group in groups:
             group_ids, group_lams = group
             p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
@@ -274,13 +276,15 @@ def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                                                            p,eta_1,eta_2,
                                                            data)
             B_pairs += b_pairs
+            bndry_ids_all |= bndry_ids
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)
-    return ref, data, p, i, avg
+        bndry_ids_master |= bndry_ids_all
+    return ref, data, p, i, avg, bndry_ids_master, starts
 
 
-def compLEs2(x):
+def compLEs_wTraj(x):
     center_ind,sim,args,grid,shape,eps,q,r,Dinv = x
     selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
     group_inds = [center_ind] + selected
@@ -293,8 +297,6 @@ def compLEs2(x):
     for start in group_pts:
         results = sim(start,*args)
         lam = results.TempStorage['Lyapunov'][-1]
-        print('sim complete')
-        tic0 = time.time()
         lams += [lam]
         c = np.max(np.abs(lam))
         t = np.cumsum([0]+results.PermStorage['Step'][:-1])
@@ -321,12 +323,10 @@ def compLEs2(x):
                         bnd_ind_sum[cube_ind] = [0,0]
                     bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                     bnd_ind_sum[cube_ind][1] += dt
-        print(time.time()-tic0)
-        print('data calcs complete')
     return [group_ids,lams,bnd_ind_sum]
 
 
-def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                       eps=1.,L=1,q=2,r=1.1,Dinv=1):
     shape = tuple(grid[:,2])
     p = np.ones(np.prod(shape))/np.prod(shape)
@@ -348,12 +348,8 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         starts |= set(center_ids)
         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
-        groups = pool.map(compLEs2,x)
-        # groups = [compLEs2(xi) for xi in x]
-        print('compLEs2 complete')
+        groups = pool.map(compLEs_wTraj,x)
         bnd_ind_sum_master = {}
-        # mixing and matching parents is bad - trajectories with different
-        # origins could pass by same index
         for group in groups:
             bnd_ind_sum = group[2]
             for key,val in bnd_ind_sum.iteritems():
@@ -368,7 +364,6 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
         for group in groups:
             lams = group[1]
             adjustLams2Ref(ref,lams)
-        p_old = np.array(p)
         bndry_ids_all = set()
         for group in groups:
             group_ids, group_lams = group[:2]
@@ -378,17 +373,9 @@ def MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                                                            data)
             B_pairs += b_pairs
             bndry_ids_all |= bndry_ids
-        chng = np.empty(len(p))
-        for idx,_p in enumerate(p_old):
-            if _p == 0:
-                chng[idx] = 1
-            elif idx in bndry_ids_all:
-                chng[idx] = eta_1
-            else:
-                chng[idx] = p[idx]/_p
         for key,val in bnd_ind_sum_master.iteritems():
             _int = ind2int(key,shape)
-            p[_int] *= val[0]/val[1]  # *chng[val[2]]
+            p[_int] *= val[0]/val[1]
         p = p/np.sum(p)
         i += 1
         avg = B_pairs/((q+1)*L*i)

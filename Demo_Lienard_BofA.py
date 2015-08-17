@@ -13,9 +13,11 @@ from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimStats
 
-from VISolver.Utilities import ListONP2NP, aug_grid, MCLE_BofA_ID_par2
+from VISolver.Utilities import ListONP2NP, aug_grid, MCLET_BofA_ID_par
 
+from matplotlib.colors import colorConverter
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 from IPython import embed
 
 from sklearn.svm import SVC
@@ -53,13 +55,14 @@ def Demo():
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
 
-    results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=10,AVG=.01,
+    results = MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=5,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
                                 L=8,q=2,r=1.1,Dinv=Dinv)
-    ref, data, p, i, avg, bndry_ids = results
+    ref, data, p, i, avg, bndry_ids, starts = results
 
     plt.figure()
     c = plt.cm.hsv(np.random.rand(len(ref)))
+    white = colorConverter.to_rgba('white')
     for cat,lam in enumerate(ref):
 
         samples = data[hash(str(lam))]
@@ -80,15 +83,17 @@ def Demo():
         Z = Z.reshape(xx.shape)
         Zma = np.ma.masked_where(Z < 0,Z)
 
+        cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',
+                                                            [white,c[cat]],256)
+        cmap.set_bad(color='w',alpha=0.0)
+
         plt.imshow(Zma, interpolation='nearest',
                    extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-                   aspect='auto', origin='lower', cmap='bone_r', zorder=0)
+                   aspect='auto', origin='lower', cmap=cmap, zorder=0)
         plt.contour(xx, yy, Z, colors='k', levels=[0], linewidths=2,
                     linetypes='-.', zorder=1)
         plt.scatter(X[:n, 0], X[:n, 1], s=30, c=c[cat], zorder=2)
 
-    # plt.xticks(())
-    # plt.yticks(())
     ax = plt.gca()
     ax.set_xlim([-2.5,2.5])
     ax.set_ylim([-2.5,2.5])
