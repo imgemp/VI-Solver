@@ -15,7 +15,8 @@ from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimStats
 
-from VISolver.Utilities import ListONP2NP, aug_grid, MCLE_BofA_ID_par2
+from VISolver.Utilities import (
+    ListONP2NP, aug_grid, MCLE_BofA_ID_par2, ind2int)
 
 from matplotlib import pyplot as plt
 from IPython import embed
@@ -58,7 +59,7 @@ def Demo():
     results = MCLE_BofA_ID_par2(sim,args,grid,nodes=8,limit=2,AVG=.01,
                                 eta_1=1.2,eta_2=.95,eps=1.,
                                 L=8,q=2,r=1.1,Dinv=Dinv)
-    ref, data, p, i, avg, bndry_ids, starts = results
+    ref, data, p, iters, avg, bndry_ids, starts = results
 
     # plt.figure()
     # obs = (0,1)
@@ -89,7 +90,6 @@ def Demo():
     #         else:
     #             test += (padding,)
     #     test = np.vstack(test).T
-    #     # test = np.vstack((xx.ravel(),yy.ravel())+(padding,)*(Domain.Dim-2)).T
     #     Z = clf.decision_function(test)
     #     Z = Z.reshape(xx.shape)
     #     Zma = np.ma.masked_where(Z < 0,Z)
@@ -110,7 +110,14 @@ def Demo():
     # plt.savefig('bndry_pts.png',format='png')
 
     # plt.figure()
-    # pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
+    # pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
+    # ind_exp = np.array([int(i) for i in (1-grid[:,0])//grid[:,3]])
+    # for ind_x in xrange(grid[obs[0],2]):
+    #     for ind_y in xrange(grid[obs[1],2]):
+    #         ind_exp[obs[0]] = ind_x
+    #         ind_exp[obs[1]] = ind_y
+    #         p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))
+    #         pmap[ind_y,ind_x] = p[p_id]
     # plt.imshow(pmap,'jet',origin='lower')
     # plt.gca().set_aspect('equal')
 
