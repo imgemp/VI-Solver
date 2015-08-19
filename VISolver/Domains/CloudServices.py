@@ -104,8 +104,6 @@ class CloudServices(Domain):
         ps = np.sum(p)
         qs = np.sum(q)
 
-        fij = fij
-
         dfij_dpj = 2*fij*(2/p-1/ps)
         dfij_dqj = 2*fij*(2/q-1/qs)
         dfij_dpk = 2*fij*(-1/ps)  # same for every k
