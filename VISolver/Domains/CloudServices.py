@@ -44,9 +44,11 @@ class CloudServices(Domain):
         relquali = q/np.mean(q)
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
+        # return self.H*np.exp(-market**2).clip(a_min=1e-6)
         return self.H*np.exp(-market**2)
 
     def Demand(self,Data):
+        # why not just return np.sum(self.Demand_IJ(Data),axis=0)
         p = Data[:self.nClouds]
         q = Data[self.nClouds:]
         relprice = p/np.mean(p)
@@ -71,6 +73,8 @@ class CloudServices(Domain):
         supply = p*q*relprice*relquali
         market = self.pref_bizes*supply
         Qij = self.H*np.exp(-market**2)
+        # why not Qij = self.Demand_IJ(Data)
+        # because need p,q,and market (fij)
 
         pfac = (2/p-1/np.sum(p))*2
         qfac = (2/q-1/np.sum(q))*2
