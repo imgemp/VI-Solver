@@ -342,7 +342,7 @@ def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     avg = np.inf
     bndry_ids_master = set()
     starts = set()
-    while (i < limit) or (avg > AVG):
+    while (i < limit) and (avg > AVG):
         print(i)
         center_ids = np.random.choice(ids,size=L,p=p)
         starts |= set(center_ids)
