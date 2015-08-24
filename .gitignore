@@ -53,6 +53,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# Figures
+*.png
+
 # Video Files
 *.mp4
 
