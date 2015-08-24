@@ -55,3 +55,6 @@ target/
 
 # Video Files
 *.mp4
+
+# NumPy Binaries
+*.npy
