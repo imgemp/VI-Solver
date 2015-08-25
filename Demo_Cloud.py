@@ -39,7 +39,10 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)
+    Start = np.ones(Domain.Dim)*2.9
+    # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
+    # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
+    # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
 
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
