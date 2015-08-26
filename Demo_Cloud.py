@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from VISolver.Domains.CloudServices import (
+from VISolver.Domains.CloudServices2 import (
     CloudServices, CreateRandomNetwork, CreateNetworkExample)
 
 # from VISolver.Solvers.Euler_LEGS import Euler_LEGS
@@ -39,7 +39,7 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-6)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)*2.9
+    Start = np.ones(Domain.Dim)*3.3
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
     # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
@@ -76,13 +76,13 @@ def Demo():
     print('[p...q]')
     print(x)
     print('Qj')
-    print(Domain.Demand(x))
+    print(Domain.Demand(x)[0])
     print('Profits')
     print(Domain.CloudProfits(x))
     print('[dpj...dqj')
     print(Domain.dCloudProfits(x))
     print('Qij')
-    print(Domain.Demand_IJ(x))
+    print(Domain.Demand_IJ(x)[0])
 
     data = CloudServices_Results.PermStorage['Data']
     data = ListONP2NP(data)
