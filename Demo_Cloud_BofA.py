@@ -1,7 +1,7 @@
 # import time
 import numpy as np
 
-from VISolver.Domains.CloudServices import (
+from VISolver.Domains.CloudServices2 import (
     CloudServices, CreateNetworkExample)
 
 # from VISolver.Solvers.Euler_LEGS import Euler_LEGS
@@ -21,7 +21,10 @@ from VISolver.Utilities import (
 from matplotlib.colors import colorConverter
 from matplotlib import pyplot as plt
 import matplotlib as mpl
+
 from IPython import embed
+
+import time
 
 from sklearn.svm import SVC
 
@@ -53,7 +56,7 @@ def Demo():
     # Print Stats
     PrintSimStats(Domain,Method,Options)
 
-    grid = [np.array([.5,4.5,6])]*Domain.Dim
+    grid = [np.array([.5,3.5,6])]*Domain.Dim
     grid = ListONP2NP(grid)
     grid = aug_grid(grid)
     Dinv = np.diag(1./grid[:,3])
@@ -63,147 +66,150 @@ def Demo():
                                 L=16,q=8,r=1.1,Dinv=Dinv)
     ref, data, p, iters, avg, bndry_ids, starts = results
 
-# Observed dimensions + fixed values for others
-obs = (0,1)
-# consts = np.array([np.inf,np.inf,4.5,0.5,2.9,1.3,3.7,2.9,3.7,4.5])
-consts = 2.9*np.ones(Domain.Dim)
+    sim_data = [results,Domain,grid]
+    np.save('cloud_'+time.strftime("%Y%m%d_%H%M%S"),sim_data)
 
-# grid test cases for learned SVM classifier
-xx, yy = np.meshgrid(np.linspace(grid[obs[0],0],grid[obs[0],1],500),
-                     np.linspace(grid[obs[1],0],grid[obs[1],1],500))
-padding = np.ones(len(xx.ravel()))
-test = ()
-for i in xrange(Domain.Dim):
-    if i == obs[0]:
-        test += (xx.ravel(),)
-    elif i == obs[1]:
-        test += (yy.ravel(),)
-    else:
-        test += (padding*consts[i],)
-test = np.vstack(test).T
+# # Observed dimensions + fixed values for others
+# obs = (0,1)
+# # consts = np.array([np.inf,np.inf,4.5,0.5,2.9,1.3,3.7,2.9,3.7,4.5])
+# consts = 2.9*np.ones(Domain.Dim)
 
-plt.figure()
-ax = plt.gca()
-c = plt.cm.hsv(np.random.rand(len(ref)))
-white = colorConverter.to_rgba('white')
-Zs = np.zeros((500,500,len(ref)))
-dist_max = np.linalg.norm(grid[:,1]-grid[:,0])
-mydict = {}
-for cat,lam in enumerate(ref):
+# # grid test cases for learned SVM classifier
+# xx, yy = np.meshgrid(np.linspace(grid[obs[0],0],grid[obs[0],1],500),
+#                      np.linspace(grid[obs[1],0],grid[obs[1],1],500))
+# padding = np.ones(len(xx.ravel()))
+# test = ()
+# for i in xrange(Domain.Dim):
+#     if i == obs[0]:
+#         test += (xx.ravel(),)
+#     elif i == obs[1]:
+#         test += (yy.ravel(),)
+#     else:
+#         test += (padding*consts[i],)
+# test = np.vstack(test).T
 
-    samples = data[hash(str(lam))]
-    if samples != []:
-        n = len(samples)
-        m = len(samples[0][0])
-        X = np.empty((n*2,m))
-        for idx,sample in enumerate(samples):
-            X[idx] = sample[0]
-            X[idx+len(samples)] = sample[1]
+# plt.figure()
+# ax = plt.gca()
+# c = plt.cm.hsv(np.random.rand(len(ref)))
+# white = colorConverter.to_rgba('white')
+# Zs = np.zeros((500,500,len(ref)))
+# dist_max = np.linalg.norm(grid[:,1]-grid[:,0])
+# mydict = {}
+# for cat,lam in enumerate(ref):
 
-            diff = sample[0]-consts
-            diff[obs[0]] = 0
-            diff[obs[1]] = 0
-            dist = np.linalg.norm(diff)
+#     samples = data[hash(str(lam))]
+#     if samples != []:
+#         n = len(samples)
+#         m = len(samples[0][0])
+#         X = np.empty((n*2,m))
+#         for idx,sample in enumerate(samples):
+#             X[idx] = sample[0]
+#             X[idx+len(samples)] = sample[1]
 
-            key = (sample[0][obs[0]],sample[0][obs[1]])
-            if not key in mydict:
-                mydict[key] = (dist,cat)
-            elif dist < mydict[key][0]:
-                mydict[key] = (dist,cat)
+#             diff = sample[0]-consts
+#             diff[obs[0]] = 0
+#             diff[obs[1]] = 0
+#             dist = np.linalg.norm(diff)
 
-        Y = np.zeros(len(samples)*2)
-        Y[:n] = 1
+#             key = (sample[0][obs[0]],sample[0][obs[1]])
+#             if not key in mydict:
+#                 mydict[key] = (dist,cat)
+#             elif dist < mydict[key][0]:
+#                 mydict[key] = (dist,cat)
 
-        clf = SVC()
-        clf.fit(X,Y)
+#         Y = np.zeros(len(samples)*2)
+#         Y[:n] = 1
 
-        Z = clf.decision_function(test)
-        Z = Z.reshape(xx.shape)
-        Zs[:,:,cat] = Z
+#         clf = SVC()
+#         clf.fit(X,Y)
 
-xscat = []
-yscat = []
-colors = []
-sizes = []
-lws = []
-for key, value in mydict.iteritems():
-    dist, cat = value
-    color = c[cat]
-    alpha = (dist_max - dist)/dist_max
-    color[-1] = alpha
+#         Z = clf.decision_function(test)
+#         Z = Z.reshape(xx.shape)
+#         Zs[:,:,cat] = Z
 
-    xscat.append(key[0])
-    yscat.append(key[1])
-    colors.append(color)
-    sizes.append(29*alpha+1)
-    lws.append((alpha == 1.)*2)
-plt.scatter(xscat,yscat,s=sizes,c=colors,lw=lws,zorder=2)
+# xscat = []
+# yscat = []
+# colors = []
+# sizes = []
+# lws = []
+# for key, value in mydict.iteritems():
+#     dist, cat = value
+#     color = c[cat]
+#     alpha = (dist_max - dist)/dist_max
+#     color[-1] = alpha
 
-best_guess = np.argmax(Zs,axis=2)
-for cat in set(best_guess.flatten()):
-    Zma = np.ma.masked_where(best_guess != cat,Zs[:,:,cat])
-    cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',
-                                                        [white,c[cat]],256)
-    cmap.set_bad(color='w',alpha=0.0)
+#     xscat.append(key[0])
+#     yscat.append(key[1])
+#     colors.append(color)
+#     sizes.append(29*alpha+1)
+#     lws.append((alpha == 1.)*2)
+# plt.scatter(xscat,yscat,s=sizes,c=colors,lw=lws,zorder=2)
 
-    # for decision boundaries
-    Zs_notcat = np.concatenate((Zs[:,:,:cat],Zs[:,:,cat+1:]),axis=2)
-    diff = Zs[:,:,cat] - np.max(Zs_notcat,axis=2)
+# best_guess = np.argmax(Zs,axis=2)
+# for cat in set(best_guess.flatten()):
+#     Zma = np.ma.masked_where(best_guess != cat,Zs[:,:,cat])
+#     cmap = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',
+#                                                         [white,c[cat]],256)
+#     cmap.set_bad(color='w',alpha=0.0)
 
-    # idx = np.unravel_index(np.argmax(diff),diff.shape)
-    idx = np.unravel_index(np.argmax(Zma),Zma.shape)
-    x = grid[obs[0],0] + (grid[obs[0],1]-grid[obs[0],0])/499*idx[1]
-    y = grid[obs[1],0] + (grid[obs[1],1]-grid[obs[1],0])/499*idx[0]
+#     # for decision boundaries
+#     Zs_notcat = np.concatenate((Zs[:,:,:cat],Zs[:,:,cat+1:]),axis=2)
+#     diff = Zs[:,:,cat] - np.max(Zs_notcat,axis=2)
 
-    lam = ref[cat]
-    if max(lam) < 0:
-        dyn = 'stable'
-    else:
-        dyn = 'unstable'
-    print(x,y)
-    # for placing text, see link below
-    # http://stackoverflow.com/questions/25521120/
-    # store-mouse-click-event-coordinates-with-matplotlib
-    plt.text(x,y,dyn,fontsize=12,ha='center',va='center',zorder=3,weight='bold',
-             bbox=dict(facecolor='black', alpha=0.3, boxstyle='round'))
+#     # idx = np.unravel_index(np.argmax(diff),diff.shape)
+#     idx = np.unravel_index(np.argmax(Zma),Zma.shape)
+#     x = grid[obs[0],0] + (grid[obs[0],1]-grid[obs[0],0])/499*idx[1]
+#     y = grid[obs[1],0] + (grid[obs[1],1]-grid[obs[1],0])/499*idx[0]
 
-    plt.contour(xx, yy, diff, colors='k', levels=[0], linewidths=2,
-                linetypes='.-', zorder=1)
-    inner = .1*np.max(diff)
-    print(np.max(diff))
-    # if max(lam) < 0:
-    #     plt.contour(xx, yy, diff, colors='k', levels=[inner], linewidths=2,
-    #                 linestyles='--', zorder=1)
-    # else:
-    #     plt.contour(xx, yy, diff, colors='k', levels=[inner], linewidths=2,
-    #                 linestyles=':', zorder=1)
+#     lam = ref[cat]
+#     if max(lam) < 0:
+#         dyn = 'stable'
+#     else:
+#         dyn = 'unstable'
+#     print(x,y)
+#     # for placing text, see link below
+#     # http://stackoverflow.com/questions/25521120/
+#     # store-mouse-click-event-coordinates-with-matplotlib
+#     plt.text(x,y,dyn,fontsize=12,ha='center',va='center',zorder=3,weight='bold',
+#              bbox=dict(facecolor='black', alpha=0.3, boxstyle='round'))
 
-    plt.imshow(Zma, interpolation='nearest',
-               extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-               aspect='auto', origin='lower', cmap=cmap, zorder=0)
-    plt.draw()
-    plt.pause(0.5)
+#     plt.contour(xx, yy, diff, colors='k', levels=[0], linewidths=2,
+#                 linetypes='.-', zorder=1)
+#     inner = .1*np.max(diff)
+#     print(np.max(diff))
+#     # if max(lam) < 0:
+#     #     plt.contour(xx, yy, diff, colors='k', levels=[inner], linewidths=2,
+#     #                 linestyles='--', zorder=1)
+#     # else:
+#     #     plt.contour(xx, yy, diff, colors='k', levels=[inner], linewidths=2,
+#     #                 linestyles=':', zorder=1)
 
-ax.set_xlim([grid[obs[0],0],grid[obs[0],1]])
-ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
-ax.set_aspect('equal')
-    plt.savefig('bndry_pts.png',format='png')
+#     plt.imshow(Zma, interpolation='nearest',
+#                extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+#                aspect='auto', origin='lower', cmap=cmap, zorder=0)
+#     plt.draw()
+#     plt.pause(0.5)
 
-    plt.figure()
-    pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
-    ind_exp = np.array([int(i) for i in (consts-grid[:,0])//grid[:,3]])
-    for ind_x in xrange(int(grid[obs[0],2])):
-        for ind_y in xrange(int(grid[obs[1],2])):
-            ind_exp[obs[0]] = ind_x
-            ind_exp[obs[1]] = ind_y
-            p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))
-            pmap[ind_y,ind_x] = p[p_id]
-    plt.imshow(pmap,cmap='jet',origin='lower')
-    plt.gca().set_aspect('equal')
+# ax.set_xlim([grid[obs[0],0],grid[obs[0],1]])
+# ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
+# ax.set_aspect('equal')
+# plt.savefig('bndry_pts.png',format='png')
 
-    plt.show()
+# plt.figure()
+# pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
+# ind_exp = np.array([int(i) for i in (consts-grid[:,0])//grid[:,3]])
+# for ind_x in xrange(int(grid[obs[0],2])):
+#     for ind_y in xrange(int(grid[obs[1],2])):
+#         ind_exp[obs[0]] = ind_x
+#         ind_exp[obs[1]] = ind_y
+#         p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))
+#         pmap[ind_y,ind_x] = p[p_id]
+# plt.imshow(pmap,cmap='jet',origin='lower')
+# plt.gca().set_aspect('equal')
 
-    embed()
+# plt.show()
+
+# embed()
 
 if __name__ == '__main__':
     Demo()
