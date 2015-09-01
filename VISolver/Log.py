@@ -9,11 +9,15 @@ def PrintSimStats(Domain, Method, Options):
     domain_info = ['(%s,%r)' % (arg, getattr(Domain,arg))
                    for arg in domain_args if arg != 'self']
     print('Domain: %r %s' % (Domain.__class__.__name__, ', '.join(domain_info)))
-    print('Method: Function = %r, Projection = %r' % (Method.F.func_name,
-                                                      Method.Proj.P.func_name))
+    print('Method: Name = %r, Projection = %r' %
+          (Method.__class__.__name__,
+           Method.Proj.P.im_class.__name__))
     params = ['Convergence Criteria: MaxIter: %r' % Options.Term.Tols[0]]
     for tol in Options.Term.Tols[1:][0]:
-        params.append('%r: %r' % (tol[0].func_name, tol[1]))
+        if isinstance(tol[1],(str,bool)):
+            params.append('%r: %r' % (tol[0].func_name, tol[1]))
+        else:
+            params.append('%r: %g' % (tol[0].func_name, tol[1]))
     print(*params, sep=', ')
     print('-------------------------------------------------------------------')
 

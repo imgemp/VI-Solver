@@ -137,6 +137,8 @@ def update_LamRef(ref,lams,eps,data):
         data[hash(str(lams[0]))] = []
     for lam in lams:
         same = [np.allclose(lam,_ref,rtol=.2,atol=1.) for _ref in ref]
+        # check if endpts are same, if so increase rtol and atol (same2)
+        # then check if both endpts and same2 is true
         if not any(same):
             ref = np.concatenate((ref,[lam]))
             data[hash(str(lam))] = []
@@ -293,10 +295,13 @@ def compLEs_wTraj(x):
     group_pts = [ind2pt(ind,grid) for ind in group_inds]
     dmax = np.linalg.norm(grid[:,3])*.5
     print(group_pts[0])
+    # endpts = []
     lams = []
     bnd_ind_sum = {}
     for start in group_pts:
         results = sim(start,*args)
+        # endpt = results.TempStorage['Data'][-1]
+        # endpts += [endpt]
         lam = results.TempStorage['Lyapunov'][-1]
         lams += [lam]
         c = np.max(np.abs(lam))
@@ -324,6 +329,7 @@ def compLEs_wTraj(x):
                         bnd_ind_sum[cube_ind] = [0,0]
                     bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                     bnd_ind_sum[cube_ind][1] += dt
+    # return [group_ids,lams,bnd_ind_sum,endpts]
     return [group_ids,lams,bnd_ind_sum]
 
 
@@ -355,12 +361,13 @@ def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
             bnd_ind_sum = group[2]
             for key,val in bnd_ind_sum.iteritems():
                 if not (key in bnd_ind_sum_master):
-                    parent = group[0][0]
+                    parent = group[0][0]  # get rid of parent stuff
                     bnd_ind_sum_master[key] = [0,0,parent]  # not right
                 bnd_ind_sum_master[key][0] += val[0]
                 bnd_ind_sum_master[key][1] += val[1]
         for group in groups:
             lams = group[1]
+            # add endpts as input to update_LamRef
             ref, data = update_LamRef(ref,lams,eps,data)
         for group in groups:
             lams = group[1]

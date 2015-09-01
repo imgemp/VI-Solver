@@ -5,8 +5,8 @@ from VISolver.Domains.CloudServices2 import (
     CloudServices, CreateRandomNetwork, CreateNetworkExample)
 
 # from VISolver.Solvers.Euler_LEGS import Euler_LEGS
-# from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
-from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
+from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
+# from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
 # from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
 
 from VISolver.Projection import BoxProjection
@@ -34,15 +34,17 @@ def Demo():
     # Set Method
     eps = 1e-2
     # Method = Euler_LEGS(Domain=Domain,P=BoxProjection(lo=eps))
-    # Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
-    Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
-    # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-6)
+    Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
+    # Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
+    # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)*3.3
+    # Start = np.ones(Domain.Dim)*3.3
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
     # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
+    Start = np.array([ 0.5,  2.9,  1.1,  0.5,  2.3,  2.3,  3.5,  1.1,  3.5,  1.7])
+    # Start = np.array([ 2.9,  2.9,  2.9,  0.5,  1.7,  0.5,  3.5,  2.9,  3.5,  3.5])
 
     # Calculate Initial Gap
     gap_0 = Domain.gap_rplus(Start)
@@ -50,7 +52,7 @@ def Demo():
     print(Domain.dCloudProfits(Start))
 
     # Set Options
-    Init = Initialization(Step=-1e-5)
+    Init = Initialization(Step=-1e-3)
     # Init = Initialization(Step=-0.00001)
     Term = Termination(MaxIter=1e5,Tols=[(Domain.gap_rplus,1e-8*gap_0)])
                                          # (Domain.valid,False)])
