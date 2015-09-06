@@ -17,6 +17,9 @@ from VISolver.Log import PrintSimResults, PrintSimStats
 
 from VISolver.Utilities import ListONP2NP
 
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import pyplot as plt
 
 from IPython import embed
@@ -39,11 +42,11 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
 
     # Initialize Starting Point
-    # Start = np.ones(Domain.Dim)*3.3
+    Start = np.ones(Domain.Dim)
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
     # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
-    Start = np.array([ 0.5,  2.9,  1.1,  0.5,  2.3,  2.3,  3.5,  1.1,  3.5,  1.7])
+    # Start = np.array([ 0.5,  2.9,  1.1,  0.5,  2.3,  2.3,  3.5,  1.1,  3.5,  1.7])
     # Start = np.array([ 2.9,  2.9,  2.9,  0.5,  1.7,  0.5,  3.5,  2.9,  3.5,  3.5])
 
     # Calculate Initial Gap
@@ -86,27 +89,50 @@ def Demo():
     print('Qij')
     print(Domain.Demand_IJ(x)[0])
 
-    data = CloudServices_Results.PermStorage['Data']
-    data = ListONP2NP(data)
-    plt.plot(data)
-    plt.show()
+    # data = CloudServices_Results.PermStorage['Data']
+    # data = ListONP2NP(data)
+    # plt.plot(data)
+    # plt.show()
 
-    t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
-    plt.plot(t,data)
-    plt.show()
+    # t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
+    # plt.plot(t,data)
+    # plt.show()
 
-    # Plot Lyapunov Exponents
-    plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
-    plt.show()
+    # # Plot Lyapunov Exponents
+    # plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
+    # plt.show()
 
-    for i in xrange(data.shape[1]/2):
-        plt.plot(data[:,i],data[:,i+data.shape[1]/2])
-    plt.show()
+    # for i in xrange(data.shape[1]/2):
+    #     plt.plot(data[:,i],data[:,i+data.shape[1]/2])
+    # plt.show()
 
-    gaps = CloudServices_Results.PermStorage[Domain.gap_rplus]
-    gaps = ListONP2NP(gaps)
-    plt.plot(gaps)
-    plt.show()
+    # gaps = CloudServices_Results.PermStorage[Domain.gap_rplus]
+    # gaps = ListONP2NP(gaps)
+    # plt.plot(gaps)
+    # plt.show()
+
+    # X = np.arange(.1,5,0.01)
+    # Y = np.arange(.1,5,0.01)
+    # X, Y = np.meshgrid(X,Y)
+    # Z = np.zeros_like(X)
+    # for i in xrange(X.shape[0]):
+    #     for j in xrange(Y.shape[0]):
+    #         pJ = np.sum(x[:Domain.nClouds])-x[0]
+    #         qJ = np.sum(x[Domain.nClouds:])-x[Domain.nClouds]
+    #         pi = X[i,j]
+    #         qi = Y[i,j]
+    #         xi = np.array([pi,qi])
+    #         Z[i,j] = Domain.CloudProfit(0,xi,pJ,qJ)
+    # fig = plt.figure()
+    # ax = fig.gca(projection='3d')
+    # surf = ax.plot_surface(X,Y,Z,rstride=1,cstride=1,
+    #                        cmap=cm.coolwarm,linewidth=0,
+    #                        antialiased=False)
+    # ax.set_zlim(0,35)
+    # ax.zaxis.set_major_locator(LinearLocator(10))
+    # ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    # fig.colorbar(surf, shrink=0.5, aspect=5)
+    # plt.show()
 
     embed()
 

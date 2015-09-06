@@ -2,6 +2,7 @@ from __future__ import division
 import numpy as np
 from VISolver.Domain import Domain
 from numpy.polynomial.polynomial import polyval
+from scipy.optimize import minimize
 
 
 class CloudServices(Domain):
@@ -41,6 +42,136 @@ class CloudServices(Domain):
 
     def CalculateNetworkSize(self):
         return 2*self.nClouds
+
+    def Nash(self,Data,rtol=1e-1,atol=1e-1):
+        isNash = np.zeros(self.nClouds,dtype=bool)
+        maxima = np.zeros((self.nClouds,2))
+        profits = np.zeros(self.nClouds)
+        success = np.zeros(self.nClouds,dtype=bool)
+        p = Data[:self.nClouds]
+        q = Data[self.nClouds:]
+        for i in xrange(self.nClouds):
+            pJ = np.sum(p)-p[i]
+            qJ = np.sum(q)-q[i]
+            x0 = np.array([p[i], q[i]])
+            Obj = lambda xi: -self.CloudProfit(i,xi,pJ,qJ)
+            Jac = lambda xi: -self.CloudJac(i,xi,pJ,qJ)
+            res = minimize(Obj, x0, method='L-BFGS-B', jac=Jac,
+                           bounds=[(0,None),(0,None)], tol=1e-8,
+                           options={'disp': False, 'maxiter': 1e5})
+            maxima[i,:] = res.x
+            profits[i] = -res.fun
+            success[i] = res.success
+            if np.allclose(res.x,x0,rtol,atol) and res.success:
+                isNash[i] = True
+        return isNash, maxima, profits, success
+
+    def Demand_iJ(self,i,pi,qi,pJ,qJ):
+        relprice = pi*self.nClouds/(pi+pJ)
+        relquali = qi*self.nClouds/(qi+qJ)
+
+        t = self.pref_bizes[:,i]*pi*qi*relprice*relquali
+
+        exp = self.H[:,i]*np.exp(-t**2)
+
+        if self.poly_splice:
+            poly = self.H[:,i]*np.exp(-9)*polyval(t,self.coeff)
+
+            texp = (t <= self.t0)
+            tpoly = np.logical_and(t > self.t0,t < self.tf)
+
+            Qij = exp*texp + poly*tpoly
+        else:
+            Qij = exp
+
+        return Qij, t
+
+    def CloudProfit(self,i,xi,pJ,qJ):
+        pi, qi = xi
+        Q = self.Demand_iJ(i,pi,qi,pJ,qJ)[0]
+        Revenue = pi*Q
+        Cost = self.c_clouds[i]*Q*qi**(-2)
+        return np.sum(Revenue - Cost)
+
+    def CloudJac(self,i,xi,pJ,qJ):
+        pi, qi = xi
+        Qij, t = self.Demand_iJ(i,pi,qi,pJ,qJ)
+
+        c = self.c_clouds[i]
+        x = (pi-c/(qi**2))
+        a = 2*c/(qi**3)
+
+        dQ_dt_exp = -2*t*Qij
+
+        if self.poly_splice:
+            coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
+            dQ_dt_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d1)
+
+            texp = (t <= self.t0)
+            tpoly = np.logical_and(t > self.t0,t < self.tf)
+
+            dQ_dt = dQ_dt_exp*texp + dQ_dt_poly*tpoly
+        else:
+            dQ_dt = dQ_dt_exp
+
+        dt_dpj = t*(2/pi-1/(pi+pJ))
+        dt_dqj = t*(2/qi-1/(qi+qJ))
+
+        dpj = np.sum(Qij+x*(dQ_dt*dt_dpj))
+        dqj = np.sum(a*Qij+x*(dQ_dt*dt_dqj))
+
+        return np.array([dpj,dqj])
+
+    def CloudHes(self,i,xi,pJ,qJ):
+        pi, qi = xi
+        Qij, t = self.Demand_iJ(i,pi,qi,pJ,qJ)
+
+        c = self.c_clouds[i]
+        x = (pi-c/(qi**2))
+        a = 2*c/(qi**3)
+
+        dQ_dt_exp = -2*t*Qij
+        d2Q_dt2_exp = -2*(1-2*t**2)*Qij
+
+        if self.poly_splice:
+            coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
+            dQ_dt_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d1)
+            coeff_d2 = coeff_d1[1:]*np.arange(1,len(coeff_d1))
+            d2Q_dt2_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d2)
+
+            texp = (t <= self.t0)
+            tpoly = np.logical_and(t > self.t0,t < self.tf)
+
+            dQ_dt = dQ_dt_exp*texp + dQ_dt_poly*tpoly
+            d2Q_dt2 = d2Q_dt2_exp*texp + d2Q_dt2_poly*tpoly
+        else:
+            dQ_dt = dQ_dt_exp
+            d2Q_dt2 = d2Q_dt2_exp
+
+        ps = pi+pJ
+        qs = qi+qJ
+
+        dt_dpj = t*(2/pi-1/ps)
+        dt_dqj = t*(2/qi-1/qs)
+
+        d2t_dpj2 = 2*t*(1/(pi**2)+1/(ps**2)-2/(pi*ps))
+        d2t_dqj2 = 2*t*(1/(qi**2)+1/(qs**2)-2/(qi*qs))
+
+        d2t_dpjdqj = t*(2/pi-1/ps)*(2/qi-1/qs)
+
+        dpj2 = 2*dQ_dt*dt_dpj+x*(dQ_dt*d2t_dpj2+d2Q_dt2*dt_dpj**2)
+        dqj2 = a*(2*dQ_dt*dt_dqj-3/qi*Qij)+x*(dQ_dt*d2t_dqj2+d2Q_dt2*dt_dqj**2)
+
+        dpjdqj = dQ_dt*(dt_dqj+a*dt_dpj) +\
+            x*(dQ_dt*d2t_dpjdqj+d2Q_dt2*dt_dpj*dt_dqj)
+
+        Jacobian = np.zeros((2,2))
+        Jacobian[0,0] = np.sum(dpj2)
+        Jacobian[0,1] = np.sum(dpjdqj)
+        Jacobian[1,0] = np.sum(dpjdqj)
+        Jacobian[1,1] = np.sum(dqj2)
+
+        return Jacobian
 
     def Demand_IJ(self,Data):
         p = Data[:self.nClouds]
