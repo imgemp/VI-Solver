@@ -36,9 +36,10 @@ class CloudServices(Domain):
         self.c_clouds = c_clouds
         self.H = H
         self.pref_bizes = pref_bizes
-        self.coeff = np.array([3520,-4752,2564,-691,93,-5])
-        self.t0 = 3
-        self.tf = 4
+        # self.coeff = np.array([3520,-4752,2564,-691,93,-5])
+        self.coeff = np.array([8,-20,26,-19,7,-1])
+        self.t0 = 1
+        self.tf = self.t0 + 1
 
     def CalculateNetworkSize(self):
         return 2*self.nClouds
@@ -75,7 +76,7 @@ class CloudServices(Domain):
         exp = self.H[:,i]*np.exp(-t**2)
 
         if self.poly_splice:
-            poly = self.H[:,i]*np.exp(-9)*polyval(t,self.coeff)
+            poly = self.H[:,i]*np.exp(-self.t0**2)*polyval(t,self.coeff)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)
@@ -105,7 +106,7 @@ class CloudServices(Domain):
 
         if self.poly_splice:
             coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
-            dQ_dt_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d1)
+            dQ_dt_poly = self.H[:,i]*np.exp(-self.t0**2)*polyval(t,coeff_d1)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)
@@ -135,9 +136,9 @@ class CloudServices(Domain):
 
         if self.poly_splice:
             coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
-            dQ_dt_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d1)
+            dQ_dt_poly = self.H[:,i]*np.exp(-self.t0**2)*polyval(t,coeff_d1)
             coeff_d2 = coeff_d1[1:]*np.arange(1,len(coeff_d1))
-            d2Q_dt2_poly = self.H[:,i]*np.exp(-9)*polyval(t,coeff_d2)
+            d2Q_dt2_poly = self.H[:,i]*np.exp(-self.t0**2)*polyval(t,coeff_d2)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)
@@ -173,6 +174,26 @@ class CloudServices(Domain):
 
         return Jacobian
 
+    def Demand_ij(self,i,j,pi,qi,pJ,qJ):
+        relprice = pi*self.nClouds/(pi+pJ)
+        relquali = qi*self.nClouds/(qi+qJ)
+
+        t = self.pref_bizes[j,i]*pi*qi*relprice*relquali
+
+        exp = self.H[j,i]*np.exp(-t**2)
+
+        if self.poly_splice:
+            poly = self.H[j,i]*np.exp(-self.t0**2)*polyval(t,self.coeff)
+
+            texp = (t <= self.t0)
+            tpoly = np.logical_and(t > self.t0,t < self.tf)
+
+            Qij = exp*texp + poly*tpoly
+        else:
+            Qij = exp
+
+        return Qij, t
+
     def Demand_IJ(self,Data):
         p = Data[:self.nClouds]
         q = Data[self.nClouds:]
@@ -184,7 +205,7 @@ class CloudServices(Domain):
         exp = self.H*np.exp(-t**2)
 
         if self.poly_splice:
-            poly = self.H*np.exp(-9)*polyval(t,self.coeff)
+            poly = self.H*np.exp(-self.t0**2)*polyval(t,self.coeff)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)
@@ -219,7 +240,7 @@ class CloudServices(Domain):
 
         if self.poly_splice:
             coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
-            dQ_dt_poly = self.H*np.exp(-9)*polyval(t,coeff_d1)
+            dQ_dt_poly = self.H*np.exp(-self.t0**2)*polyval(t,coeff_d1)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)
@@ -251,9 +272,9 @@ class CloudServices(Domain):
 
         if self.poly_splice:
             coeff_d1 = self.coeff[1:]*np.arange(1,len(self.coeff))
-            dQ_dt_poly = self.H*np.exp(-9)*polyval(t,coeff_d1)
+            dQ_dt_poly = self.H*np.exp(-self.t0**2)*polyval(t,coeff_d1)
             coeff_d2 = coeff_d1[1:]*np.arange(1,len(coeff_d1))
-            d2Q_dt2_poly = self.H*np.exp(-9)*polyval(t,coeff_d2)
+            d2Q_dt2_poly = self.H*np.exp(-self.t0**2)*polyval(t,coeff_d2)
 
             texp = (t <= self.t0)
             tpoly = np.logical_and(t > self.t0,t < self.tf)

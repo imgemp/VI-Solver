@@ -134,6 +134,74 @@ def Demo():
     # fig.colorbar(surf, shrink=0.5, aspect=5)
     # plt.show()
 
+    # Domain2 = CloudServices(Network=Network,poly_splice=False)
+
+    # i = 0
+    # j = 3
+    # pi = np.arange(0,.8,.001)
+    # pJ = .01
+    # qi = qJ = 1
+    # Q00 = np.zeros_like(pi)
+    # Q200 = Q00.copy()
+    # t = np.zeros_like(pi)
+    # for p in xrange(len(pi)):
+    #     Qoo, too = Domain.Demand_ij(i,j,pi[p],qi,pJ,qJ)
+    #     Q2oo, t2oo = Domain2.Demand_ij(i,j,pi[p],qi,pJ,qJ)
+    #     Q00[p] = Qoo
+    #     Q200[p] = Q2oo
+    #     t[p] = too
+    # e = pi[np.argmax(t >= 1/np.sqrt(2))]
+    # Qe = Q00[np.argmax(t >= 1/np.sqrt(2))]/12.
+    # p0 = pi[np.argmax(t >= Domain.t0)]
+    # Qp0 = Q00[np.argmax(t >= Domain.t0)]/12.
+    # pf = pi[np.argmax(t >= Domain.tf)]
+    # Qpf = Q00[np.argmax(t >= Domain.tf)]/12.
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111)
+    # Qij, = ax.plot(pi,Q00/12.,'k-', linewidth=5)
+    # exp, = ax.plot(pi,Q200/12.,'k--', linewidth=5)
+    # ax.plot(p0,Qp0,'ob',markersize=10)
+    # ax.plot(pf,Qpf,'or',markersize=10)
+    # eps = .05
+    # ax.plot([-eps,.8+eps],[0,0],'k-.')
+    # ax.plot([0,0],[-eps,1+eps],'k-.')
+    # # ax.plot([e,e],[0,1])
+    # # ax.plot([p0,p0],[0,1])
+    # # ax.plot([pf,pf],[0,1])
+    # ax.annotate('inelastic', xy=(.04, .97), xycoords='data',
+    #             xytext=(.1, .7), textcoords='data',
+    #             arrowprops=dict(arrowstyle='simple',facecolor='black'),
+    #             # arrowprops=dict(frac=0.1,headwidth=10,width=4,facecolor='black',shrink=.05),
+    #             ha='center', va='center', size=18,
+    #             )
+    # ax.annotate('elastic', xy=(e, Qe), xycoords='data',
+    #             xytext=(e+.2, Qe+.2), textcoords='data',
+    #             # arrowprops=dict(arrowstyle="simple", facecolor='black'),
+    #             arrowprops=dict(frac=0.1,headwidth=10,width=4,facecolor='black',shrink=.1),
+    #             ha='center', va='center', size=18,
+    #             )
+    # ax.annotate('splice', xy=(p0, Qp0), xycoords='data',
+    #             xytext=(p0+.2, Qp0+.2), textcoords='data',
+    #             # arrowprops=dict(arrowstyle="simple", facecolor='black'),
+    #             arrowprops=dict(frac=0.1,headwidth=10,width=4,facecolor='black',shrink=.1),
+    #             ha='center', va='center', size=18,
+    #             )
+    # ax.annotate('zero-cutoff', xy=(pf, Qpf+.02), xycoords='data',
+    #             xytext=(pf, Qpf+.2*np.sqrt(2)), textcoords='data',
+    #             # arrowprops=dict(arrowstyle="simple", facecolor='black'),
+    #             arrowprops=dict(frac=0.1,headwidth=10,width=4,facecolor='black',shrink=.1),
+    #             ha='center', va='center', size=18,
+    #             )
+    # ax.set_xlim(-eps,.8+eps)
+    # ax.set_ylim(-eps,1+eps)
+    # leg = plt.legend([Qij,exp], [r'$Q_{ij}^{}$', r'$H_{i}e^{-t_{ij}^2}$'], fontsize=20,
+    #     fancybox=True)
+    # plt.setp(leg.get_texts()[0], fontsize='20', va='center')
+    # plt.setp(leg.get_texts()[1], fontsize='20', va='bottom')
+    # plt.axis('off')
+    # # plt.show()
+    # plt.savefig("Demand.png",bbox_inches='tight')
+
     embed()
 
 if __name__ == '__main__':
