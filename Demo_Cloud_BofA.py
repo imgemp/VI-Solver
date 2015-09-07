@@ -70,7 +70,7 @@ def Demo():
     np.save('cloud_'+time.strftime("%Y%m%d_%H%M%S"),sim_data)
 
 # # Observed dimensions + fixed values for others
-# obs = (0,1)
+# obs = (4,9)  # Look at new green-tech company
 # # consts = np.array([np.inf,np.inf,4.5,0.5,2.9,1.3,3.7,2.9,3.7,4.5])
 # consts = 2.9*np.ones(Domain.Dim)
 
@@ -193,7 +193,7 @@ def Demo():
 # ax.set_xlim([grid[obs[0],0],grid[obs[0],1]])
 # ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
 # ax.set_aspect('equal')
-# plt.savefig('bndry_pts.png',format='png')
+# plt.savefig('BoA.png',bbox_inches='tight')
 
 # plt.figure()
 # pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))

@@ -31,7 +31,7 @@ def Demo():
 
     # Define Network and Domain
     Network = CreateRandomNetwork(5,4,seed=0)
-    Network = CreateNetworkExample(ex=2)
+    Network = CreateNetworkExample(ex=3)
     Domain = CloudServices(Network=Network,gap_alpha=2)
 
     # Set Method
@@ -57,7 +57,7 @@ def Demo():
     # Set Options
     Init = Initialization(Step=-1e-3)
     # Init = Initialization(Step=-0.00001)
-    Term = Termination(MaxIter=1e5,Tols=[(Domain.gap_rplus,1e-8*gap_0)])
+    Term = Termination(MaxIter=1e5,Tols=[(Domain.gap_rplus,1e-12*gap_0)])
                                          # (Domain.valid,False)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Step','F Evaluations',
                                'Projections','Data',Domain.eig_stats,
@@ -89,17 +89,43 @@ def Demo():
     print('Qij')
     print(Domain.Demand_IJ(x)[0])
 
+    # t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
     # data = CloudServices_Results.PermStorage['Data']
     # data = ListONP2NP(data)
-    # plt.plot(data)
-    # plt.show()
+    # LE = CloudServices_Results.PermStorage['Lyapunov']
 
-    # t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
-    # plt.plot(t,data)
-    # plt.show()
-
-    # # Plot Lyapunov Exponents
-    # plt.plot(CloudServices_Results.PermStorage['Lyapunov'])
+    # fig = plt.figure()
+    # fig.set_size_inches([8,8])
+    # title = '5-Cloud, 4-Client Market Opens at ' + \
+    #     r'$(p_i=d_i=1 \,\, \forall i)$'
+    # fig.suptitle(title,fontsize=18)
+    # ax1 = fig.add_subplot(211)
+    # l = ax1.plot(t,data)
+    # ax1.set_title('Convergence of market to Nash equilibrium')
+    # ax1.set_xlim([0,5.5])
+    # labels = ['$p_'+repr(i+1)+'$'for i in xrange(Domain.nClouds)] + \
+    #     ['$d_'+repr(i+1)+'$'for i in xrange(Domain.nClouds)]
+    # ax1.legend(l,labels,bbox_to_anchor=(1.05, -.075),
+    #            loc='lower left', borderaxespad=0.,
+    #            fancybox=True)
+    # ax2 = fig.add_subplot(212)
+    # l = ax2.plot(t,LE)
+    # ax2.set_title('Convergence of characteristic Lyapunov exponent')
+    # ax2.set_xlim([0,5.5])
+    # mn = min(LE[-1])
+    # tk = 50  # -mn/5.//10*10
+    # ax2.set_ylim([(mn//10)*10-tk,2*tk])
+    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    # Lambda_p = ','.join('%.1f' % lam for lam in LE[-1][:Domain.nClouds])
+    # Lambda_d = ','.join('%.1f' % lam for lam in LE[-1][Domain.nClouds:])
+    # textstr = '$\Lambda=[$'+Lambda_p+','+Lambda_d+'$]$'
+    # ax2.text(0.0145, 0.9, textstr, transform=ax2.transAxes, fontsize=14,
+    #          va='center', bbox=props)
+    # # ax2.legend(l,labels,bbox_to_anchor=(1.05, .5),
+    # #            loc='lower left', borderaxespad=0.,
+    # #            fancybox=True)
+    # plt.savefig('Scenario1.png',bbox_inches='tight')
+    # plt.clf()
     # plt.show()
 
     # for i in xrange(data.shape[1]/2):
