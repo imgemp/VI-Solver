@@ -73,6 +73,8 @@ def Demo():
             X[idx+len(samples)] = sample[1]
         Y = np.zeros(len(samples)*2)
         Y[:n] = 1
+        print(X)
+        print(Y)
 
         clf = SVC()
         clf.fit(X,Y)

@@ -293,7 +293,8 @@ def compLEs_wTraj(x):
     group_inds = [center_ind] + selected
     group_ids = [ind2int(ind,shape) for ind in group_inds]
     group_pts = [ind2pt(ind,grid) for ind in group_inds]
-    dmax = np.linalg.norm(grid[:,3])*.5
+    ddiag = np.linalg.norm(grid[:,3])
+    # dmax = np.linalg.norm(grid[:,3])*.5
     print(group_pts[0])
     # endpts = []
     lams = []
@@ -314,7 +315,7 @@ def compLEs_wTraj(x):
             ti = t[i]
             dt = results.PermStorage['Step'][i]
             ds = np.linalg.norm(pt-cube_pts,axis=1)
-            if any(ds > np.sqrt(len(pt))):
+            if any(ds > ddiag):
                 cube_inds = pt2inds2(pt,grid)
                 cube_pts = np.array([ind2pt2(ind,grid) for ind in cube_inds])
                 ds = np.linalg.norm(pt-cube_pts,axis=1)
@@ -323,8 +324,9 @@ def compLEs_wTraj(x):
                             axis=1)
             for idx, cube_ind in enumerate(cube_inds):
                 if inbnds[idx]:
-                    d = ds[idx]
-                    d_fac = max(1-d/dmax,0)
+                    # d = ds[idx]
+                    # d_fac = max(1-d/dmax,0)
+                    d_fac = 1
                     if not (cube_ind in bnd_ind_sum):
                         bnd_ind_sum[cube_ind] = [0,0]
                     bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T*d_fac)*dt

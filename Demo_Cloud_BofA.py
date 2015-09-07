@@ -5,8 +5,8 @@ from VISolver.Domains.CloudServices2 import (
     CloudServices, CreateNetworkExample)
 
 # from VISolver.Solvers.Euler_LEGS import Euler_LEGS
-# from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
-from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
+from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
+# from VISolver.Solvers.AdamsBashforthEuler_LEGS import ABEuler_LEGS
 # from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
 
 from VISolver.Projection import BoxProjection
@@ -40,12 +40,12 @@ def Demo():
     # Set Method
     eps = 1e-2
     # Method = Euler_LEGS(Domain=Domain,P=BoxProjection(lo=eps))
-    # Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
-    Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
+    Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
+    # Method = ABEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-1)
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e-6)
 
     # Set Options
-    Init = Initialization(Step=-1e-5)
+    Init = Initialization(Step=-1e-3)
     Term = Termination(MaxIter=1e5)  # ,Tols=[(Domain.valid,False)])
     Repo = Reporting(Requests=['Data','Step'])
     Misc = Miscellaneous()
