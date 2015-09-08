@@ -155,7 +155,7 @@ def Demo():
     groups = groupstuff(grid,trajs,lams,ts,Starts)
     p = procgroup(groups,grid)
 
-    cmap = cm.jet
+    cmap = cm.gray
     norm = mpl.colors.Normalize(vmin=0.,vmax=1.)
     to_rgba = cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba
 
@@ -174,7 +174,7 @@ def Demo():
 
     # Boundary
     x = np.arange(-1,3,.01)
-    plt.plot(x,(x-1)**2+1.05,'k--',lw=2)
+    plt.plot(x,.25*(x-1)**2+1.05,'k--',lw=2)
 
     for idt,traj in enumerate(trajs):
         lam = lams[idt]
@@ -219,8 +219,10 @@ def Demo():
     ax.text(trajs[2][0,0]+.09, trajs[2][0,1], '$x_2$', fontsize=18,
             va='center', ha='center', fontweight='bold')
 
-    ax.annotate('Boundary', xy=(.38, 1.38), xycoords='data',
-                xytext=(.3, 1.), textcoords='data',
+    # xy0 = (.38, 1.38)
+    # xytext0 = (.3, 1.)
+    ax.annotate('Boundary', xy=(.38, 1.17), xycoords='data',
+                xytext=(.3, 1.5), textcoords='data',
                 arrowprops=dict(arrowstyle='simple',facecolor='black'),
                 ha='center', va='center', size=18,
                 )
