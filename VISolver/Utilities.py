@@ -131,18 +131,30 @@ def neighbors(ind,grid,r,q=None,Dinv=1):
     return selected, neigh
 
 
-def update_LamRef(ref,lams,eps,data):
+def update_LamRef(ref,lams,eps,data,ref_ept,endpts):
     if ref is None:
         ref = lams[0].copy()[None]
+        ref_ept = endpts[0].copy()[None]
         data[hash(str(lams[0]))] = []
-    for lam in lams:
-        same = [np.allclose(lam,_ref,rtol=.2,atol=1.) for _ref in ref]
-        # check if endpts are same, if so increase rtol and atol (same2)
-        # then check if both endpts and same2 is true
+    for l,lam in enumerate(lams):
+        # same0 = [np.allclose(lam,_ref,rtol=.2,atol=1.) for _ref in ref]
+        ept = endpts[l]
+        same_ept = [np.allclose(ept,_ref,rtol=.1,atol=1.) for _ref in ref_ept]
+        same = []
+        # print(len(same_ept))
+        # print(len(ref))
+        for e,is_same_ept in enumerate(same_ept):
+            if is_same_ept:
+                same += [np.allclose(lam,ref[e],rtol=.4,atol=1.)]
+            else:
+                same += [np.allclose(lam,ref[e],rtol=.2,atol=1.)]
+        # print(same)
+        # print(same0)
         if not any(same):
             ref = np.concatenate((ref,[lam]))
+            ref_ept = np.concatenate((ref_ept,[ept]))
             data[hash(str(lam))] = []
-    return ref, data
+    return ref, data, ref_ept
 
 
 def adjustLams2Ref(ref,lams):
@@ -178,113 +190,113 @@ def update_Prob_Data(ids,shape,grid,lams,eps,p,eta_1,eta_2,data):
     return p, data, boundry_pairs, toZero
 
 
-def MCLE_BofA_ID(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
-                 eps=1.,L=1,q=2,r=1.1,Dinv=1):
-    shape = tuple(grid[:,2])
-    p = np.ones(np.prod(shape))/np.prod(shape)
-    ids = range(int(np.prod(shape)))
+# def MCLE_BofA_ID(sim,args,grid,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+#                  eps=1.,L=1,q=2,r=1.1,Dinv=1):
+#     shape = tuple(grid[:,2])
+#     p = np.ones(np.prod(shape))/np.prod(shape)
+#     ids = range(int(np.prod(shape)))
 
-    ref = None
-    data = {}
-    B_pairs = 0
+#     ref = None
+#     data = {}
+#     B_pairs = 0
 
-    i = 0
-    avg = np.inf
-    bndry_ids_master = set()
-    starts = set()
-    while (i <= limit) or (avg > AVG):
-        print(i)
-        center_ids = np.random.choice(ids,size=L,p=p)
-        starts |= set(center_ids)
-        center_inds = [int2ind(center_id,shape) for center_id in center_ids]
-        groups = []
-        for center_ind in center_inds:
-            selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
-            group_inds = [center_ind] + selected
-            group_ids = [ind2int(ind,shape) for ind in group_inds]
-            group_pts = [ind2pt(ind,grid) for ind in group_inds]
-            print(group_pts)
-            lams = []
-            for start in group_pts:
-                results = sim(start,*args)
-                lams += [results.TempStorage['Lyapunov'][-1]]
-            ref, data = update_LamRef(ref,lams,eps,data)
-            groups += [[group_ids,lams]]
-        for group in groups:
-            lams = group[1]
-            adjustLams2Ref(ref,lams)
-        bndry_ids_all = set()
-        for group in groups:
-            group_ids, group_lams = group
-            p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
-                                                           group_lams,eps,
-                                                           p,eta_1,eta_2,
-                                                           data)
-            B_pairs += b_pairs
-            bndry_ids_all |= bndry_ids
-        p = p/np.sum(p)
-        i += 1
-        avg = B_pairs/((q+1)*L*i)
-        bndry_ids_master |= bndry_ids_all
-    return ref, data, p, i, avg, bndry_ids_master, starts
-
-
-def compLEs(x):
-    center_ind,sim,args,grid,shape,eps,q,r,Dinv = x
-    selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
-    group_inds = [center_ind] + selected
-    group_ids = [ind2int(ind,shape) for ind in group_inds]
-    group_pts = [ind2pt(ind,grid) for ind in group_inds]
-    lams = []
-    for start in group_pts:
-        results = sim(start,*args)
-        lams += [results.TempStorage['Lyapunov'][-1]]
-    return [group_ids,lams]
+#     i = 0
+#     avg = np.inf
+#     bndry_ids_master = set()
+#     starts = set()
+#     while (i <= limit) or (avg > AVG):
+#         print(i)
+#         center_ids = np.random.choice(ids,size=L,p=p)
+#         starts |= set(center_ids)
+#         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
+#         groups = []
+#         for center_ind in center_inds:
+#             selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
+#             group_inds = [center_ind] + selected
+#             group_ids = [ind2int(ind,shape) for ind in group_inds]
+#             group_pts = [ind2pt(ind,grid) for ind in group_inds]
+#             print(group_pts)
+#             lams = []
+#             for start in group_pts:
+#                 results = sim(start,*args)
+#                 lams += [results.TempStorage['Lyapunov'][-1]]
+#             ref, data = update_LamRef(ref,lams,eps,data)
+#             groups += [[group_ids,lams]]
+#         for group in groups:
+#             lams = group[1]
+#             adjustLams2Ref(ref,lams)
+#         bndry_ids_all = set()
+#         for group in groups:
+#             group_ids, group_lams = group
+#             p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
+#                                                            group_lams,eps,
+#                                                            p,eta_1,eta_2,
+#                                                            data)
+#             B_pairs += b_pairs
+#             bndry_ids_all |= bndry_ids
+#         p = p/np.sum(p)
+#         i += 1
+#         avg = B_pairs/((q+1)*L*i)
+#         bndry_ids_master |= bndry_ids_all
+#     return ref, data, p, i, avg, bndry_ids_master, starts
 
 
-def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
-                     eps=1.,L=1,q=2,r=1.1,Dinv=1):
-    shape = tuple(grid[:,2])
-    p = np.ones(np.prod(shape))/np.prod(shape)
-    ids = range(int(np.prod(shape)))
+# def compLEs(x):
+#     center_ind,sim,args,grid,shape,eps,q,r,Dinv = x
+#     selected, neigh = neighbors(center_ind,grid,r,q,Dinv)
+#     group_inds = [center_ind] + selected
+#     group_ids = [ind2int(ind,shape) for ind in group_inds]
+#     group_pts = [ind2pt(ind,grid) for ind in group_inds]
+#     lams = []
+#     for start in group_pts:
+#         results = sim(start,*args)
+#         lams += [results.TempStorage['Lyapunov'][-1]]
+#     return [group_ids,lams]
 
-    ref = None
-    data = {}
-    B_pairs = 0
 
-    pool = mp.ProcessingPool(nodes=nodes)
+# def MCLE_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
+#                      eps=1.,L=1,q=2,r=1.1,Dinv=1):
+#     shape = tuple(grid[:,2])
+#     p = np.ones(np.prod(shape))/np.prod(shape)
+#     ids = range(int(np.prod(shape)))
 
-    i = 0
-    avg = np.inf
-    bndry_ids_master = set()
-    starts = set()
-    while (i < limit) or (avg > AVG):
-        print(i)
-        center_ids = np.random.choice(ids,size=L,p=p)
-        starts |= set(center_ids)
-        center_inds = [int2ind(center_id,shape) for center_id in center_ids]
-        x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
-        groups = pool.map(compLEs,x)
-        for group in groups:
-            lams = group[1]
-            ref, data = update_LamRef(ref,lams,eps,data)
-        for group in groups:
-            lams = group[1]
-            adjustLams2Ref(ref,lams)
-        bndry_ids_all = set()
-        for group in groups:
-            group_ids, group_lams = group
-            p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
-                                                           group_lams,eps,
-                                                           p,eta_1,eta_2,
-                                                           data)
-            B_pairs += b_pairs
-            bndry_ids_all |= bndry_ids
-        p = p/np.sum(p)
-        i += 1
-        avg = B_pairs/((q+1)*L*i)
-        bndry_ids_master |= bndry_ids_all
-    return ref, data, p, i, avg, bndry_ids_master, starts
+#     ref = None
+#     data = {}
+#     B_pairs = 0
+
+#     pool = mp.ProcessingPool(nodes=nodes)
+
+#     i = 0
+#     avg = np.inf
+#     bndry_ids_master = set()
+#     starts = set()
+#     while (i < limit) or (avg > AVG):
+#         print(i)
+#         center_ids = np.random.choice(ids,size=L,p=p)
+#         starts |= set(center_ids)
+#         center_inds = [int2ind(center_id,shape) for center_id in center_ids]
+#         x = [(ind,sim,args,grid,shape,eps,q,r,Dinv) for ind in center_inds]
+#         groups = pool.map(compLEs,x)
+#         for group in groups:
+#             lams = group[1]
+#             ref, data = update_LamRef(ref,lams,eps,data)
+#         for group in groups:
+#             lams = group[1]
+#             adjustLams2Ref(ref,lams)
+#         bndry_ids_all = set()
+#         for group in groups:
+#             group_ids, group_lams = group
+#             p, data, b_pairs, bndry_ids = update_Prob_Data(group_ids,shape,grid,
+#                                                            group_lams,eps,
+#                                                            p,eta_1,eta_2,
+#                                                            data)
+#             B_pairs += b_pairs
+#             bndry_ids_all |= bndry_ids
+#         p = p/np.sum(p)
+#         i += 1
+#         avg = B_pairs/((q+1)*L*i)
+#         bndry_ids_master |= bndry_ids_all
+#     return ref, data, p, i, avg, bndry_ids_master, starts
 
 
 def compLEs_wTraj(x):
@@ -296,13 +308,13 @@ def compLEs_wTraj(x):
     ddiag = np.linalg.norm(grid[:,3])
     # dmax = np.linalg.norm(grid[:,3])*.5
     print(group_pts[0])
-    # endpts = []
+    endpts = []
     lams = []
     bnd_ind_sum = {}
     for start in group_pts:
         results = sim(start,*args)
-        # endpt = results.TempStorage['Data'][-1]
-        # endpts += [endpt]
+        endpt = results.TempStorage['Data'][-1]
+        endpts += [endpt]
         lam = results.TempStorage['Lyapunov'][-1]
         lams += [lam]
         c = np.max(np.abs(lam))
@@ -331,8 +343,8 @@ def compLEs_wTraj(x):
                         bnd_ind_sum[cube_ind] = [0,0]
                     bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T*d_fac)*dt
                     bnd_ind_sum[cube_ind][1] += dt
-    # return [group_ids,lams,bnd_ind_sum,endpts]
-    return [group_ids,lams,bnd_ind_sum]
+    return [group_ids,lams,bnd_ind_sum,endpts]
+    # return [group_ids,lams,bnd_ind_sum]
 
 
 def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
@@ -342,6 +354,7 @@ def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
     ids = range(int(np.prod(shape)))
 
     ref = None
+    ref_ept = None
     data = {}
     B_pairs = 0
 
@@ -369,8 +382,9 @@ def MCLET_BofA_ID_par(sim,args,grid,nodes=8,limit=1,AVG=.01,eta_1=1.2,eta_2=.95,
                 bnd_ind_sum_master[key][1] += val[1]
         for group in groups:
             lams = group[1]
+            endpts = group[3]
             # add endpts as input to update_LamRef
-            ref, data = update_LamRef(ref,lams,eps,data)
+            ref, data, ref_ept = update_LamRef(ref,lams,eps,data,ref_ept,endpts)
         for group in groups:
             lams = group[1]
             adjustLams2Ref(ref,lams)

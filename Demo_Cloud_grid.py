@@ -139,7 +139,7 @@ def Demo():
     a = np.log(Starts[1][1]+1)/Starts[1][0]
     traj = np.vstack([t,np.exp(a*t)-1]).T
     trajs += [traj[::-1,:]]
-    lam = np.array([-2,-2])
+    lam = np.array([-1,-2])
     lams += [lam]
     ts += [t]
 
@@ -148,7 +148,7 @@ def Demo():
     a = np.log(Starts[2][1]+1)/Starts[2][0]
     traj = np.vstack([t,np.exp(a*t)-1]).T
     trajs += [traj[::-1,:]]
-    lam = np.array([-2,-2])
+    lam = np.array([-1,-2])
     lams += [lam]
     ts += [t]
 
