@@ -89,10 +89,37 @@ def Demo():
     print('Qij')
     print(Domain.Demand_IJ(x)[0])
 
-    # t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
-    # data = CloudServices_Results.PermStorage['Data']
-    # data = ListONP2NP(data)
-    # LE = CloudServices_Results.PermStorage['Lyapunov']
+    t = np.abs(np.cumsum(CloudServices_Results.PermStorage['Step']))
+    data = CloudServices_Results.PermStorage['Data']
+    data = ListONP2NP(data)
+    LE = CloudServices_Results.PermStorage['Lyapunov']
+
+    # fig = plt.figure()
+    # # fig.set_size_inches([8,8])
+    # title = '5-Cloud, 4-Client Market Opens at ' + \
+    #     r'$(p_i=d_i=1 \,\, \forall i)$'
+    # fig.suptitle(title,fontsize=18)
+    # ax1 = fig.add_subplot(111)
+    # l = ax1.plot(t,[-le for le in LE])
+    # ax1.set_yscale('log')
+    # ax1.invert_yaxis()
+    # ax1.set_title('Convergence of characteristic Lyapunov exponent')
+    # ax1.set_xlim([0,5.5])
+    # mn = min(LE[-1])
+    # tk = 50  # -mn/5.//10*10
+    # # ax1.set_ylim([(mn//10)*10-tk,2*tk])
+    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    # Lambda_p = ','.join('%.1f' % lam for lam in LE[-1][:Domain.nClouds])
+    # Lambda_d = ','.join('%.1f' % lam for lam in LE[-1][Domain.nClouds:])
+    # textstr = '$\Lambda=[$'+Lambda_p+','+Lambda_d+'$]$'
+    # ax1.text(0.0145, 0.9, textstr, transform=ax1.transAxes, fontsize=14,
+    #          va='center', bbox=props)
+    # # ax2.legend(l,labels,bbox_to_anchor=(1.05, .5),
+    # #            loc='lower left', borderaxespad=0.,
+    # #            fancybox=True)
+    # # plt.savefig('Scenario1.png',bbox_inches='tight')
+    # # plt.clf()
+    # plt.show()
 
     # fig = plt.figure()
     # fig.set_size_inches([8,8])
@@ -109,7 +136,7 @@ def Demo():
     #            loc='lower left', borderaxespad=0.,
     #            fancybox=True)
     # ax2 = fig.add_subplot(212)
-    # l = ax2.plot(t,LE)
+    # l = ax2.plot(t,[-le for le in LE])
     # ax2.set_title('Convergence of characteristic Lyapunov exponent')
     # ax2.set_xlim([0,5.5])
     # mn = min(LE[-1])
@@ -124,8 +151,8 @@ def Demo():
     # # ax2.legend(l,labels,bbox_to_anchor=(1.05, .5),
     # #            loc='lower left', borderaxespad=0.,
     # #            fancybox=True)
-    # plt.savefig('Scenario1.png',bbox_inches='tight')
-    # plt.clf()
+    # # plt.savefig('Scenario1.png',bbox_inches='tight')
+    # # plt.clf()
     # plt.show()
 
     # for i in xrange(data.shape[1]/2):
@@ -186,8 +213,8 @@ def Demo():
     # ax = fig.add_subplot(111)
     # Qij, = ax.plot(pi,Q00/12.,'k-', linewidth=5)
     # exp, = ax.plot(pi,Q200/12.,'k--', linewidth=5)
-    # ax.plot(p0,Qp0,'ob',markersize=10)
-    # ax.plot(pf,Qpf,'or',markersize=10)
+    # ax.plot(p0,Qp0,'ow',markersize=10)
+    # ax.plot(pf,Qpf,'ow',markersize=10)
     # eps = .05
     # ax.plot([-eps,.8+eps],[0,0],'k-.')
     # ax.plot([0,0],[-eps,1+eps],'k-.')
@@ -228,7 +255,7 @@ def Demo():
     # # plt.show()
     # plt.savefig("Demand.png",bbox_inches='tight')
 
-    embed()
+    # embed()
 
 if __name__ == '__main__':
     Demo()
