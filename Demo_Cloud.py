@@ -31,7 +31,7 @@ def Demo():
 
     # Define Network and Domain
     Network = CreateRandomNetwork(5,4,seed=0)
-    Network = CreateNetworkExample(ex=3)
+    Network = CreateNetworkExample(ex=2)
     Domain = CloudServices(Network=Network,gap_alpha=2)
 
     # Set Method
