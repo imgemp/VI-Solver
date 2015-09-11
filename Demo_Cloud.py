@@ -42,7 +42,9 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)
+    Start = 2.9*np.ones(Domain.Dim)
+    Start[4] = .7
+    Start[9] = 1.
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
     # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
@@ -93,6 +95,8 @@ def Demo():
     data = CloudServices_Results.PermStorage['Data']
     data = ListONP2NP(data)
     LE = CloudServices_Results.PermStorage['Lyapunov']
+
+    print(Domain.Nash(x))
 
     # fig = plt.figure()
     # # fig.set_size_inches([8,8])

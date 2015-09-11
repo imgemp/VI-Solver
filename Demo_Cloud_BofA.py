@@ -130,6 +130,11 @@ for cat,lam in enumerate(ref):
         Z = Z.reshape(xx.shape)
         Zs[:,:,cat] = Z
 
+txt_locs = [(1.4798387096774193, 0.82031250000000011),
+            (3.1189516129032255, 1.046875),
+            (1.625, 2.328125),
+            (3.258064516129032, 2.921875)]
+
 best_guess = np.argmax(Zs,axis=2)
 cat_num = 0
 for cat in set(best_guess.flatten()):
@@ -157,6 +162,7 @@ for cat in set(best_guess.flatten()):
     # for placing text, see link below
     # http://stackoverflow.com/questions/25521120/
     # store-mouse-click-event-coordinates-with-matplotlib
+    x,y = txt_locs[cat_num]
     plt.text(x,y,dyn,fontsize=12,ha='center',va='center',zorder=3,weight='bold',
              color='black',
              bbox=dict(facecolor='white', alpha=0.8, boxstyle='round'))
@@ -166,14 +172,14 @@ for cat in set(best_guess.flatten()):
 
     mult, hat_num = divmod(cat_num,len(hatches))
     hatch = (mult+1)*hatches[hat_num]
-    cat_num += 1
     plt.contourf(xx,yy,Zma,0,hatches=[hatch],colors='none')
 
     plt.imshow(Zma, interpolation='nearest',
                extent=(xx.min(), xx.max(), yy.min(), yy.max()),
                aspect='auto', origin='lower', cmap=cmap, zorder=0)
+    cat_num += 1
     # plt.draw()
-    # plt.pause(0.5)
+    # plt.pause(2.0)
 
 if obs[0] >= Domain.Dim // 2:
     xlabel = '$d_{' + str(obs[0]-Domain.Dim//2) + '}$'
@@ -183,13 +189,33 @@ if obs[1] >= Domain.Dim // 2:
     ylabel = '$d_{' + str(obs[1]-Domain.Dim//2) + '}$'
 else:
     ylabel = '$p_{' + str(obs[1]) + '}$'
-plt.xlabel(xlabel)
-plt.ylabel(ylabel)
+plt.xlabel(xlabel,fontsize=16)
+plt.ylabel(ylabel,fontsize=16)
 
 ax.set_xlim([grid[obs[0],0],grid[obs[0],1]])
 ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
 ax.set_aspect('equal')
-plt.title('Boundaries of Attraction for Cloud Services Market')
+plt.title('Boundaries of Attraction for Cloud Services Market',fontsize=18)
+
+coords = []
+fig = plt.gcf()
+def onclick(event):
+    global ix, iy
+    ix, iy = event.xdata, event.ydata
+    print 'x = %d, y = %d'%(
+        ix, iy)
+
+    global coords
+    coords.append((ix, iy))
+
+    # if len(coords) == 2:
+    #     fig.canvas.mpl_disconnect(cid)
+
+    return coords
+cid = fig.canvas.mpl_connect('button_press_event', onclick)
+
+fig.canvas.mpl_disconnect(cid)
+
 plt.show()
 plt.savefig('BoA.png',bbox_inches='tight')
 
