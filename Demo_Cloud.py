@@ -31,7 +31,7 @@ def Demo():
 
     # Define Network and Domain
     Network = CreateRandomNetwork(5,4,seed=0)
-    Network = CreateNetworkExample(ex=2)
+    Network = CreateNetworkExample(ex=5)
     Domain = CloudServices(Network=Network,gap_alpha=2)
 
     # Set Method
@@ -42,9 +42,9 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
 
     # Initialize Starting Point
-    Start = 2.9*np.ones(Domain.Dim)
-    Start[4] = .7
-    Start[9] = 1.
+    Start = np.ones(Domain.Dim)
+    # Start[4] = .7
+    # Start[9] = 1.
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
     # Start = np.array([ 2.1,  4.5,  1.3,  1.3,  2.1,  3.7,  1.3,  2.1,  3.7,  1.3])
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  3.7,  2.9,  0.5,  2.9,  0.5,  2.1])
@@ -97,6 +97,18 @@ def Demo():
     LE = CloudServices_Results.PermStorage['Lyapunov']
 
     print(Domain.Nash(x))
+
+    # p = np.arange(0.01,20,.1)
+    # f = (10.*np.exp(-(p**2./(p+2.))**2.)+np.exp(-(1./10.*p**2./(p+2.))**2.))*(p-1.)
+    # fig = plt.figure()
+    # fig.suptitle('Profit Non-Convex in Price',fontsize=18)
+    # ax = fig.add_subplot(111)
+    # ax.plot(p,f,'k',lw=2)
+    # ax.set_xlim([0,20])
+    # ax.set_ylim([-2,6])
+    # plt.xlabel('$p_1$',fontsize=14)
+    # plt.ylabel('$\pi_1$',fontsize=14)
+    # plt.savefig('NonConvex.png',bbox_inches='tight')
 
     # fig = plt.figure()
     # # fig.set_size_inches([8,8])

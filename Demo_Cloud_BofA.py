@@ -73,8 +73,8 @@ def Demo():
 
 # Observed dimensions + fixed values for others
 obs = (4,9)  # Look at new green-tech company
-# consts = np.array([np.inf,np.inf,4.5,0.5,2.9,1.3,3.7,2.9,3.7,4.5])
-consts = 2.9*np.ones(Domain.Dim)
+consts = np.array([3.45,2.42,3.21,2.27,np.inf,.76,.97,.75,1.03,np.inf])
+# consts = 2.9*np.ones(Domain.Dim)
 
 # grid test cases for learned SVM classifier
 xx, yy = np.meshgrid(np.linspace(grid[obs[0],0],grid[obs[0],1],500),
@@ -130,10 +130,19 @@ for cat,lam in enumerate(ref):
         Z = Z.reshape(xx.shape)
         Zs[:,:,cat] = Z
 
-txt_locs = [(1.4798387096774193, 0.82031250000000011),
-            (3.1189516129032255, 1.046875),
-            (1.625, 2.328125),
-            (3.258064516129032, 2.921875)]
+# txt_locs = [(1.4798387096774193, 0.82031250000000011),
+#             (3.1189516129032255, 1.046875),
+#             (1.625, 2.328125),
+#             (3.258064516129032, 2.921875)]
+
+txt_locs = [(1.532258064516129, 1.7187500000000002),
+            (4.346774193548387, 0.71875000000000022),
+            (4.193548387096774, 4.427083333333333),
+            (3.9838709677419355, 2.5416666666666665),
+            (2.838709677419355, 3.7604166666666665),
+            (3.8306451612903225, 4.09375),
+            (3.064516129032258, 4.40625),
+            (3.524193548387097, 4.270833333333333)]
 
 best_guess = np.argmax(Zs,axis=2)
 cat_num = 0
@@ -182,13 +191,13 @@ for cat in set(best_guess.flatten()):
     # plt.pause(2.0)
 
 if obs[0] >= Domain.Dim // 2:
-    xlabel = '$d_{' + str(obs[0]-Domain.Dim//2) + '}$'
+    xlabel = '$d_{' + str(obs[0]-Domain.Dim//2+1) + '}$'
 else:
-    xlabel = '$p_{' + str(obs[0]) + '}$'
+    xlabel = '$p_{' + str(obs[0]+1) + '}$'
 if obs[1] >= Domain.Dim // 2:
-    ylabel = '$d_{' + str(obs[1]-Domain.Dim//2) + '}$'
+    ylabel = '$d_{' + str(obs[1]-Domain.Dim//2+1) + '}$'
 else:
-    ylabel = '$p_{' + str(obs[1]) + '}$'
+    ylabel = '$p_{' + str(obs[1]+1) + '}$'
 plt.xlabel(xlabel,fontsize=16)
 plt.ylabel(ylabel,fontsize=16)
 
@@ -197,26 +206,26 @@ ax.set_ylim([grid[obs[1],0],grid[obs[1],1]])
 ax.set_aspect('equal')
 plt.title('Boundaries of Attraction for Cloud Services Market',fontsize=18)
 
-coords = []
-fig = plt.gcf()
-def onclick(event):
-    global ix, iy
-    ix, iy = event.xdata, event.ydata
-    print 'x = %d, y = %d'%(
-        ix, iy)
+# coords = []
+# fig = plt.gcf()
+# def onclick(event):
+#     global ix, iy
+#     ix, iy = event.xdata, event.ydata
+#     print 'x = %d, y = %d'%(
+#         ix, iy)
 
-    global coords
-    coords.append((ix, iy))
+#     global coords
+#     coords.append((ix, iy))
 
-    # if len(coords) == 2:
-    #     fig.canvas.mpl_disconnect(cid)
+#     # if len(coords) == 2:
+#     #     fig.canvas.mpl_disconnect(cid)
 
-    return coords
-cid = fig.canvas.mpl_connect('button_press_event', onclick)
+#     return coords
+# cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
-fig.canvas.mpl_disconnect(cid)
+# fig.canvas.mpl_disconnect(cid)
 
-plt.show()
+# plt.show()
 plt.savefig('BoA.png',bbox_inches='tight')
 
 

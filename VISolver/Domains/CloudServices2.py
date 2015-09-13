@@ -445,6 +445,40 @@ def CreateNetworkExample(ex=1):
                       [6,6,6,6,6],
                       [12,12,12,12,12]])
 
+    elif ex == 4:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([1.05,1.1,.95,1.15])
+
+        # Business preferences
+        pref_bizes = np.array([[.27,.27,.27,.38],
+                               [.34,.34,.34,.31],
+                               [.33,.33,.33,.26],
+                               [.25,.40,.40,.34]])
+
+        # Business scale factors
+        H = np.array([[11,11,11,11],
+                      [9,9,9,9],
+                      [6,6,6,6],
+                      [12,12,12,12]])
+
+    elif ex == 5:
+
+        # Cloud cost function coefficients
+        c_clouds = np.array([1.05,1.1,.95,1.15])
+
+        # Business preferences
+        pref_bizes = np.array([[.38,.38,.38,.27],
+                               [.34,.34,.34,.31],
+                               [.33,.33,.33,.26],
+                               [.25,.40,.40,.34]])
+
+        # Business scale factors
+        H = np.array([[11,11,11,11],
+                      [9,9,9,9],
+                      [6,6,6,6],
+                      [12,12,12,12]])
+
     else:
         raise NotImplementedError('There are only 3 predefined examples (1-3)')
 
