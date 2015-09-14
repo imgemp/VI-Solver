@@ -31,7 +31,7 @@ def Demo():
 
     # Define Network and Domain
     Network = CreateRandomNetwork(5,4,seed=0)
-    Network = CreateNetworkExample(ex=5)
+    Network = CreateNetworkExample(ex=2)
     Domain = CloudServices(Network=Network,gap_alpha=2)
 
     # Set Method
@@ -42,7 +42,8 @@ def Demo():
     # Method = CashKarp_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
 
     # Initialize Starting Point
-    Start = np.ones(Domain.Dim)
+    Start = np.array([3.45,2.42,3.21,2.27,3.5,.76,.97,.75,1.03,1.0])
+    # Start = np.ones(Domain.Dim)
     # Start[4] = .7
     # Start[9] = 1.
     # Start = np.array([ 0.5,  4.5,  2.1,  4.5,  4.5,  2.9,  0.5,  2.9,  0.5,  1.3])
