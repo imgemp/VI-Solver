@@ -108,7 +108,7 @@ def update_LERef(ref,les,eps,data,ref_ept,endpts):
     if ref is None:
         ref = les[0].copy()[None]
         ref_ept = endpts[0].copy()[None]
-        data[hash(str(les[0]))] = []
+        data[hash(repr(les[0]))] = []
 
     # Check each LE against LE reference dictionary
     for l,le in enumerate(les):
@@ -128,7 +128,7 @@ def update_LERef(ref,les,eps,data,ref_ept,endpts):
         if not any(same):
             ref = np.concatenate((ref,[le]))
             ref_ept = np.concatenate((ref_ept,[ept]))
-            data[hash(str(le))] = []
+            data[hash(repr(le))] = []
     return ref, data, ref_ept
 
 
@@ -163,8 +163,8 @@ def update_Prob_Data(ids,shape,grid,les,eps,p,eta_1,eta_2,data):
             # Add pair to corresponding dataset
             pt_a = ind2pt(int2ind(id_a,shape),grid)
             pt_b = ind2pt(int2ind(id_b,shape),grid)
-            data[hash(str(le_a))] += [[pt_a,pt_b]]
-            data[hash(str(le_b))] += [[pt_b,pt_a]]
+            data[hash(repr(le_a))] += [[pt_a,pt_b]]
+            data[hash(repr(le_b))] += [[pt_b,pt_a]]
         else:
             # Decrease probablitiy of pair
             p[ids[pair[0]]] *= eta_2

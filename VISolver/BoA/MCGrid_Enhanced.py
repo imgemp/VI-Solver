@@ -45,10 +45,10 @@ def LE(x):
         cube_pts = np.array([ind2pt(ind,grid) for ind in cube_inds])
 
         # Iterate through trajectory and compute probability decay
-        for i, pt in enumerate(results.PermStorage['Data']):
+        for k, pt in enumerate(results.PermStorage['Data']):
             # Record current time, time step, and distance from cube corners
-            ti = t[i]
-            dt = results.PermStorage['Step'][i]
+            tk = t[k]
+            dt = results.PermStorage['Step'][k]
             ds = np.linalg.norm(pt-cube_pts,axis=1)
 
             # Update surrounding cube if point has crossed cube boundary
@@ -68,7 +68,7 @@ def LE(x):
                 if inbnds[idx]:
                     if not (cube_ind in bnd_ind_sum):
                         bnd_ind_sum[cube_ind] = [0,0]
-                    bnd_ind_sum[cube_ind][0] += np.exp(-c*ti/T)*dt  # heuristic
+                    bnd_ind_sum[cube_ind][0] += np.exp(-c*tk/T)*dt  # heuristic
                     bnd_ind_sum[cube_ind][1] += dt
     return [group_ids,les,endpts,bnd_ind_sum]
 
