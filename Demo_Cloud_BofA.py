@@ -1,6 +1,6 @@
 import numpy as np
 
-from VISolver.Domains.CloudServices2 import (
+from VISolver.Domains.CloudServices import (
     CloudServices, CreateNetworkExample)
 
 from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS

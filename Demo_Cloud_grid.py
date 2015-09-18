@@ -15,7 +15,6 @@ from IPython import embed
 
 def groupstuff(grid,trajs,lams,ts,Starts):
     ddiag = np.linalg.norm(grid[:,3])
-    # dmax = ddiag*.5
     bnd_ind_sum = {}
     for idx,traj in enumerate(trajs):
         lam = lams[idx]
@@ -38,8 +37,6 @@ def groupstuff(grid,trajs,lams,ts,Starts):
                             axis=1)
             for idx, cube_ind in enumerate(cube_inds):
                 if inbnds[idx]:
-                    # d = ds[idx]
-                    # d_fac = max(1-d/dmax,0)
                     d_fac = 1
                     if not (cube_ind in bnd_ind_sum):
                         bnd_ind_sum[cube_ind] = [0,0]
