@@ -16,7 +16,7 @@ import time
 
 from VISolver.BoA.Utilities import aug_grid
 from VISolver.BoA.MCGrid_Enhanced import MCT
-from VISolver.BoA.Plotting import plotBoA
+from VISolver.BoA.Plotting import plotBoA, plotDistribution
 
 from IPython import embed
 
@@ -70,22 +70,12 @@ def Demo():
     xlabel = '$p_'+repr(obs[0])+'$'
     ylabel = '$q_'+repr(obs[1])+'$'
     title = 'Boundaries of Attraction for Cloud Services Market'
-    plotBoA(ref,data,grid,obs=obs,consts=consts,txt_locs=txt_locs,
-            xlabel=xlabel,ylabel=ylabel,title=title)
+    figBoA, axBoA = plotBoA(ref,data,grid,obs=obs,consts=consts,
+                            txt_locs=txt_locs,xlabel=xlabel,ylabel=ylabel,
+                            title=title)
 
-    # plt.figure()
-    # pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
-    # ind_exp = np.array([int(i) for i in (consts-grid[:,0])//grid[:,3]])
-    # for ind_x in xrange(int(grid[obs[0],2])):
-    #     for ind_y in xrange(int(grid[obs[1],2])):
-    #         ind_exp[obs[0]] = ind_x
-    #         ind_exp[obs[1]] = ind_y
-    #         p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))
-    #         pmap[ind_y,ind_x] = p[p_id]
-    # plt.imshow(pmap,cmap='jet',origin='lower')
-    # plt.gca().set_aspect('equal')
-
-    # plt.show()
+    # Plot Probablity Distribution
+    figP, axP = plotDistribution(p,grid,obs=obs,consts=consts)
 
     embed()
 

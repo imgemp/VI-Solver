@@ -4,10 +4,13 @@ from matplotlib.colors import colorConverter
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap as lsc
 
+from VISolver.BoA.Utilities import ind2int
+
 from sklearn.svm import SVC
 
 
 def onclick(event):
+    # Records click locations to global variable on click event
     if not 'coords' in globals():
         global coords
         coords = []
@@ -25,6 +28,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
         print('No Boundaries Exist!')
         return
 
+    # Handle observable dimensions and fixed (hel constant) dimensions
     if obs is None:
         obs = np.arange(min(grid.shape[0],2))
     if consts is None:
@@ -33,7 +37,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
         obs = [obs]
     assert len(obs) <= 2
 
-    # Grid test cases for learned SVM classifier
+    # Construct test cases for SVM classifier
     if len(obs) == 2:
         xx, yy = np.meshgrid(np.linspace(grid[obs[0],0],grid[obs[0],1],Neval),
                              np.linspace(grid[obs[1],0],grid[obs[1],1],Neval))
@@ -53,11 +57,14 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
         test = np.tile(consts,(Neval,1))
         test[:,obs[0]] = np.linspace(grid[obs[0],0],grid[obs[0],1],Neval)
 
+    # Define colormaps and hatches for plotting
     c = plt.cm.hsv(np.random.rand(len(ref)))
     white = colorConverter.to_rgba('white')
-    hatches = ('-', '\\', '*', 'o', '+', 'x', 'O', '.', '/')
     dist_max = np.linalg.norm(grid[:,1]-grid[:,0])
+    hatches = ('-', '\\', '*', 'o', '+', 'x', 'O', '.', '/')
 
+    # Learn SVM Classifiers for each basin of attraction and
+    # compute decision function over grid
     if len(obs) == 2:
         Zs = np.zeros((Neval,Neval,len(ref)))
     else:
@@ -102,6 +109,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
+    # Plot data points from training set
     if wscatter:
         xscat = []
         if len(obs) == 2:
@@ -136,6 +144,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
                 for xid, xval in enumerate(xscat):
                     ax.plot([xval]*2,[0,1],c=colors[xid],lw=lws[xid],zorder=2)
 
+    # Plot decision boundaries and shade/hatch/categorize basins of attraction
     best_guess = np.argmax(Zs,axis=2)
     cat_num = 0
     for cat in set(best_guess.flatten()):
@@ -191,6 +200,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
             plt.draw()
             plt.pause(2.0)
 
+    # Label axes
     if xlabel is None:
         xlabel = '$x_'+repr(obs[0])+'$'
     plt.xlabel(xlabel,fontsize=16)
@@ -207,9 +217,11 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
                         labelbottom='off')
         fig.set_size_inches(8, 3)
 
+    # Title and 'square' axes
     ax.set_aspect('equal')
     fig.suptitle(title,fontsize=18)
 
+    # Setup event handler for recording click locations
     if makeTxt_Locs:
         global coords
         coords = []
@@ -224,4 +236,39 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
     if saveFig:
         plt.savefig('BoA.png',bbox_inches='tight')
 
-    return
+    return fig, ax
+
+
+def plotDistribution(p,grid,obs=None,consts=None,saveFig=False):
+    # Handle observable dimensions and fixed (hel constant) dimensions
+    if obs is None:
+        obs = np.arange(min(grid.shape[0],2))
+    if consts is None:
+        consts = grid[:,0]
+    if isinstance(obs,int):
+        obs = [obs]
+    assert len(obs) == 2
+
+    # Extract distribution map
+    if grid.shape[0] == 2:
+        pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
+    else:
+        pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
+        ind_exp = np.array([int(i) for i in (consts-grid[:,0])//grid[:,3]])
+        for ind_x in xrange(int(grid[obs[0],2])):
+            for ind_y in xrange(int(grid[obs[1],2])):
+                ind_exp[obs[0]] = ind_x
+                ind_exp[obs[1]] = ind_y
+                p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))
+                pmap[ind_y,ind_x] = p[p_id]
+
+    # Plot distribution map
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(pmap,cmap='jet',origin='lower')
+    ax.set_aspect('equal')
+
+    if saveFig:
+        plt.savefig('BoA.png',bbox_inches='tight')
+
+    return fig, ax

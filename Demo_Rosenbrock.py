@@ -3,11 +3,6 @@ import numpy as np
 
 from VISolver.Domains.Rosenbrock import Rosenbrock
 
-# from VISolver.Solvers.Euler import Euler
-# from VISolver.Solvers.Extragradient import EG
-# from VISolver.Solvers.AcceleratedGradient import AG
-# from VISolver.Solvers.HeunEuler import HeunEuler
-# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
 
 from VISolver.Solver import Solve
@@ -24,11 +19,6 @@ def Demo():
     Domain = Rosenbrock(Dim=1000)
 
     # Set Method
-    # Method = Euler(Domain=Domain)
-    # Method = EG(Domain=Domain)
-    # Method = AG(Domain=Domain)
-    # Method = HeunEuler(Domain=Domain,Delta0=1e-6)
-    # Method = ABEuler(Domain=Domain,Delta0=1e-5)
     Method = CashKarp(Domain=Domain,Delta0=1e-6)
 
     # Initialize Starting Point
@@ -36,7 +26,6 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
     Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
                                'Projections'])

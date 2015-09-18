@@ -4,8 +4,6 @@ from VISolver.Domain import Domain
 from numpy.polynomial.polynomial import polyval
 from scipy.optimize import minimize
 
-from matplotlib import pyplot as plt
-
 
 class CloudServices(Domain):
 
@@ -38,7 +36,6 @@ class CloudServices(Domain):
         self.c_clouds = c_clouds
         self.H = H
         self.pref_bizes = pref_bizes
-        # self.coeff = np.array([3520,-4752,2564,-691,93,-5])
         self.coeff = np.array([8,-20,26,-19,7,-1])
         self.t0 = 1
         self.tf = self.t0 + 1
@@ -504,102 +501,3 @@ def CreateRandomNetwork(nClouds=2,nBiz=2,seed=None):
     H = np.tile(np.random.rand(nBiz)*10+5,(nClouds,1)).T
 
     return (nClouds,nBiz,c_clouds,H,pref_bizes)
-
-
-def plotDemandCurve(saveFig=False):
-    Network = CreateNetworkExample(ex=2)
-    Domain = CloudServices(Network=Network)
-    Domain2 = CloudServices(Network=Network,poly_splice=False)
-
-    i = 0
-    j = 3
-    pi = np.arange(0,.8,.001)
-    pJ = .01
-    qi = qJ = 1
-
-    Q = np.zeros_like(pi)
-    Q2 = Q.copy()
-    t = np.zeros_like(pi)
-    for p in xrange(len(pi)):
-        _Q, t = Domain.Demand_ij(i,j,pi[p],qi,pJ,qJ)
-        _Q2, _ = Domain2.Demand_ij(i,j,pi[p],qi,pJ,qJ)
-        Q[p] = _Q
-        Q2[p] = _Q2
-        t[p] = t
-
-    e = pi[np.argmax(t >= 1/np.sqrt(2))]
-    Qe = Q[np.argmax(t >= 1/np.sqrt(2))]/12.
-    p0 = pi[np.argmax(t >= Domain.t0)]
-    Qp0 = Q[np.argmax(t >= Domain.t0)]/12.
-    pf = pi[np.argmax(t >= Domain.tf)]
-    Qpf = Q[np.argmax(t >= Domain.tf)]/12.
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    Qij, = ax.plot(pi,Q/12.,'k-', linewidth=5)
-    exp, = ax.plot(pi,Q2/12.,'k--', linewidth=5)
-    ax.plot(p0,Qp0,'ow',markersize=10)
-    ax.plot(pf,Qpf,'ow',markersize=10)
-    eps = .05
-    ax.plot([-eps,.8+eps],[0,0],'k-.')
-    ax.plot([0,0],[-eps,1+eps],'k-.')
-
-    ax.annotate('inelastic', xy=(.04, .97), xycoords='data',
-                xytext=(.1, .7), textcoords='data',
-                arrowprops=dict(arrowstyle='simple',facecolor='black'),
-                ha='center', va='center', size=18,
-                )
-    ax.annotate('elastic', xy=(e, Qe), xycoords='data',
-                xytext=(e+.2, Qe+.2), textcoords='data',
-                arrowprops=dict(frac=0.1,headwidth=10,width=4,
-                                facecolor='black',shrink=.1),
-                ha='center', va='center', size=18,
-                )
-    ax.annotate('splice', xy=(p0, Qp0), xycoords='data',
-                xytext=(p0+.2, Qp0+.2), textcoords='data',
-                arrowprops=dict(frac=0.1,headwidth=10,width=4,
-                                facecolor='black',shrink=.1),
-                ha='center', va='center', size=18,
-                )
-    ax.annotate('zero-cutoff', xy=(pf, Qpf+.02), xycoords='data',
-                xytext=(pf, Qpf+.2*np.sqrt(2)), textcoords='data',
-                arrowprops=dict(frac=0.1,headwidth=10,width=4,
-                                facecolor='black',shrink=.1),
-                ha='center', va='center', size=18,
-                )
-
-    ax.set_xlim(-eps,.8+eps)
-    ax.set_ylim(-eps,1+eps)
-
-    leg = plt.legend([Qij,exp], [r'$Q_{ij}^{}$', r'$H_{i}e^{-t_{ij}^2}$'],
-                     fontsize=20,fancybox=True)
-    plt.setp(leg.get_texts()[0], fontsize='20', va='center')
-    plt.setp(leg.get_texts()[1], fontsize='20', va='bottom')
-    plt.axis('off')
-
-    if saveFig:
-        plt.savefig("Demand.png",bbox_inches='tight')
-    return fig, ax
-
-
-def plotNonConcaveProfit(saveFig=False):
-    p = np.arange(0.01,20,.1)
-    Q11 = 10.*np.exp(-(p**2./(p+2.))**2.)
-    Q12 = np.exp(-(1./10.*p**2./(p+2.))**2.)
-    f = (Q11+Q12)*(p-1.)
-
-    fig = plt.figure()
-    fig.suptitle('Profit Non-Concave in Price',fontsize=18)
-    ax = fig.add_subplot(111)
-
-    ax.plot(p,f,'k',lw=2)
-
-    ax.set_xlim([0,20])
-    ax.set_ylim([-2,6])
-    plt.xlabel('$p_1$',fontsize=14)
-    plt.ylabel('$\pi_1$',fontsize=14)
-
-    if saveFig:
-        plt.savefig('NonConcave.png',bbox_inches='tight')
-    return fig, ax

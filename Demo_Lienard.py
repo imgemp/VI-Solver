@@ -30,7 +30,6 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=1e-3)
-    # Init = Initialization(Step=.1)
     Term = Termination(MaxIter=1e4)
     Repo = Reporting(Requests=['Step','Data','Lyapunov'])
     Misc = Miscellaneous()

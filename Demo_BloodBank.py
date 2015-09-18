@@ -3,11 +3,6 @@ import numpy as np
 
 from VISolver.Domains.BloodBank import BloodBank, CreateRandomNetwork
 
-# from VISolver.Solvers.Euler import Euler
-# from VISolver.Solvers.Extragradient import EG
-# from VISolver.Solvers.AcceleratedGradient import AG
-# from VISolver.Solvers.HeunEuler import HeunEuler
-# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
 
 from VISolver.Projection import BoxProjection
@@ -26,11 +21,6 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-    # Method = Euler(Domain=Domain,P=BoxProjection(lo=0))
-    # Method = EG(Domain=Domain,P=BoxProjection(lo=0))
-    # Method = AG(Domain=Domain,P=BoxProjection(lo=0))
-    # Method = HeunEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
-    # Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
     Method = CashKarp(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-6)
 
     # Initialize Starting Point

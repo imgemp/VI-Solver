@@ -13,7 +13,7 @@ from VISolver.Utilities import ListONP2NP
 
 from VISolver.BoA.Utilities import aug_grid
 from VISolver.BoA.MCGrid_Enhanced import MCT
-from VISolver.BoA.Plotting import plotBoA
+from VISolver.BoA.Plotting import plotBoA, plotDistribution
 
 from IPython import embed
 
@@ -54,28 +54,10 @@ def Demo():
     ref, data, p, i, avg, bndry_ids, starts = results
 
     # Plot BoAs
-    plotBoA(ref,data,grid,wcolor=True,wscatter=True)
+    figBoA, axBoA = plotBoA(ref,data,grid,wcolor=True,wscatter=True)
 
-    # plt.figure()
-    # pmap = np.swapaxes(np.reshape(p,tuple(grid[:,2])),0,1)
-    # plt.imshow(pmap,'jet',origin='lower')
-    # plt.gca().set_aspect('equal')
-
-    # def fun(file):
-    #     cloud = np.load(file)
-    #     if len(cloud) > 3:
-    #         ref, data, p, iters, avg, bndry_ids, Domain, grid = cloud
-    #         starts = [None]
-    #     else:
-    #         results, Domain, grid = cloud
-    #         ref, data, p, iters, avg, bndry_ids, starts = results
-    #     datanew = {}
-    #     for cat,lam in enumerate(ref):
-    #         datanew[hash(repr(lam))] = data[hash(str(lam))]
-    #     results = ref, datanew, p, iters, avg, bndry_ids, starts
-    #     np.save(file+'_new',[results,Domain,grid])
-
-    # plt.show()
+    # Plot Probablity Distribution
+    figP, axP = plotDistribution(p,grid)
 
     embed()
 
