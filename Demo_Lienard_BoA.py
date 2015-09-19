@@ -15,8 +15,6 @@ from VISolver.BoA.Utilities import aug_grid
 from VISolver.BoA.MCGrid_Enhanced import MCT
 from VISolver.BoA.Plotting import plotBoA, plotDistribution
 
-from IPython import embed
-
 
 def Demo():
 
@@ -58,8 +56,6 @@ def Demo():
 
     # Plot Probablity Distribution
     figP, axP = plotDistribution(p,grid)
-
-    embed()
 
 if __name__ == '__main__':
     Demo()
