@@ -38,22 +38,12 @@ class BloodBank(Domain):
         self.cmap = cmap
         maxFlows = [0]*6
         for data in Data:
-<<<<<<< HEAD
-            x = self.UnpackPathFlows(data)
-            xflows = list(self.PathFlow2LinkFlow_x2f(x))
-            newFlows = [np.max(flow) for flow in xflows]
-            maxFlows = np.max([maxFlows,newFlows],axis=0)
-        norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
-        self.to_rgba = \
-            [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba for n in norm]
-=======
             flows = list(self.PathFlow2LinkFlow_x2f(self.UnpackPathFlows(data)))
             newFlows = [np.max(flow) for flow in flows]
             maxFlows = np.max([maxFlows,newFlows],axis=0)
         norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
         self.to_rgba = [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba
                         for n in norm]
->>>>>>> master
 
     def InitVisual(self):
 
@@ -71,27 +61,6 @@ class BloodBank(Domain):
 
         # Create Network Skeleton
         Ox = (max([self.nC,self.nB,self.nD,self.nR]) - 1.)/2.
-<<<<<<< HEAD
-        Oy = 6.
-        Cx = np.linspace(Ox-(self.nC-1.)/2.,
-                         Ox+(self.nC-1.)/2.,self.nC)
-        Cy = 5.
-        Bx = np.linspace(Ox-(self.nB-1.)/2.,
-                         Ox+(self.nB-1.)/2.,self.nB)
-        By = 4.
-        Px = np.linspace(Ox-(self.nB-1.)/2.,
-                         Ox+(self.nB-1.)/2.,self.nB)
-        Py = 3.
-        Sx = np.linspace(Ox-(self.nB-1.)/2.,
-                         Ox+(self.nB-1.)/2.,self.nB)
-        Sy = 2.
-        Dx = np.linspace(Ox-(self.nD-1.)/2.,
-                         Ox+(self.nD-1.)/2.,self.nD)
-        Dy = 1.
-        Rx = np.linspace(Ox-(self.nR-1.)/2.,
-                         Ox+(self.nR-1.)/2.,self.nR)
-        Ry = 0.
-=======
         Cx = np.linspace(Ox-(self.nC-1.)/2.,Ox+(self.nC-1.)/2.,self.nC)
         Bx = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB)
         Px = np.linspace(Ox-(self.nB-1.)/2.,Ox+(self.nB-1.)/2.,self.nB)
@@ -107,7 +76,6 @@ class BloodBank(Domain):
         Dy = 1.
         Ry = 0.
 
->>>>>>> master
         od = []
         for c in xrange(self.nC):
             od.append([(Ox,Oy),(Cx[c],Cy)])
@@ -134,12 +102,7 @@ class BloodBank(Domain):
         plt.box('off')
         plt.yticks([0,1,2,3,4,5,6],['Hospitals', 'Distribution', 'Storage',
                                     'Labs', 'Blood Centers', 'Collection',
-<<<<<<< HEAD
-                                    'Organization'],
-                   rotation=45)
-=======
                                     'Organization'], rotation=45)
->>>>>>> master
         plt.xticks(Rx,['Hospital\n'+str(r+1) for r in xrange(self.nR)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
@@ -196,25 +159,15 @@ class BloodBank(Domain):
             self.chat_pow1_PS,self.chat_pow1_SD,self.chat_pow1_DR,\
             self.chat_pow2_1C,self.chat_pow2_CB,self.chat_pow2_BP,\
             self.chat_pow2_PS,self.chat_pow2_SD,self.chat_pow2_DR,\
-<<<<<<< HEAD
-            self.zhat_1C,self.zhat_CB,self.zhat_BP,\
-            self.zhat_PS,self.zhat_SD,self.zhat_DR,\
-=======
             self.zhat_1C,self.zhat_CB,self.zhat_BP,self.zhat_PS,\
             self.zhat_SD,self.zhat_DR,\
->>>>>>> master
             self.rhat,\
             self.pihat_pow1_1C,self.pihat_pow1_CB,self.pihat_pow1_BP,\
             self.pihat_pow1_PS,self.pihat_pow1_SD,self.pihat_pow1_DR,\
             self.pihat_pow2_1C,self.pihat_pow2_CB,self.pihat_pow2_BP,\
             self.pihat_pow2_PS,self.pihat_pow2_SD,self.pihat_pow2_DR,\
-<<<<<<< HEAD
-            self.ubar_1C,self.ubar_CB,self.ubar_BP,\
-            self.ubar_PS,self.ubar_SD,self.ubar_DR,\
-=======
             self.ubar_1C,self.ubar_CB,self.ubar_BP,self.ubar_PS,\
             self.ubar_SD,self.ubar_DR,\
->>>>>>> master
             self.ind_C___C,\
             self.ind_CB__C,self.ind_CB__B,\
             self.ind_CBD_C,self.ind_CBD_B,self.ind_CBD_D,\
@@ -225,24 +178,14 @@ class BloodBank(Domain):
 
     def UnpackPathFlows(self,Data):
 
-<<<<<<< HEAD
-        slice_data = Data[0:self.nC*self.nB*self.nD*self.nR]
-        shp = (self.nC,self.nB,self.nD,self.nR)
-        return np.reshape(slice_data,shp)
-=======
         return np.reshape(Data[0:self.nC*self.nB*self.nD*self.nR],
                          (self.nC,self.nB,self.nD,self.nR))
->>>>>>> master
 
     def CalculateNetworkSize(self):
 
         xSize = self.nC*self.nB*self.nD*self.nR
-<<<<<<< HEAD
-        uSize = gamSize = self.nC+self.nB*(self.nC+2+self.nD)+self.nD*self.nR
-=======
         uSize = gamSize = self.nC+self.nC*self.nB+self.nB+self.nB + \
             self.nB*self.nD+self.nD*self.nR
->>>>>>> master
 
         return xSize+uSize+gamSize
 
@@ -437,26 +380,16 @@ class BloodBank(Domain):
     def ExpectedShortage_EMinus(self,x):
 
         nu = np.sum(x*self.mu,axis=(0,1,2))
-        rng = self.prob_high-self.prob_low
 
-<<<<<<< HEAD
-        return ((nu**2)/2.-nu*self.prob_high+(self.prob_high**2)/2.)/rng
-=======
         return ((nu**2)/2.-nu*self.prob_high+(self.prob_high**2)/2.) / \
             (self.prob_high-self.prob_low)
->>>>>>> master
 
     def ExpectedSurplus_EPlus(self,x):
 
         nu = np.sum(x*self.mu,axis=(0,1,2))
-        rng = self.prob_high-self.prob_low
 
-<<<<<<< HEAD
-        return ((nu**2)/2.-nu*self.prob_low+(self.prob_low**2)/2.)/rng
-=======
         return ((nu**2)/2.-nu*self.prob_low+(self.prob_low**2)/2.) / \
             (self.prob_high-self.prob_low)
->>>>>>> master
 
     def ProbabilityDistributionFunction_Pknuk(self,x):
 
@@ -493,18 +426,6 @@ class BloodBank(Domain):
         EPlus = self.ExpectedSurplus_EPlus(x)
         Rhatx = self.TotalRisk_Rhatx(x,f_1C)
         dgam_1C, dgam_CB, dgam_BP, dgam_PS, dgam_SD, dgam_DR = \
-<<<<<<< HEAD
-            self.F3X_dgam(f_1C,f_CB,f_BP,f_PS,f_SD,f_DR,
-                          u_1C,u_CB,u_BP,u_PS,u_SD,u_DR)
-
-        return np.sum(Chatx+Zhatx) +\
-            np.sum(pi_1C)+np.sum(pi_CB)+np.sum(pi_BP) +\
-            np.sum(pi_PS)+np.sum(pi_SD)+np.sum(pi_DR) +\
-            np.sum(self.lambda_minus*EMinus+self.lambda_plus*EPlus) +\
-            np.sum(Rhatx)*self.theta -\
-            np.sum(gam_1C*dgam_1C)-np.sum(gam_CB*dgam_CB) -\
-            np.sum(gam_BP*dgam_BP)-np.sum(gam_PS*dgam_PS) -\
-=======
             self.F3X_dgam(f_1C, f_CB, f_BP, f_PS, f_SD, f_DR,
                           u_1C,u_CB,u_BP,u_PS,u_SD,u_DR)
 
@@ -515,7 +436,6 @@ class BloodBank(Domain):
             np.sum(Rhatx)*self.theta - \
             np.sum(gam_1C*dgam_1C)-np.sum(gam_CB*dgam_CB) - \
             np.sum(gam_BP*dgam_BP)-np.sum(gam_PS*dgam_PS) - \
->>>>>>> master
             np.sum(gam_SD*dgam_SD)-np.sum(gam_DR*dgam_DR)
 
     def F1X_dx(self,x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR,
@@ -525,15 +445,8 @@ class BloodBank(Domain):
                                                          f_PS,f_SD,f_DR)
         dZhatxdx = self.dTotalDiscardingCostdx_dZhatxdx(x,f_1C,f_CB,f_BP,
                                                         f_PS,f_SD,f_DR)
-<<<<<<< HEAD
-
         Pknuk = np.tile(self.ProbabilityDistributionFunction_Pknuk(x),
                         (self.nC,self.nB,self.nD,1))
-
-=======
-        Pknuk = np.tile(self.ProbabilityDistributionFunction_Pknuk(x),
-                        (self.nC,self.nB,self.nD,1))
->>>>>>> master
         Gam = np.reshape(gam_1C[self.ind_CBDR_C] +
                          gam_CB[self.ind_CBDR_C,self.ind_CBDR_B] +
                          gam_BP[self.ind_CBDR_B] +
@@ -941,11 +854,7 @@ def CreateRandomNetwork(nC,nB,nD,nR,seed):
     prob_high = 3.+17.*np.random.rand(nR)+prob_low
 
     lambda_minus = 2500.+1000.*np.random.rand(nR)
-<<<<<<< HEAD
-    lambda_plus = 25.+50.*np.random.rand(nR)
-=======
     lambda_plus = 25+50.*np.random.rand(nR)
->>>>>>> master
 
     rhat = 1.+1.5*np.random.rand(nC)
 

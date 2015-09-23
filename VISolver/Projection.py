@@ -47,7 +47,6 @@ class EuclideanSimplexProjection(Projection):
         return w
 
 
-<<<<<<< HEAD
 class BoxProjection(Projection):
 
     def __init__(self,lo=-np.inf,hi=np.inf):
@@ -56,7 +55,8 @@ class BoxProjection(Projection):
 
     def P(self,Data,Step,Direc):
         return np.clip(Data+Step*Direc,self.min,self.max)
-=======
+
+
 class PolytopeProjection(Projection):
 
     # http://cvxopt.org/userguide/coneprog.html#quadratic-programming
@@ -103,4 +103,3 @@ class PolytopeProjection(Projection):
         else:
             raise NotImplementedError('Unexpected error: no match for case!')
         return np.reshape(NewData,Data.shape)
->>>>>>> master

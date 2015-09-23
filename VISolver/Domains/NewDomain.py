@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-# import numpy as np
-
->>>>>>> master
 from VISolver.Domain import Domain
 
 
