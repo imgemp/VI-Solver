@@ -22,11 +22,7 @@ def Demo():
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
-<<<<<<< Updated upstream
     Method = CashKarp(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
-=======
-    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
->>>>>>> Stashed changes
 
     # Initialize Starting Point
     x = 10*np.ones(np.product(Domain.x_shape))

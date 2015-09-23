@@ -21,11 +21,7 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-<<<<<<< Updated upstream
     Method = CashKarp(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-6)
-=======
-    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
->>>>>>> Stashed changes
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
