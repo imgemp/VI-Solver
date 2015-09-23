@@ -17,12 +17,6 @@ class IdentityProjection(Projection):
         return Data+Step*Direc
 
 
-class RPlusProjection(Projection):
-
-    def P(self,Data,Step,Direc):
-        return np.maximum(0,Data+Step*Direc)
-
-
 class EntropicProjection(Projection):
 
     def P(self,Data,Step,Direc):
@@ -51,6 +45,16 @@ class EuclideanSimplexProjection(Projection):
         # compute the projection by thresholding Data using theta
         w = (Data - theta).clip(min=0)
         return w
+
+
+class BoxProjection(Projection):
+
+    def __init__(self,lo=-np.inf,hi=np.inf):
+        self.min = lo
+        self.max = hi
+
+    def P(self,Data,Step,Direc):
+        return np.clip(Data+Step*Direc,self.min,self.max)
 
 
 class PolytopeProjection(Projection):

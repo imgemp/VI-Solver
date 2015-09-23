@@ -5,7 +5,7 @@ from VISolver.Domains.BloodBank import BloodBank, CreateNetworkExample
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -29,7 +29,7 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = np.zeros(Domain.Dim)
@@ -65,7 +65,7 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = BloodBank_Results_Phase1.PermStorage['Data'][-1]
@@ -101,7 +101,7 @@ def Demo():
     Domain = BloodBank(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-5)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-5)
 
     # Initialize Starting Point
     Start = BloodBank_Results_Phase2.PermStorage['Data'][-1]
@@ -141,18 +141,13 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    equi_1 = BloodBank_Results_Phase1.PermStorage['Data']
-    conv_1 = [equi_1[-1]] * fps * frame_skip * freeze
-    equi_2 = BloodBank_Results_Phase2.PermStorage['Data']
-    conv_2 = [equi_2[-1]] * fps * frame_skip * freeze
-    equi_3 = BloodBank_Results_Phase3.PermStorage['Data']
-    conv_3 = [equi_3[-1]] * fps * frame_skip * freeze
-    Frames = np.concatenate((equi_1,
-                             conv_1,
-                             equi_2,
-                             conv_2,
-                             equi_3,
-                             conv_3),
+    Dyn_1 = BloodBank_Results_Phase1.PermStorage['Data']
+    Frz_1 = [Dyn_1[-1]]*fps*frame_skip*freeze
+    Dyn_2 = BloodBank_Results_Phase2.PermStorage['Data']
+    Frz_2 = [Dyn_2[-1]]*fps*frame_skip*freeze
+    Dyn_3 = BloodBank_Results_Phase3.PermStorage['Data']
+    Frz_3 = [Dyn_3[-1]]*fps*frame_skip*freeze
+    Frames = np.concatenate((Dyn_1,Frz_1,Dyn_2,Frz_2,Dyn_3,Frz_3),
                             axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
@@ -165,20 +160,18 @@ def Demo():
     t4 = t3 + len(BloodBank_Results_Phase2.PermStorage['Data']) // frame_skip
     t5 = t4 + fps*freeze
     t6 = t5 + len(BloodBank_Results_Phase3.PermStorage['Data']) // frame_skip
-
-    title_1 = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
-    title_2 = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
-    title_3 = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
-    title_4 = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Converged)'
-    title_5 = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
-    title_6 = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
-
-    anns = sorted([(t1, plt.title, title_1),
-                   (t2, plt.title, title_2),
-                   (t3, plt.title, title_3),
-                   (t4, plt.title, title_4),
-                   (t5, plt.title, title_5),
-                   (t6, plt.title, title_6)],
+    Dyn_1_ann = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    Frz_1_ann = '$Demand_{1}$ $<$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+    Dyn_2_ann = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    Frz_2_ann = '$Demand_{1}$ ~= $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+    Dyn_3_ann = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Equilibrating)'
+    Frz_3_ann = '$Demand_{1}$ $>$ $Demand_{2}$ & $Demand_{3}$\n(Converged)'
+    anns = sorted([(t1, plt.title, Dyn_1_ann),
+                   (t2, plt.title, Frz_1_ann),
+                   (t3, plt.title, Dyn_2_ann),
+                   (t4, plt.title, Frz_2_ann),
+                   (t5, plt.title, Dyn_3_ann),
+                   (t6, plt.title, Frz_3_ann)],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File

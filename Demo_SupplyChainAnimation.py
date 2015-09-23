@@ -6,7 +6,7 @@ from VISolver.Domains.SupplyChain import (
 
 from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 
-from VISolver.Projection import RPlusProjection
+from VISolver.Projection import BoxProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -30,7 +30,7 @@ def Demo():
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-2)
 
     # Initialize Starting Point
     x = 10*np.ones(np.product(Domain.x_shape))
@@ -69,7 +69,7 @@ def Demo():
     Domain = SupplyChain(Network=Network,alpha=2)
 
     # Set Method
-    Method = ABEuler(Domain=Domain,P=RPlusProjection(),Delta0=1e-2)
+    Method = ABEuler(Domain=Domain,P=BoxProjection(lo=0),Delta0=1e-2)
 
     # Initialize Starting Point
     Start = SupplyChain_Results_Phase1.PermStorage['Data'][-1]
@@ -109,15 +109,11 @@ def Demo():
     # Collect Frames
     frame_skip = 5
     freeze = 5
-    equi_1 = SupplyChain_Results_Phase1.PermStorage['Data']
-    conv_1 = [equi_1[-1]] * fps * frame_skip * freeze
-    equi_2 = SupplyChain_Results_Phase2.PermStorage['Data']
-    conv_2 = [equi_2[-1]] * fps * frame_skip * freeze
-    Frames = np.concatenate((equi_1,
-                             conv_1,
-                             equi_2,
-                             conv_2),
-                            axis=0)[::frame_skip]
+    Dyn_1 = SupplyChain_Results_Phase1.PermStorage['Data']
+    Frz_1 = [Dyn_1[-1]]*fps*frame_skip*freeze
+    Dyn_2 = SupplyChain_Results_Phase2.PermStorage['Data']
+    Frz_2 = [Dyn_2[-1]]*fps*frame_skip*freeze
+    Frames = np.concatenate((Dyn_1,Frz_1,Dyn_2,Frz_2),axis=0)[::frame_skip]
 
     # Normalize Colormap by Flow at each Network Level
     Domain.FlowNormalizeColormap(Frames,cm.rainbow)
@@ -127,16 +123,14 @@ def Demo():
     t2 = t1 + len(SupplyChain_Results_Phase1.PermStorage['Data']) // frame_skip
     t3 = t2 + fps*freeze
     t4 = t3 + len(SupplyChain_Results_Phase2.PermStorage['Data']) // frame_skip
-
-    title_1 = 'Control Network\n(Equilibrating)'
-    title_2 = 'Control Network\n(Converged)'
-    title_3 = 'Market Increases Demand for Firm 2''s Product\n(Equilibrating)'
-    title_4 = 'Market Increases Demand for Firm 2''s Product\n(Converged)'
-
-    anns = sorted([(t1, plt.title, title_1),
-                   (t2, plt.title, title_2),
-                   (t3, plt.title, title_3),
-                   (t4, plt.title, title_4)],
+    Dyn_1_ann = 'Control Network\n(Equilibrating)'
+    Frz_1_ann = 'Control Network\n(Converged)'
+    Dyn_2_ann = 'Market Increases Demand for Firm 2''s Product\n(Equilibrating)'
+    Frz_2_ann = 'Market Increases Demand for Firm 2''s Product\n(Converged)'
+    anns = sorted([(t1, plt.title, Dyn_1_ann),
+                   (t2, plt.title, Frz_1_ann),
+                   (t3, plt.title, Dyn_2_ann),
+                   (t4, plt.title, Frz_2_ann)],
                   key=lambda x:x[0], reverse=True)
 
     # Save Animation to File

@@ -1,5 +1,3 @@
-# import numpy as np
-
 from VISolver.Domain import Domain
 
 
