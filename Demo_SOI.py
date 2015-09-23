@@ -31,7 +31,6 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus, 'Step', 'F Evaluations',
                                'Projections','Data'])

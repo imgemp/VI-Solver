@@ -19,7 +19,11 @@ def Demo():
     Domain = Rosenbrock(Dim=1000)
 
     # Set Method
+<<<<<<< Updated upstream
     Method = CashKarp(Domain=Domain,Delta0=1e-6)
+=======
+    Method = CashKarp(Domain=Domain,P=RPlusProjection(),Delta0=1e-6)
+>>>>>>> Stashed changes
 
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)
