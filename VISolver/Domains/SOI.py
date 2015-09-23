@@ -38,6 +38,7 @@ class SOI(Domain):
         self.cmap = cmap
         maxFlows = [0]*2
         for data in Data:
+<<<<<<< HEAD
             x = self.UnpackData(data)
             xflows = list(self.PathFlow2LinkFlow_x2f(*x)[0])
             newFlows = [np.max(flow) for flow in xflows]
@@ -45,6 +46,14 @@ class SOI(Domain):
         norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
         self.to_rgba = \
             [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba for n in norm]
+=======
+            flows = list(self.PathFlow2LinkFlow_x2f(*self.UnpackData(data))[0])
+            newFlows = [np.max(flow) for flow in flows]
+            maxFlows = np.max([maxFlows,newFlows],axis=0)
+        norm = [mpl.colors.Normalize(vmin=0.,vmax=mxf) for mxf in maxFlows]
+        self.to_rgba = [cm.ScalarMappable(norm=n, cmap=self.cmap).to_rgba
+                        for n in norm]
+>>>>>>> master
 
     def InitVisual(self):
 
@@ -62,6 +71,7 @@ class SOI(Domain):
 
         # Create Network Skeleton
         mid = (max([self.m,self.n,self.o]) - 1.)/2.
+<<<<<<< HEAD
         Ix = np.linspace(mid-(self.m-1.)/2.,
                          mid+(self.m-1.)/2.,self.m)
         Iy = 2.
@@ -71,6 +81,16 @@ class SOI(Domain):
         Kx = np.linspace(mid-(self.o-1.)/2.,
                          mid+(self.o-1.)/2.,self.o)
         Ky = 0.
+=======
+        Ix = np.linspace(mid-(self.m-1.)/2.,mid+(self.m-1.)/2.,self.m)
+        Jx = np.linspace(mid-(self.n-1.)/2.,mid+(self.n-1.)/2.,self.n)
+        Kx = np.linspace(mid-(self.o-1.)/2.,mid+(self.o-1.)/2.,self.o)
+
+        Iy = 2.
+        Jy = 1.
+        Ky = 0.
+
+>>>>>>> master
         od = []
         for i in xrange(self.m):
             for j in xrange(self.n):
@@ -87,8 +107,12 @@ class SOI(Domain):
         # Annotate Plot
         plt.box('off')
         plt.yticks([0,1,2],['Demand\nMarkets', 'Network\nProviders',
+<<<<<<< HEAD
                             'Service\nProviders'],
                    rotation=45)
+=======
+                            'Service\nProviders'], rotation=45)
+>>>>>>> master
         plt.xticks(Kx,['Market\n'+str(k+1) for k in xrange(self.o)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
@@ -136,9 +160,14 @@ class SOI(Domain):
 
     def UnpackData(self,Data):
 
+<<<<<<< HEAD
         shp = (self.m,self.n,self.o)
         rng = xrange(0,self.Dim,self.Dim//3)
         return [np.reshape(Data[s:s+self.Dim//3],shp) for s in rng]
+=======
+        return [np.reshape(Data[s:s+self.Dim//3],(self.m,self.n,self.o))
+                for s in xrange(0,self.Dim,self.Dim//3)]
+>>>>>>> master
 
     def CalculateNetworkSize(self):
 
@@ -186,6 +215,7 @@ class SOI(Domain):
 
     def dProductionCostdQuantity_dfdQ(self,Q):
 
+<<<<<<< HEAD
         shp = Q.shape[1:][::-1]+(1,)
         return np.tile(2.*self.coeff_f_Q*np.sum(Q,axis=(1,2))+1.,shp).T
 
@@ -199,6 +229,21 @@ class SOI(Domain):
 
         toorder = self.coeff_rho_Q[self.drhodQ_ind_I,:,:,self.drhodQ_ind_I,:,:]
         return np.swapaxes(np.swapaxes(toorder,1,3),2,4)
+=======
+        return np.tile(2.*self.coeff_f_Q*np.sum(Q,axis=(1,2)) +
+                       1.,Q.shape[1:][::-1]+(1,)).T
+
+    def DemandPrice_rho(self,Q,q):
+
+        return np.sum(self.coeff_rho_Q *
+                      np.resize(Q,self.coeff_rho_Q.shape),axis=(3,4,5)) + \
+            self.coeff_rho_q*q+self.coeff_rho_const
+
+    def dDemandPricedQuantity_drhodQ(self,Q,q):
+
+        slc = self.coeff_rho_Q[self.drhodQ_ind_I,:,:,self.drhodQ_ind_I,:,:]
+        return np.swapaxes(np.swapaxes(slc,1,3),2,4)
+>>>>>>> master
 
     def TransportationCost_c(self,Q,q):
 
@@ -207,8 +252,13 @@ class SOI(Domain):
     def dTransportationCostdQuality_dcdq(self,Q,q):
 
         dcdq = np.zeros(q.shape+(q.shape[0],q.shape[2]))
+<<<<<<< HEAD
         dquad = 2.*self.coeff_c_q_pow2*q + self.coeff_c_q_pow1
         dcdq[self.dcdq_ind] = dquad.flatten()
+=======
+        dcdq[self.dcdq_ind] = (2.*self.coeff_c_q_pow2*q +
+                               self.coeff_c_q_pow1).flatten()
+>>>>>>> master
 
         return dcdq
 
@@ -235,9 +285,14 @@ class SOI(Domain):
 
         Qrep = np.rollaxis(np.tile(Q,(self.n,self.o,1,1,1)),2,0)
 
+<<<<<<< HEAD
         shp = (0+len(Q.shape),1+len(Q.shape))
 
         return rho+np.sum(drhodQ*Qrep,axis=shp)-Pi-dfdQ
+=======
+        return rho+np.sum(drhodQ*Qrep,axis=(0+len(Q.shape),1+len(Q.shape))) - \
+            Pi-dfdQ
+>>>>>>> master
 
     def NetworkProviderProfit(self,Q,q,Pi):
 
