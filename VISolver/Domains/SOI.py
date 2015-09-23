@@ -146,22 +146,22 @@ class SOI(Domain):
 
     def PathFlow2LinkFlow_x2f(self,Q,q,Pi):
 
-        slice_Q_top = Q[self.ind_IJ_I,self.ind_IJ_J,:]
-        f_Q_top = np.reshape(np.sum(slice_Q_top,axis=1),(self.m,self.n))
-        slice_Q_bot = Q[:,self.ind_JK_J,self.ind_JK_K]
-        f_Q_bot = np.reshape(np.sum(slice_Q_bot,axis=0),(self.n,self.o))
+        Q_top_sum = np.sum(Q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_Q_top = np.reshape(Q_top_sum,(self.m,self.n))
+        Q_bot_sum = np.sum(Q[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_Q_bot = np.reshape(Q_bot_sum,(self.n,self.o))
         f_Q = [f_Q_top,f_Q_bot]
 
-        slice_q_top = q[self.ind_IJ_I,self.ind_IJ_J,:]
-        f_q_top = np.reshape(np.sum(slice_q_top,axis=1),(self.m,self.n))
-        slice_q_bot = q[:,self.ind_JK_J,self.ind_JK_K]
-        f_q_bot = np.reshape(np.sum(slice_q_bot,axis=0),(self.n,self.o))
+        q_top_sum = np.sum(q[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_q_top = np.reshape(q_top_sum,(self.m,self.n))
+        q_bot_sum = np.sum(q[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_q_bot = np.reshape(q_bot_sum,(self.n,self.o))
         f_q = [f_q_top,f_q_bot]
 
-        slice_Pi_top = Pi[self.ind_IJ_I,self.ind_IJ_J,:]
-        f_Pi_top = np.reshape(np.sum(slice_Pi_top,axis=1),(self.m,self.n))
-        slice_Pi_bot = Pi[:,self.ind_JK_J,self.ind_JK_K]
-        f_Pi_bot = np.reshape(np.sum(slice_Pi_bot,axis=0),(self.n,self.o))
+        Pi_top_sum = np.sum(Pi[self.ind_IJ_I,self.ind_IJ_J,:],axis=1)
+        f_Pi_top = np.reshape(Pi_top_sum,(self.m,self.n))
+        Pi_bot_sum = np.sum(Pi[:,self.ind_JK_J,self.ind_JK_K],axis=0)
+        f_Pi_bot = np.reshape(Pi_bot_sum,(self.n,self.o))
         f_Pi = [f_Pi_top,f_Pi_bot]
 
         return f_Q, f_q, f_Pi

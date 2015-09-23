@@ -240,41 +240,39 @@ class BloodBank(Domain):
 
     def PathFlow2LinkFlow_x2f(self,x):
 
-        slice_f_1C = x[self.ind_C___C,:,:,:]
-        f_1C = np.reshape(np.sum(slice_f_1C,axis=(1,2,3)),(self.nC,))
-        slice_f_CB = x[self.ind_CB__C,self.ind_CB__B,:,:]
-        shp_f_CB = (self.nC,self.nB)
-        f_CB = np.reshape(np.sum(slice_f_CB*self.alpha_CBx,axis=(1,2)),shp_f_CB)
-        slice_f_BP = x[self.ind_CB__C,self.ind_CB__B,:,:]
-        shp_f_BP = (self.nC,self.nB,self.nD,self.nR)
-        f_BP = np.sum(np.reshape(slice_f_BP*self.alpha_BPx,shp_f_BP),
+        f_1C = np.reshape(np.sum(x[self.ind_C___C,:,:,:],axis=(1,2,3)),
+                          (self.nC,))
+        x_CB = x[self.ind_CB__C,self.ind_CB__B,:,:]*self.alpha_CBx
+        f_CB = np.reshape(np.sum(x_CB,axis=(1,2)),(self.nC,self.nB))
+        x_BP = x[self.ind_CB__C,self.ind_CB__B,:,:]*self.alpha_BPx
+        f_BP = np.sum(np.reshape(x_BP,(self.nC,self.nB,self.nD,self.nR)),
                       axis=(0,2,3))
         f_PS = f_BP*self.alpha_PSx
-        slice_f_SD = x[self.ind_CB__C,self.ind_CB__B,:,:]
-        shp_f_SD = (self.nC,self.nB,self.nD,self.nR)
-        f_SD = np.sum(np.reshape(slice_f_SD*self.alpha_SDx,shp_f_SD),axis=(0,3))
-        slice_f_DR = x[self.ind_CBD_C,self.ind_CBD_B,self.ind_CBD_D,:]
-        shp_f_DR = (self.nC,self.nB,self.nD,self.nR)
-        f_DR = np.sum(np.reshape(slice_f_DR*self.alpha_DRx,shp_f_DR),axis=(0,1))
+        x_SD = x[self.ind_CB__C,self.ind_CB__B,:,:]*self.alpha_SDx
+        f_SD = np.sum(np.reshape(x_SD,(self.nC,self.nB,self.nD,self.nR)),
+                      axis=(0,3))
+        x_DR = x[self.ind_CBD_C,self.ind_CBD_B,self.ind_CBD_D,:]*self.alpha_DRx
+        f_DR = np.sum(np.reshape(x_DR,(self.nC,self.nB,self.nD,self.nR)),
+                      axis=(0,1))
 
         return f_1C, f_CB, f_BP, f_PS, f_SD, f_DR
 
     def TotalOperationalCost_Chatx(self,x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR):
 
-        c_1C = self.chat_pow2_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C] +\
+        c_1C = self.chat_pow2_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C] + \
             self.chat_pow1_1C[self.ind_CBDR_C]
-        c_CB = self.chat_pow2_CB[self.ind_CBDR_C,self.ind_CBDR_B] *\
-            f_CB[self.ind_CBDR_C,self.ind_CBDR_B] +\
+        c_CB = self.chat_pow2_CB[self.ind_CBDR_C,self.ind_CBDR_B] * \
+            f_CB[self.ind_CBDR_C,self.ind_CBDR_B] + \
             self.chat_pow1_CB[self.ind_CBDR_C,self.ind_CBDR_B]
-        c_BP = self.chat_pow2_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B] +\
+        c_BP = self.chat_pow2_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B] + \
             self.chat_pow1_BP[self.ind_CBDR_B]
-        c_PS = self.chat_pow2_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B] +\
+        c_PS = self.chat_pow2_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B] + \
             self.chat_pow1_PS[self.ind_CBDR_B]
-        c_SD = self.chat_pow2_SD[self.ind_CBDR_B,self.ind_CBDR_D] *\
-            f_SD[self.ind_CBDR_B,self.ind_CBDR_D] +\
+        c_SD = self.chat_pow2_SD[self.ind_CBDR_B,self.ind_CBDR_D] * \
+            f_SD[self.ind_CBDR_B,self.ind_CBDR_D] + \
             self.chat_pow1_SD[self.ind_CBDR_B,self.ind_CBDR_D]
-        c_DR = self.chat_pow2_DR[self.ind_CBDR_D,self.ind_CBDR_R] *\
-            f_DR[self.ind_CBDR_D,self.ind_CBDR_R] +\
+        c_DR = self.chat_pow2_DR[self.ind_CBDR_D,self.ind_CBDR_R] * \
+            f_DR[self.ind_CBDR_D,self.ind_CBDR_R] + \
             self.chat_pow1_DR[self.ind_CBDR_D,self.ind_CBDR_R]
 
         return x*np.reshape(c_1C +
@@ -287,20 +285,20 @@ class BloodBank(Domain):
 
     def dTotalOperationalCostdx_dChatxdx(self,x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR):
 
-        dc_1C = 2.*self.chat_pow2_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C] +\
+        dc_1C = 2.*self.chat_pow2_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C] + \
             self.chat_pow1_1C[self.ind_CBDR_C]
-        dc_CB = 2.*self.chat_pow2_CB[self.ind_CBDR_C,self.ind_CBDR_B] *\
-            f_CB[self.ind_CBDR_C,self.ind_CBDR_B] +\
+        dc_CB = 2.*self.chat_pow2_CB[self.ind_CBDR_C,self.ind_CBDR_B] * \
+            f_CB[self.ind_CBDR_C,self.ind_CBDR_B] + \
             self.chat_pow1_CB[self.ind_CBDR_C,self.ind_CBDR_B]
-        dc_BP = 2.*self.chat_pow2_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B] +\
+        dc_BP = 2.*self.chat_pow2_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B] + \
             self.chat_pow1_BP[self.ind_CBDR_B]
-        dc_PS = 2.*self.chat_pow2_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B] +\
+        dc_PS = 2.*self.chat_pow2_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B] + \
             self.chat_pow1_PS[self.ind_CBDR_B]
-        dc_SD = 2.*self.chat_pow2_SD[self.ind_CBDR_B,self.ind_CBDR_D] *\
-            f_SD[self.ind_CBDR_B,self.ind_CBDR_D] +\
+        dc_SD = 2.*self.chat_pow2_SD[self.ind_CBDR_B,self.ind_CBDR_D] * \
+            f_SD[self.ind_CBDR_B,self.ind_CBDR_D] + \
             self.chat_pow1_SD[self.ind_CBDR_B,self.ind_CBDR_D]
-        dc_DR = 2.*self.chat_pow2_DR[self.ind_CBDR_D,self.ind_CBDR_R] *\
-            f_DR[self.ind_CBDR_D,self.ind_CBDR_R] +\
+        dc_DR = 2.*self.chat_pow2_DR[self.ind_CBDR_D,self.ind_CBDR_R] * \
+            f_DR[self.ind_CBDR_D,self.ind_CBDR_R] + \
             self.chat_pow1_DR[self.ind_CBDR_D,self.ind_CBDR_R]
 
         return np.reshape(dc_1C +
@@ -314,13 +312,13 @@ class BloodBank(Domain):
     def TotalDiscardingCost_Zhatx(self,x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR):
 
         z_1C = self.zhat_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C]
-        z_CB = self.zhat_CB[self.ind_CBDR_C,self.ind_CBDR_B] *\
+        z_CB = self.zhat_CB[self.ind_CBDR_C,self.ind_CBDR_B] * \
             f_CB[self.ind_CBDR_C,self.ind_CBDR_B]
         z_BP = self.zhat_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B]
         z_PS = self.zhat_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B]
-        z_SD = self.zhat_SD[self.ind_CBDR_B,self.ind_CBDR_D] *\
+        z_SD = self.zhat_SD[self.ind_CBDR_B,self.ind_CBDR_D] * \
             f_SD[self.ind_CBDR_B,self.ind_CBDR_D]
-        z_DR = self.zhat_DR[self.ind_CBDR_D,self.ind_CBDR_R] *\
+        z_DR = self.zhat_DR[self.ind_CBDR_D,self.ind_CBDR_R] * \
             f_DR[self.ind_CBDR_D,self.ind_CBDR_R]
 
         return x*np.reshape(z_1C +
@@ -334,13 +332,13 @@ class BloodBank(Domain):
     def dTotalDiscardingCostdx_dZhatxdx(self,x,f_1C,f_CB,f_BP,f_PS,f_SD,f_DR):
 
         dz_1C = 2.*self.zhat_1C[self.ind_CBDR_C]*f_1C[self.ind_CBDR_C]
-        dz_CB = 2.*self.zhat_CB[self.ind_CBDR_C,self.ind_CBDR_B] *\
+        dz_CB = 2.*self.zhat_CB[self.ind_CBDR_C,self.ind_CBDR_B] * \
             f_CB[self.ind_CBDR_C,self.ind_CBDR_B]
         dz_BP = 2.*self.zhat_BP[self.ind_CBDR_B]*f_BP[self.ind_CBDR_B]
         dz_PS = 2.*self.zhat_PS[self.ind_CBDR_B]*f_PS[self.ind_CBDR_B]
-        dz_SD = 2.*self.zhat_SD[self.ind_CBDR_B,self.ind_CBDR_D] *\
+        dz_SD = 2.*self.zhat_SD[self.ind_CBDR_B,self.ind_CBDR_D] * \
             f_SD[self.ind_CBDR_B,self.ind_CBDR_D]
-        dz_DR = 2.*self.zhat_DR[self.ind_CBDR_D,self.ind_CBDR_R] *\
+        dz_DR = 2.*self.zhat_DR[self.ind_CBDR_D,self.ind_CBDR_R] * \
             f_DR[self.ind_CBDR_D,self.ind_CBDR_R]
 
         return np.reshape(dz_1C +
@@ -413,24 +411,13 @@ class BloodBank(Domain):
         pi_1C, pi_CB, pi_BP, pi_PS, pi_SD, pi_DR = \
             self.TotalInvestmentCost_Pihatu(u_1C,u_CB,u_BP,u_PS,u_SD,u_DR)
         EMinus = self.ExpectedShortage_EMinus(x)
-        # print(EMinus);
         EPlus = self.ExpectedSurplus_EPlus(x)
-        # print(EPlus);
         Rhatx = self.TotalRisk_Rhatx(x,f_1C)
 
-        # print('Total Investment Cost');
-        # print(np.sum(pi_1C)+np.sum(pi_CB)+np.sum(pi_BP) +\
-            # np.sum(pi_PS)+np.sum(pi_SD)+np.sum(pi_DR))
-        # print('Total Objective Cost (17)')
-        # print(np.sum(Chatx+Zhatx)+\
-        #        np.sum(pi_1C)+np.sum(pi_CB)+np.sum(pi_BP) +\
-            # np.sum(pi_PS)+np.sum(pi_SD)+np.sum(pi_DR)+\
-        #        np.sum(self.lambda_minus*EMinus+self.lambda_plus*EPlus))
-
-        return np.sum(Chatx+Zhatx) +\
-            np.sum(pi_1C)+np.sum(pi_CB)+np.sum(pi_BP)+np.sum(pi_PS) +\
-            np.sum(pi_SD)+np.sum(pi_DR) +\
-            np.sum(self.lambda_minus*EMinus+self.lambda_plus*EPlus) +\
+        return np.sum(Chatx+Zhatx) + \
+            np.sum(pi_1C)+np.sum(pi_CB)+np.sum(pi_BP)+np.sum(pi_PS) + \
+            np.sum(pi_SD)+np.sum(pi_DR) + \
+            np.sum(self.lambda_minus*EMinus+self.lambda_plus*EPlus) + \
             np.sum(Rhatx)*self.theta
 
     def Lagrangian_L(self,x,u_1C,u_CB,u_BP,u_PS,u_SD,u_DR,
@@ -464,8 +451,10 @@ class BloodBank(Domain):
                                                          f_PS,f_SD,f_DR)
         dZhatxdx = self.dTotalDiscardingCostdx_dZhatxdx(x,f_1C,f_CB,f_BP,
                                                         f_PS,f_SD,f_DR)
-        _Pknuk = self.ProbabilityDistributionFunction_Pknuk(x)
-        Pknuk = np.tile(_Pknuk,(self.nC,self.nB,self.nD,1))
+
+        Pknuk = np.tile(self.ProbabilityDistributionFunction_Pknuk(x),
+                        (self.nC,self.nB,self.nD,1))
+
         Gam = np.reshape(gam_1C[self.ind_CBDR_C] +
                          gam_CB[self.ind_CBDR_C,self.ind_CBDR_B] +
                          gam_BP[self.ind_CBDR_B] +
@@ -475,7 +464,7 @@ class BloodBank(Domain):
                          (self.nC,self.nB,self.nD,self.nR))
         dRhatxdx = self.dTotalRiskdx_dRhatxdx(x,f_1C)
 
-        return dChatxdx + dZhatxdx + self.lambda_plus*self.mu*Pknuk -\
+        return dChatxdx + dZhatxdx + self.lambda_plus*self.mu*Pknuk - \
             self.lambda_minus*self.mu*(1-Pknuk) + Gam + self.theta*dRhatxdx
 
     def F2X_du(self,u_1C,u_CB,u_BP,u_PS,u_SD,u_DR,
@@ -764,31 +753,30 @@ def CreateNetworkExample(ex=1):
     ind_CBDR_R = np.tile(np.arange(nR),nC*nB*nD)
 
     #Alpha Values for Both Path and Link Computation
-    slice_CBx = alpha_1C[ind_CB__C][None][None]
-    alpha_CBx = np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR))
-    slice_1Cx = alpha_1C[ind_CB__C][None][None]
-    slice_CBx = alpha_CB[ind_CB__C,ind_CB__B][None][None]
-    alpha_BPx = np.tile(np.rollaxis(slice_1Cx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR))
+    tile_1C = np.rollaxis(alpha_1C[ind_CB__C][None][None],2)
+    tile_CB = np.rollaxis(alpha_CB[ind_CB__C,ind_CB__B][None][None],2)
+    tile_BP = np.rollaxis(alpha_BP[ind_CB__B][None][None],2)
+    tile_PS = np.rollaxis(alpha_PS[ind_CB__B][None][None],2)
+
+    tile_1C2 = np.rollaxis(alpha_1C[ind_CBD_C][None],1)
+    tile_CB2 = np.rollaxis(alpha_CB[ind_CBD_C,ind_CBD_B][None],1)
+    tile_BP2 = np.rollaxis(alpha_BP[ind_CBD_B][None],1)
+    tile_PS2 = np.rollaxis(alpha_PS[ind_CBD_B][None],1)
+    tile_SD2 = np.rollaxis(alpha_SD[ind_CBD_B,ind_CBD_D][None],1)
+
+    alpha_CBx = np.tile(tile_1C,(1,nD,nR))
+    alpha_BPx = np.tile(tile_1C,(1,nD,nR)) * np.tile(tile_CB,(1,nD,nR))
     alpha_PSx = alpha_BP
-    slice_1Cx = alpha_1C[ind_CB__C][None][None]
-    slice_CBx = alpha_CB[ind_CB__C,ind_CB__B][None][None]
-    slice_BPx = alpha_BP[ind_CB__B][None][None]
-    slice_PSx = alpha_PS[ind_CB__B][None][None]
-    alpha_SDx = np.tile(np.rollaxis(slice_1Cx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_BPx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_PSx,2),(1,nD,nR))
-    slice_1Cx = alpha_1C[ind_CBD_C][None]
-    slice_CBx = alpha_1C[ind_CBD_C][None]
-    slice_BPx = alpha_BP[ind_CBD_B][None]
-    slice_PSx = alpha_PS[ind_CBD_B][None]
-    slice_SDx = alpha_SD[ind_CBD_B,ind_CBD_D][None]
-    alpha_DRx = np.tile(np.rollaxis(slice_1Cx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_BPx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_PSx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_SDx,1),(1,nR))
+    alpha_SDx = np.tile(tile_1C,(1,nD,nR)) * \
+        np.tile(tile_CB,(1,nD,nR)) * \
+        np.tile(tile_BP,(1,nD,nR)) * \
+        np.tile(tile_PS,(1,nD,nR))
+    alpha_DRx = np.tile(tile_1C2,(1,nR)) * \
+        np.tile(tile_CB2,(1,nR)) * \
+        np.tile(tile_BP2,(1,nR)) * \
+        np.tile(tile_PS2,(1,nR)) * \
+        np.tile(tile_SD2,(1,nR))
+
     alpha_CBf = alpha_1C[ind_CBDR_C]
     alpha_BPf = alpha_CBf*alpha_CB[ind_CBDR_C,ind_CBDR_B]
     alpha_PSf = alpha_BPf*alpha_BP[ind_CBDR_B]
@@ -903,31 +891,30 @@ def CreateRandomNetwork(nC,nB,nD,nR,seed):
     ind_CBDR_R = np.tile(np.arange(nR),nC*nB*nD)
 
     #Alpha Values for Both Path and Link Computation
-    slice_CBx = alpha_1C[ind_CB__C][None][None]
-    alpha_CBx = np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR))
-    slice_1Cx = alpha_1C[ind_CB__C][None][None]
-    slice_CBx = alpha_CB[ind_CB__C,ind_CB__B][None][None]
-    alpha_BPx = np.tile(np.rollaxis(slice_1Cx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR))
+    tile_1C = np.rollaxis(alpha_1C[ind_CB__C][None][None],2)
+    tile_CB = np.rollaxis(alpha_CB[ind_CB__C,ind_CB__B][None][None],2)
+    tile_BP = np.rollaxis(alpha_BP[ind_CB__B][None][None],2)
+    tile_PS = np.rollaxis(alpha_PS[ind_CB__B][None][None],2)
+
+    tile_1C2 = np.rollaxis(alpha_1C[ind_CBD_C][None],1)
+    tile_CB2 = np.rollaxis(alpha_CB[ind_CBD_C,ind_CBD_B][None],1)
+    tile_BP2 = np.rollaxis(alpha_BP[ind_CBD_B][None],1)
+    tile_PS2 = np.rollaxis(alpha_PS[ind_CBD_B][None],1)
+    tile_SD2 = np.rollaxis(alpha_SD[ind_CBD_B,ind_CBD_D][None],1)
+
+    alpha_CBx = np.tile(tile_1C,(1,nD,nR))
+    alpha_BPx = np.tile(tile_1C,(1,nD,nR)) * np.tile(tile_CB,(1,nD,nR))
     alpha_PSx = alpha_BP
-    slice_1Cx = alpha_1C[ind_CB__C][None][None]
-    slice_CBx = alpha_CB[ind_CB__C,ind_CB__B][None][None]
-    slice_BPx = alpha_BP[ind_CB__B][None][None]
-    slice_PSx = alpha_PS[ind_CB__B][None][None]
-    alpha_SDx = np.tile(np.rollaxis(slice_1Cx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_BPx,2),(1,nD,nR)) *\
-        np.tile(np.rollaxis(slice_PSx,2),(1,nD,nR))
-    slice_1Cx = alpha_1C[ind_CBD_C][None]
-    slice_CBx = alpha_1C[ind_CBD_C][None]
-    slice_BPx = alpha_BP[ind_CBD_B][None]
-    slice_PSx = alpha_PS[ind_CBD_B][None]
-    slice_SDx = alpha_SD[ind_CBD_B,ind_CBD_D][None]
-    alpha_DRx = np.tile(np.rollaxis(slice_1Cx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_CBx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_BPx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_PSx,1),(1,nR)) *\
-        np.tile(np.rollaxis(slice_SDx,1),(1,nR))
+    alpha_SDx = np.tile(tile_1C,(1,nD,nR)) * \
+        np.tile(tile_CB,(1,nD,nR)) * \
+        np.tile(tile_BP,(1,nD,nR)) * \
+        np.tile(tile_PS,(1,nD,nR))
+    alpha_DRx = np.tile(tile_1C2,(1,nR)) * \
+        np.tile(tile_CB2,(1,nR)) * \
+        np.tile(tile_BP2,(1,nR)) * \
+        np.tile(tile_PS2,(1,nR)) * \
+        np.tile(tile_SD2,(1,nR))
+
     alpha_CBf = alpha_1C[ind_CBDR_C]
     alpha_BPf = alpha_CBf*alpha_CB[ind_CBDR_C,ind_CBDR_B]
     alpha_PSf = alpha_BPf*alpha_BP[ind_CBDR_B]
