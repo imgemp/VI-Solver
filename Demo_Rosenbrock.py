@@ -7,20 +7,12 @@ from matplotlib import cm
 
 from VISolver.Domains.Rosenbrock import Rosenbrock
 
-# from VISolver.Solvers.Euler import Euler
-# from VISolver.Solvers.Extragradient import EG
-# from VISolver.Solvers.AcceleratedGradient import AG
-from VISolver.Solvers.HeunEuler import HeunEuler
-# from VISolver.Solvers.AdamsBashforthEuler import ABEuler
 from VISolver.Solvers.CashKarp import CashKarp
-from VISolver.Solvers.GempCK import GempCK
 
-from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
 from VISolver.Log import PrintSimResults, PrintSimStats
-from IPython import embed
 
 
 def Demo():
@@ -31,20 +23,13 @@ def Demo():
     Domain = Rosenbrock(Dim=1000)
 
     # Set Method
-    # Method = Euler(Domain=Domain,P=IdentityProjection())
-    # Method = EG(Domain=Domain,P=IdentityProjection())
-    # Method = AG(Domain=Domain,P=IdentityProjection())
-    # Method = HeunEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-2)
-    # Method = ABEuler(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
-    Method = CashKarp(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
-    # Method = GempCK(Domain=Domain,P=IdentityProjection(),Delta0=1e-5)
+    Method = CashKarp(Domain=Domain,Delta0=1e-6)
 
     # Initialize Starting Point
     Start = -0.5*np.ones(Domain.Dim)
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    # Init = Initialization(Step=-0.1)
     Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
     Repo = Reporting(Requests=[Domain.f_Error, 'Step', 'F Evaluations',
                                'Projections','Data'])
@@ -65,8 +50,6 @@ def Demo():
     # Plot Results
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    # X = np.arange(-5, 5, 0.25)
-    # Y = np.arange(-5, 5, 0.25)
     X = np.arange(-2, 2, 0.25)
     Y = np.arange(-1, 3, 0.25)
     X, Y = np.meshgrid(X, Y)
@@ -86,8 +69,7 @@ def Demo():
         trajY.append(data[i][1])
         trajZ.append(res[i])
     ax.plot(trajX,trajY,trajZ)
-
-    embed()
+    plt.show()
 
 if __name__ == '__main__':
     Demo()
