@@ -56,10 +56,10 @@ class HeunEuler(Solver):
         # Adjust Stepsize
         Delta = max(abs(NewData-_NewData))
         if Delta == 0:
-            Step = 2 * Step
+            growth = self.GrowthLimit
         else:
             growth = min((self.Delta0/Delta)**0.5, self.GrowthLimit)
-            Step = max(min(Step*growth, self.MaxStep), self.MinStep)
+        Step = np.clip(growth*Step,self.MinStep,self.MaxStep)
 
         # Store Data
         TempData['Data'] = NewData
