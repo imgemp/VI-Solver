@@ -7,7 +7,7 @@ def PrintSimStats(Domain, Method, Options):
     domain_init_func = Domain.__init__.func_code
     domain_args = domain_init_func.co_varnames[:domain_init_func.co_argcount]
     domain_info = ['(%s,%r)' % (arg, getattr(Domain,arg))
-                   for arg in domain_args if arg != 'self']
+                   for arg in domain_args if arg != 'self' and arg != 'dataset']
     print('Domain: %r %s' % (Domain.__class__.__name__, ', '.join(domain_info)))
     print('Method: Name = %r, Projection = %r' %
           (Method.__class__.__name__,
