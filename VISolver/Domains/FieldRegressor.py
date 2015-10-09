@@ -24,19 +24,16 @@ class FieldRegressor(Domain):
         D_poly_fixed = self.D_poly.subs(zip(self.c_ij,Data))
 
         MSE = 0
-        for pair in combinations(xrange(self.N),2):
+        for pair,dist in self.train_y:
             x1, x2 = self.train_x[pair[0]], self.train_x[pair[1]]
-            y1, y2 = self.train_y[pair[0]], self.train_y[pair[1]]
 
             xo_vals = x1.copy()
             dx_vals = x2 - x1
 
-            dy_vals = y2 - y1
-
             eval_pt = zip(self.xo,xo_vals)+zip(self.dx,dx_vals)
-            dy_pred = float(D_poly_fixed.subs(eval_pt))
+            dist_pred = float(D_poly_fixed.subs(eval_pt))
 
-            MSE += (dy_pred-dy_vals)**2.
+            MSE += (dist_pred-dist)**2.
 
         return np.sqrt(MSE)/self.N
 
@@ -45,20 +42,17 @@ class FieldRegressor(Domain):
         grad_fixed = [g.subs(zip(self.c_ij,Data)) for g in self.grad]
         grad_eval = np.zeros(len(self.grad))
 
-        for pair in combinations(xrange(self.N),2):
+        for pair,dist in self.train_y:
             x1, x2 = self.train_x[pair[0]], self.train_x[pair[1]]
-            y1, y2 = self.train_y[pair[0]], self.train_y[pair[1]]
 
             xo_vals = x1.copy()
             dx_vals = x2 - x1
 
-            dy_vals = y2 - y1
-
             eval_pt = zip(self.xo,xo_vals)+zip(self.dx,dx_vals)
 
-            dy_pred = float(D_poly_fixed.subs(eval_pt))
+            dist_pred = float(D_poly_fixed.subs(eval_pt))
 
-            err = dy_pred - dy_vals
+            err = dist_pred - dist
 
             for idx,g in enumerate(grad_fixed):
                 dfdc = g.subs(eval_pt)
@@ -132,3 +126,20 @@ class FieldRegressor(Domain):
 
         self.D_poly = D_poly
         self.grad = grad
+
+
+def constructRandomDataset(N,dim):
+    train_x = np.random.rand(N,dim)
+    train_y = []
+    for pair in combinations(xrange(N),2):
+        train_y += [(pair,10*np.random.rand())]
+    return (train_x, train_y)
+
+
+def constructSampleDataset(conservative=False):
+    train_x = np.array([[0,0],[0,1],[1,0]])
+    if conservative:
+        train_y = [((0,1),5),((0,2),10),((1,2),5)]
+    else:
+        train_y = [((0,1),5),((0,2),10),((1,2),2.5)]
+    return (train_x, train_y)

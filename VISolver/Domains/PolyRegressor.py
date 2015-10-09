@@ -1,6 +1,5 @@
 import numpy as np
 import sympy
-from itertools import combinations
 
 from VISolver.Domain import Domain
 
@@ -24,19 +23,16 @@ class PolyRegressor(Domain):
         poly_fixed = self.poly.subs(zip(self.c_ij,Data))
 
         MSE = 0
-        for pair in combinations(xrange(self.N),2):
+        for pair,dist in self.train_y:
             x1, x2 = self.train_x[pair[0]], self.train_x[pair[1]]
-            y1, y2 = self.train_y[pair[0]], self.train_y[pair[1]]
-
-            dy_vals = y2 - y1
 
             eval_pt_1 = zip(self.x,x1)
             eval_pt_2 = zip(self.x,x2)
             y_pred_1 = float(poly_fixed.subs(eval_pt_1))
             y_pred_2 = float(poly_fixed.subs(eval_pt_2))
-            dy_pred = y_pred_2 - y_pred_1
+            dist_pred = y_pred_2 - y_pred_1
 
-            MSE += (dy_pred-dy_vals)**2.
+            MSE += (dist_pred-dist)**2.
 
         return np.sqrt(MSE)/self.N
 
@@ -45,19 +41,16 @@ class PolyRegressor(Domain):
         grad_fixed = [g.subs(zip(self.c_ij,Data)) for g in self.dpoly]
         grad_eval = np.zeros(len(self.dpoly))
 
-        for pair in combinations(xrange(self.N),2):
+        for pair,dist in self.train_y:
             x1, x2 = self.train_x[pair[0]], self.train_x[pair[1]]
-            y1, y2 = self.train_y[pair[0]], self.train_y[pair[1]]
-
-            dy_vals = y2 - y1
 
             eval_pt_1 = zip(self.x,x1)
             eval_pt_2 = zip(self.x,x2)
             y_pred_1 = float(poly_fixed.subs(eval_pt_1))
             y_pred_2 = float(poly_fixed.subs(eval_pt_2))
-            dy_pred = y_pred_2 - y_pred_1
+            dist_pred = y_pred_2 - y_pred_1
 
-            err = dy_pred - dy_vals
+            err = dist_pred - dist
 
             for idx,g in enumerate(grad_fixed):
                 dfdc = g.subs(eval_pt_2) - g.subs(eval_pt_1)
@@ -90,7 +83,7 @@ class PolyRegressor(Domain):
         return np.sum(c_ij*np.product(x**np.asarray(pdl),axis=1))
 
     def constructPoly(self,dim,deg):
-        pdl = self.poly_deg_list(dim,deg+1)
+        pdl = self.poly_deg_list(dim,deg)
         c_ij = sympy.symarray('c',len(pdl))
         x = sympy.symarray('x',dim)
 
@@ -103,3 +96,16 @@ class PolyRegressor(Domain):
         self.poly = poly
         self.dpoly = dpoly
         self.pdl = pdl
+
+
+def conv2field(c_ij):
+    # np.asarray([poly.diff(xi).coeffs() for xi in x])
+    # only works for dim=2,deg=2 for now
+    c_ij_field = np.empty((2,3))
+    c_ij_field[0,0] = c_ij[2]
+    c_ij_field[0,1] = c_ij[4]
+    c_ij_field[0,2] = 2*c_ij[5]
+    c_ij_field[1,0] = c_ij[1]
+    c_ij_field[1,1] = 2*c_ij[3]
+    c_ij_field[1,2] = c_ij[4]
+    return c_ij_field.flatten()
