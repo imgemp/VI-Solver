@@ -78,7 +78,7 @@ class FieldRegressor(Domain):
     def poly_deg_list(self,dim,deg):
         tuples = list()
         for d in xrange(deg+1):
-            tuples += self.fixed_sum_digits(dim,d)
+            tuples += self.fixed_sum_digits(dim,d)[::-1]
         return tuples
 
     def poly(self,x,c_ij,pdl):
@@ -136,10 +136,15 @@ def constructRandomDataset(N,dim):
     return (train_x, train_y)
 
 
-def constructSampleDataset(conservative=False):
+def constructSampleDataset(conservative=False,ex=1):
     train_x = np.array([[0,0],[0,1],[1,0]])
     if conservative:
         train_y = [((0,1),5),((0,2),10),((1,2),5)]
     else:
-        train_y = [((0,1),5),((0,2),10),((1,2),2.5)]
+        if ex == 1:
+            train_y = [((0,1),5),((0,2),10),((1,2),2.5)]
+        else:
+            train_x = np.array([[1,0],[0,1],[-1,0],[0,-1]])
+            train_y = [((0,2),0),((1,3),0),
+                       ((0,1),1),((1,2),1),((2,3),1),((3,0),1)]
     return (train_x, train_y)
