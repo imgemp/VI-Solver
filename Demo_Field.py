@@ -3,7 +3,7 @@ import numpy as np
 
 from VISolver.Domains.FieldRegressor import (
     FieldRegressor, constructSampleDataset)
-from VISolver.Domains.PolyRegressorLight import PolyRegressor, conv2field
+from VISolver.Domains.PolyRegressor import PolyRegressor, conv2field
 
 from VISolver.Solvers.HeunEuler import HeunEuler
 
