@@ -1,8 +1,8 @@
 import time
 import numpy as np
 
-from VISolver.Domains.FieldRegressorLight import (
-    FieldRegressor, constructRandomDataset, constructSampleDataset)
+from VISolver.Domains.FieldRegressor import (
+    FieldRegressor, constructSampleDataset)
 from VISolver.Domains.PolyRegressorLight import PolyRegressor, conv2field
 
 from VISolver.Solvers.HeunEuler import HeunEuler
@@ -21,9 +21,7 @@ def Demo():
     #__POLY_REGRESSION__##############################################
 
     # Construct Dataset
-    # N = 4
-    # dataset = constructRandomDataset(N,dim=2)
-    dataset = constructSampleDataset(conservative=False,ex=1)
+    dataset = constructSampleDataset(conservative=False,ex=3)
 
     # Define Regressor
     Domain = PolyRegressor(dataset,deg=2)
