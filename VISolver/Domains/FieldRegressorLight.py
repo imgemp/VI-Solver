@@ -21,8 +21,6 @@ class FieldRegressor(Domain):
         self.Dim = len(self.c_ij)
 
     def f(self,Data):
-        D_poly_fixed = self.D_poly.subs(zip(self.c_ij,Data))
-
         MSE = 0
         for pair,dist in self.train_y:
             x1, x2 = self.train_x[pair[0]], self.train_x[pair[1]]
@@ -30,16 +28,14 @@ class FieldRegressor(Domain):
             xo_vals = x1.copy()
             dx_vals = x2 - x1
 
-            eval_pt = zip(self.xo,xo_vals)+zip(self.dx,dx_vals)
-            dist_pred = float(D_poly_fixed.subs(eval_pt))
+            eval_pt = np.hstack((Data,dx_vals,xo_vals))
+            dist_pred = self.poly(eval_pt,*self.D_poly_lte)
 
             MSE += (dist_pred-dist)**2.
 
         return np.sqrt(MSE)/self.N
 
     def F(self,Data):
-        D_poly_fixed = self.D_poly.subs(zip(self.c_ij,Data))
-        grad_fixed = [g.subs(zip(self.c_ij,Data)) for g in self.grad]
         grad_eval = np.zeros(len(self.grad))
 
         for pair,dist in self.train_y:
@@ -48,14 +44,13 @@ class FieldRegressor(Domain):
             xo_vals = x1.copy()
             dx_vals = x2 - x1
 
-            eval_pt = zip(self.xo,xo_vals)+zip(self.dx,dx_vals)
-
-            dist_pred = float(D_poly_fixed.subs(eval_pt))
+            eval_pt = np.hstack((Data,dx_vals,xo_vals))
+            dist_pred = self.poly(eval_pt,*self.D_poly_lte)
 
             err = dist_pred - dist
 
-            for idx,g in enumerate(grad_fixed):
-                dfdc = g.subs(eval_pt)
+            for idx in xrange(len(self.grad)):
+                dfdc = self.poly(eval_pt,*self.grad_lte[idx])
                 grad_eval[idx] += err*dfdc
 
         grad_eval *= 2./self.N
@@ -82,7 +77,7 @@ class FieldRegressor(Domain):
         return tuples
 
     def poly(self,x,c_ij,pdl):
-        return np.sum(c_ij*np.product(x**np.asarray(pdl),axis=1))
+        return np.sum(c_ij*np.product(x**np.asarray(pdl),axis=-1))
 
     def constructField(self,dim,deg):
         pdl = self.poly_deg_list(dim,deg)
@@ -127,12 +122,31 @@ class FieldRegressor(Domain):
         self.D_poly = D_poly
         self.grad = grad
 
+        # NEED TO CONVERT EVERYTHING TO INTEGERS AND FLOATS FIRST!!!!
+        # THEY ARE STILL SYMPY TYPES AS OF NOW!!!!!
+
         # sorted(Domain.D_poly.free_symbols,key=lambda sym: str(sym))
         # c_ijs (i.e. Data), then dx's, then xo's in order of dimension
         # construct x = np.hstack((Data,dx's,xo's))
         # extract pdl from Domain.D_poly.terms()
-        # pdl = [term[0] for term in Domain.D_poly.terms()]
+        # pdl = [d[0] for d in D_poly.terms()]
         # do something like poly(x,D_poly.coeffs(),pdl)
+        coeffs = []
+        pdl = []
+        for p,c in D_poly.terms():
+            pdl += [tuple([int(pi) for pi in p])]
+            coeffs += [float(c)]
+        self.D_poly_lte = (coeffs,pdl)
+
+        self.grad_lte = []
+        for g in grad:
+            coeffs = []
+            pdl = []
+            for p,c in g.terms():
+                pdl += [tuple([int(pi) for pi in p])]
+                coeffs += [float(c)]
+            self.grad_lte += [(coeffs,pdl)]
+        # self.grad_lte = [(g.coeffs(),[d[0] for d in g.terms()]) for g in grad]
 
 
 def constructRandomDataset(N,dim):
