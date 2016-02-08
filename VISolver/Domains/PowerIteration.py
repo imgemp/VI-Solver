@@ -12,7 +12,7 @@ class PowerIteration(Domain):
 
     def F(self,Data):
         v = self.A.dot(Data)
-        return v/np.linalg.norm(v) - Data
+        return v - Data
         # return self.Ahat.dot(Data)
 
     def res_norm(self,Data):

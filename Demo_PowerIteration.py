@@ -9,6 +9,7 @@ from VISolver.Solvers.Euler import Euler
 from VISolver.Solvers.CashKarp import CashKarp
 from VISolver.Solvers.CashKarp_PhaseSpace import CashKarp_PhaseSpace
 
+from VISolver.Projection import NormBallProjection
 from VISolver.Solver import Solve
 from VISolver.Options import (
     DescentOptions, Miscellaneous, Reporting, Termination, Initialization)
@@ -33,7 +34,7 @@ def Demo():
     Domain = PowerIteration(A=A)
 
     # Set Method
-    Method_Standard = Euler(Domain=Domain,FixStep=True)
+    Method_Standard = Euler(Domain=Domain,FixStep=True,P=NormBallProjection())
 
     # Initialize Starting Point
     Start = np.ones(Domain.Dim)
@@ -63,7 +64,7 @@ def Demo():
     res_standard = Results_Standard.PermStorage[Domain.res_norm]
 
     # Set Method
-    Method_CK = CashKarp(Domain=Domain,Delta0=1e-4)
+    Method_CK = CashKarp(Domain=Domain,Delta0=1e-4,P=NormBallProjection())
 
     # Print Stats
     PrintSimStats(Domain,Method_CK,Options)
@@ -82,7 +83,8 @@ def Demo():
     res_CK = Results_CK.PermStorage[Domain.res_norm]
 
     # Set Method
-    Method_CKPS = CashKarp_PhaseSpace(Domain=Domain,Delta0=1e-4)
+    Method_CKPS = CashKarp_PhaseSpace(Domain=Domain,Delta0=1e-4,
+                                      P=NormBallProjection())
 
     # Print Stats
     PrintSimStats(Domain,Method_CKPS,Options)
@@ -106,22 +108,25 @@ def Demo():
 
     # Plot Results
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ax = fig.add_subplot(2,1,1)
 
-    label = 'Standard Power Iteration with scaling' +\
-        r' $A \cdot v / ||A \cdot v||$'
+    # label = 'Standard Power Iteration with scaling' +\
+    #     r' $A \cdot v / ||A \cdot v||$'
+    label = 'Standard'
     ax.plot(res_standard,label=label)
 
-    fevals = Results_CK.PermStorage['F Evaluations'][-1]
-    label = Method_CK.__class__.__name__+r' Power Iteration'
-    label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CK.Delta0)
-    x = np.linspace(0,fevals,len(res_CK))
+    fevals_CK = Results_CK.PermStorage['F Evaluations'][-1]
+    # label = Method_CK.__class__.__name__+r' Power Iteration'
+    # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CK.Delta0)
+    label = 'CK'
+    x = np.linspace(0,fevals_CK,len(res_CK))
     ax.plot(x,res_CK,label=label)
 
-    fevals = Results_CKPS.PermStorage['F Evaluations'][-1]
-    label = Method_CKPS.__class__.__name__+' Power Iteration'
-    label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CKPS.Delta0)
-    x = np.linspace(0,fevals,len(res_CKPS))
+    fevals_CKPS = Results_CKPS.PermStorage['F Evaluations'][-1]
+    # label = Method_CKPS.__class__.__name__+' Power Iteration'
+    # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CKPS.Delta0)
+    label = 'CKPS'
+    x = np.linspace(0,fevals_CKPS,len(res_CKPS))
     ax.plot(x,res_CKPS,label=label)
 
     xlabel = r'# of $A \cdot v$ Evaluations'
@@ -141,7 +146,43 @@ def Demo():
 
     ax.legend()
 
-    ax.set_xlim([0,Term.Tols[0]])
+    xlim = min(max(len(res_standard),fevals_CK,fevals_CKPS),Term.Tols[0])
+    xlim = int(np.ceil(xlim/10.)*10)
+    ax.set_xlim([0,xlim])
+
+    ax.set_yscale('log',nonposy='clip')
+
+    ax2 = fig.add_subplot(2,1,2)
+
+    # label = 'Standard Power Iteration with scaling' +\
+    #     r' $A \cdot v / ||A \cdot v||$'
+    label = 'Standard'
+    ax2.plot(res_standard,label=label)
+
+    # label = Method_CK.__class__.__name__+r' Power Iteration'
+    # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CK.Delta0)
+    label = 'CK'
+    ax2.plot(res_CK,label=label)
+
+    # label = Method_CKPS.__class__.__name__+' Power Iteration'
+    # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CKPS.Delta0)
+    label = 'CKPS'
+    ax2.plot(res_CKPS,label=label)
+
+    xlabel = r'# of Iterations'
+    ax2.set_xlabel(xlabel)
+
+    ylabel = r'Norm of residual ($||\frac{A \cdot v}{||A \cdot v||}$'
+    ylabel += r'$ - \frac{v}{||v||}||$)'
+    ax2.set_ylabel(ylabel)
+
+    ax2.legend()
+
+    xlim = min(max(len(res_standard),len(res_CK),len(res_CKPS)),Term.Tols[0])
+    xlim = int(np.ceil(xlim/10.)*10)
+    ax2.set_xlim([0,xlim])
+
+    ax2.set_yscale('log',nonposy='clip')
 
     plt.show()
 

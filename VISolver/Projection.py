@@ -47,6 +47,17 @@ class EuclideanSimplexProjection(Projection):
         return w
 
 
+class NormBallProjection(Projection):
+
+    def __init__(self,p=2,axis=None):
+        self.p = p
+        self.axis = axis
+
+    def P(self,Data,Step,Direc):
+        un_norm = Data+Step*Direc
+        return un_norm/np.linalg.norm(un_norm,ord=self.p,axis=self.axis)
+
+
 class BoxProjection(Projection):
 
     def __init__(self,lo=-np.inf,hi=np.inf):
