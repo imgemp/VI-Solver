@@ -13,13 +13,13 @@ class Projection(object):
 
 class IdentityProjection(Projection):
 
-    def P(self,Data,Step,Direc):
+    def P(self,Data,Step=0.,Direc=0.):
         return Data+Step*Direc
 
 
 class EntropicProjection(Projection):
 
-    def P(self,Data,Step,Direc):
+    def P(self,Data,Step=0.,Direc=0.):
         ProjectedData = Data*np.exp(MachineLimit_Exp(Step,Direc)*Direc)
         return ProjectedData/np.sum(ProjectedData)
 
@@ -27,7 +27,7 @@ class EntropicProjection(Projection):
 class EuclideanSimplexProjection(Projection):
 
     # Taken from: https://gist.github.com/daien/1272551
-    def P(self,Data,Step,Direc,s=1):
+    def P(self,Data,Step=0.,Direc=0.,s=1):
         assert s > 0, "Radius s must be strictly positive (%d <= 0)" % s
         Data = Data + Step*Direc
         n, = Data.shape  # will raise ValueError if Data is not 1-D
@@ -35,7 +35,7 @@ class EuclideanSimplexProjection(Projection):
         if Data.sum() == s and np.alltrue(Data >= 0):
             # best projection: itself!
             return Data
-        # get the array of cumulative sums of a sorted (decreasing) copy of Data
+        # get the array of cumulative sums of sorted (decreasing) copy of Data
         u = np.sort(Data)[::-1]
         cssd = np.cumsum(u)
         # get the number of > 0 components of the optimal solution
@@ -53,7 +53,7 @@ class NormBallProjection(Projection):
         self.p = p
         self.axis = axis
 
-    def P(self,Data,Step,Direc):
+    def P(self,Data,Step=0.,Direc=0.):
         un_norm = Data+Step*Direc
         return un_norm/np.linalg.norm(un_norm,ord=self.p,axis=self.axis)
 
@@ -64,7 +64,7 @@ class BoxProjection(Projection):
         self.min = lo
         self.max = hi
 
-    def P(self,Data,Step,Direc):
+    def P(self,Data,Step=0.,Direc=0.):
         return np.clip(Data+Step*Direc,self.min,self.max)
 
 
@@ -101,7 +101,7 @@ class PolytopeProjection(Projection):
             err = 'G & h and/or A & b should be specified as numpy arrays'
             raise TypeError(err)
 
-    def P(self,Data,Step,Direc):
+    def P(self,Data,Step=0.,Direc=0.):
         P = self.matrix(2.*np.identity(len(Data)),tc='d')
         q = self.matrix(-2.*(Data+Step*Direc),tc='d')
         # cvx quad prog solver returns a matrix object, not numpy array

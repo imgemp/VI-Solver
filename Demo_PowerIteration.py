@@ -127,7 +127,7 @@ def Demo():
     # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CKPS.Delta0)
     label = 'CKPS'
     x = np.linspace(0,fevals_CKPS,len(res_CKPS))
-    ax.plot(x,res_CKPS,label=label)
+    ax.plot(x,res_CKPS,'-.',label=label)
 
     xlabel = r'# of $A \cdot v$ Evaluations'
     ax.set_xlabel(xlabel)
@@ -167,7 +167,7 @@ def Demo():
     # label = Method_CKPS.__class__.__name__+' Power Iteration'
     # label += r' $\Delta_0=$'+'{:.0e}'.format(Method_CKPS.Delta0)
     label = 'CKPS'
-    ax2.plot(res_CKPS,label=label)
+    ax2.plot(res_CKPS,'-.',label=label)
 
     xlabel = r'# of Iterations'
     ax2.set_xlabel(xlabel)
