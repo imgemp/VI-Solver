@@ -1,3 +1,10 @@
+'''
+This file reproduces the figures (some randomness involved) seen in
+"Exploring the Dynamics of Variational Inequality Games with Non-Concave
+Utilities" @ NIPS Workshop: Learning, Inference, and Control of Multi-Agent
+Systems. 2015
+'''
+
 import numpy as np
 
 from VISolver.Domains.CloudServices import (
