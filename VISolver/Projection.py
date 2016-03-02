@@ -68,6 +68,38 @@ class BoxProjection(Projection):
         return np.clip(Data+Step*Direc,self.min,self.max)
 
 
+class HyperplaneProjection(Projection):
+
+    def __init__(self,hyperplanes,sequence='random'):
+        assert sequence in ['random','cyclic','distal']
+        self.hyps = hyperplanes
+        self.ps = []
+        for hyp in self.hyps:
+            scale = np.linalg.inv(hyp.T.dot(hyp))
+            p = hyp.dot(scale).dot(hyp.T)
+            self.ps += [p]
+        self.seq = sequence
+        self.idx = 0
+
+    def P(self,Data,Step=0.,Direc=0.):
+        _Data = Data+Step*Direc
+        if self.seq == 'random':
+            p = self.ps[np.random.randint(len(self.ps))]
+            return p.dot(_Data)
+        elif self.seq == 'cyclic':
+            p = self.ps[self.idx]
+            self.idx = (self.idx + 1) % len(self.hyps)
+            return p.dot(_Data)
+        elif self.seq == 'distal':
+            e = self.errors(_Data)
+            return _Data - e[np.argmax(np.linalg.norm(e,axis=1))]
+        else:
+            raise NotImplementedError('Sequence option does not exist.')
+
+    def errors(self,Data):
+        return [Data - p.dot(Data) for p in self.ps]
+
+
 class PolytopeProjection(Projection):
 
     # http://cvxopt.org/userguide/coneprog.html#quadratic-programming
@@ -82,7 +114,7 @@ class PolytopeProjection(Projection):
         except ImportError:
             self.qp = None
             self.matrix = None
-            raise ImportError('CVXOPT is required for '+self.__class__.__name__)
+            raise ImportError('CVXOPT required for '+self.__class__.__name__)
         else:
             self.qp = solvers.qp
             self.matrix = matrix

@@ -88,16 +88,16 @@ def Demo():
         PrintSimResults(Options,Rosenbrock_Results,Method,toc)
 
         # Plot Results
-        data = Rosenbrock_Results.PermStorage['Data']
-        res = np.asarray(Rosenbrock_Results.PermStorage[Domain.f_Error])
-        res[np.isnan(res)] = np.inf
+        data_SD = Rosenbrock_Results.PermStorage['Data']
+        res_SD = np.asarray(Rosenbrock_Results.PermStorage[Domain.f_Error])
+        res_SD[np.isnan(res_SD)] = np.inf
         trajX = []
         trajY = []
         trajZ = []
-        for i in xrange(len(data)):
-            trajX.append(data[i][0])
-            trajY.append(data[i][1])
-            trajZ.append(res[i])
+        for i in xrange(len(data_SD)):
+            trajX.append(data_SD[i][0])
+            trajY.append(data_SD[i][1])
+            trajZ.append(res_SD[i])
         ax.plot(trajX,trajY,trajZ,lw=next(lw))
         plt.draw()
     plt.ioff()
@@ -131,17 +131,28 @@ def Demo():
     PrintSimResults(Options,Rosenbrock_Results,Method,toc)
 
     # Plot Results
-    data = Rosenbrock_Results.PermStorage['Data']
-    res_Newton = np.asarray(Rosenbrock_Results.PermStorage[Domain.f_Error])
-    from IPython import embed
-    embed()
+    data_N = Rosenbrock_Results.PermStorage['Data']
+    res_N = np.asarray(Rosenbrock_Results.PermStorage[Domain.f_Error])
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(res_Newton,label='Newton''s Method')
-    ax.plot(res,label='Steepest Descent')
+    ax.plot(res_N,label='Newton''s Method')
+    ax.plot(res_SD,label='Steepest Descent')
     ax.set_yscale('log')
     ax.set_xlabel('Iterations (k)')
     ax.set_ylabel('f(X,Y) [log-scale]')
+    ax.set_title('Rosenbrock Test: Newton''s Method vs Steepest Descent')
+    ax.legend()
+    plt.show()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    diff_N = [np.linalg.norm(d-Domain.ArgMin) for d in data_N]
+    diff_SD = [np.linalg.norm(d-Domain.ArgMin) for d in data_SD]
+    ax.plot(diff_N,label='Newton''s Method')
+    ax.plot(diff_SD,label='Steepest Descent')
+    ax.set_yscale('log')
+    ax.set_xlabel('Iterations (k)')
+    ax.set_ylabel(r'$||x-x^*||$ [log-scale]')
     ax.set_title('Rosenbrock Test: Newton''s Method vs Steepest Descent')
     ax.legend()
     plt.show()
