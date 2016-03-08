@@ -23,7 +23,8 @@ class MixtureMean(Domain):
 
     def predict(self,parameters):
         mu_user = parameters[0]
-        mu_movie = parameters[1]
+        # mu_movie = parameters[1]
+        mu_movie = 1. - mu_user
         return mu_user*self.usermean + mu_movie*self.moviemean
 
     def rmse(self,pred,test,mask):
@@ -36,5 +37,6 @@ class MixtureMean(Domain):
         diff = np.asarray(pred - self.Data)
         dmu_user = np.sum((diff.T*self.usermean.squeeze()).T)
         dmu_movie = np.sum(diff*self.moviemean.squeeze())
-        grad = np.array([dmu_user,dmu_movie])/(rmse*self.Data.nnz)
+        # grad = np.array([dmu_user,dmu_movie])/(rmse*self.Data.nnz)
+        grad = np.array([dmu_user-dmu_movie])/(rmse*self.Data.nnz)
         return grad
