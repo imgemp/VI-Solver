@@ -19,12 +19,15 @@ class SVDMethod(Domain):
         self.fro = np.linalg.norm(self.mask*Data.toarray(),ord='fro')
         return Data.toarray()
 
+    def unpack(self,parameters):
+        return parameters.reshape(self.Data.shape)
+
     def F(self,parameters):
-        R = self.shrink(parameters,self.tau)
+        R = self.shrink(self.unpack(parameters),self.tau)
         # grad = np.asarray(self.Data-R)*self.mask
         grad = (self.Data-R)*self.mask
         self.last_F = grad
-        return grad
+        return grad.flatten()
 
     def shrink(self,x,tau,k=125):
         U, S, Vt = svds(x,k=k)

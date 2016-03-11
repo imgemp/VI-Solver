@@ -140,13 +140,13 @@ def score_svdmethod(train,test,mask,tau=6e3,step=1.9,fixstep=True,iters=250):
 
     # Set Method
     # Method = Euler(Domain=Domain,FixStep=fixstep)
-    Method = HeunEuler(Domain=Domain,Delta0=1e-1,
-                       MinStep=1e0,MaxStep=1e2)
+    Method = HeunEuler(Domain=Domain,Delta0=1e2,
+                       MinStep=1e0,MaxStep=1e3)
 
     # Initialize Starting Point
     # globalmean = train.sum()/train.nnz
     # Start = globalmean*np.ones(train.shape)
-    Start = np.zeros(train.shape)
+    Start = np.zeros(train.shape).flatten()
 
     # Set Options
     Init = Initialization(Step=step)
@@ -167,7 +167,7 @@ def score_svdmethod(train,test,mask,tau=6e3,step=1.9,fixstep=True,iters=250):
     PrintSimResults(Options,Results,Method,toc)
 
     # Retrieve result
-    Y = np.asarray(Results.TempStorage['Data'][-1])
+    Y = np.asarray(Results.TempStorage['Data'][-1]).reshape(train.shape)
     pred = Domain.shrink(Y,Domain.tau)
 
     return rmse(pred,test,mask), Results.PermStorage[Domain.rel_error]
