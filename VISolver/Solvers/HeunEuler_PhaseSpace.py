@@ -4,7 +4,7 @@ from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solver
 
 
-class HeunEuler(Solver):
+class HeunEuler_PhaseSpace(Solver):
 
     def __init__(self, Domain, P=IdentityProjection(), Delta0=1e-2,
                  GrowthLimit=2, MinStep=-1e10, MaxStep=1e10):

@@ -10,6 +10,9 @@ from matplotlib import cm
 from VISolver.Domains.Rosenbrock import Rosenbrock
 
 from VISolver.Solvers.Euler import Euler
+# from VISolver.Solvers.HeunEuler_PhaseSpace import HeunEuler_PhaseSpace
+# from VISolver.Solvers.HeunEuler_AdaGrad_PhaseSpace import \
+#     HeunEuler_AdaGrad_PhaseSpace
 
 from VISolver.Solver import Solve
 from VISolver.Options import (
@@ -27,6 +30,8 @@ def Demo():
 
     # Set Method
     Method = Euler(Domain=Domain,FixStep=True)
+    # Method = HeunEuler_PhaseSpace(Domain=Domain,Delta0=1e-1)
+    # Method = HeunEuler_AdaGrad_PhaseSpace(Domain=Domain,Delta0=1e-1)
 
     # Set Options
     Term = Termination(MaxIter=20000,Tols=[(Domain.f_Error,1e-6)])
@@ -38,6 +43,7 @@ def Demo():
     r = 2
     rads = np.linspace(0,2*np.pi,num=4,endpoint=False)
     steps = -np.logspace(-5,-3,num=3,endpoint=True)
+    # steps = -np.logspace(-8,-6,num=3,endpoint=True)
 
     # Construct figure
     fig = plt.figure()
