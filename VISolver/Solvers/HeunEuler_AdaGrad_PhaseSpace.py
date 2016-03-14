@@ -13,6 +13,8 @@ class HeunEuler(Solver):
 
         self.Proj = P
 
+        self.Proj_Norm = IdentityProjection()
+
         self.StorageSize = 1
 
         self.TempStorage = {}
@@ -28,14 +30,12 @@ class HeunEuler(Solver):
     def InitTempStorage(self,Start,Domain,Options):
 
         self.TempStorage['Data'] = self.StorageSize*[Start]
-        F_Start = self.F(Start)
-        F_Start_Norms = np.abs(F_Start)
-        self.TempStorage['Norms'] = self.StorageSize*[F_Start_Norms]
-        self.TempStorage[self.F] = self.StorageSize*[F_Start/F_Start_Norms]
-        self.TempStorage['F_Norms'] = self.StorageSize*[F_Start_Norms]
+        self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
+        self.TempStorage['F_Norms'] = self.StorageSize*[np.zeros_like(Start)]
         self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
         self.TempStorage['F Evaluations'] = self.StorageSize*[1]
         self.TempStorage['Projections'] = self.StorageSize*[0]
+        self.TempStorage['Time'] = abs(Options.Init.Step)
 
         return self.TempStorage
 
@@ -74,8 +74,9 @@ class HeunEuler(Solver):
         Fs_Data = np.zeros((2,Data.shape[0]))
         Fs_Data[0,:] = Record.TempStorage[self.F][-1]
         Fs_Norm = np.zeros((2,Data.shape[0]))
-        Fs_Norm[0,:] = Record.TempStorage['F_Norms'][-1]
+        Fs_Norm[0,:] = np.abs(Fs_Data[0,:])
         Step = Record.TempStorage['Step'][-1]
+        Time = Record.TempStorage['Time'][-1]
 
         # Initialize Storage
         TempData = {}
@@ -84,22 +85,33 @@ class HeunEuler(Solver):
         direction_data = Fs_Data[0,:]
         direction_norm = Fs_Norm[0,:]
         _NewData = self.Proj.P(Data,Step,direction_data)
-        _NewNorm = self.Proj.P(Norm,Step,direction_data)
-        Fs[1,:] = self.F(_NewData)
-        direction = 0.5*np.sum(Fs,axis=0)
-        NewData = self.Proj.P(Data,Step,direction)
+        _NewNorm = self.Proj_Norm.P(Norm,Step,direction_norm)
+        F_NewData = self.F(_NewData)
+        Fs_Data[1,:] = F_NewData/_NewNorm
+        Fs_Norm[1,:] = (np.abs(F_NewData) - _NewNorm)/(Time + Step)
+        direction_data = 0.5*np.sum(Fs_Data,axis=0)
+        direction_norm = 0.5*np.sum(Fs_Norm,axis=0)
+        NewData = self.Proj.P(Data,Step,direction_data)
+        NewNorm = self.Proj_Norm.P(Norm,Step,direction_norm)
 
         # Compute Delta + Traditional Stepsize
-        Delta = max(abs(NewData-_NewData))
+        Delta_data = max(abs(NewData-_NewData))
+        Delta_norm = max(abs(NewNorm-_NewNorm))
+        Delta = max(Delta_data,Delta_norm)
         if Delta == 0.:
             growth_est = self.GrowthLimit
         else:
             growth_est = (self.Delta0/Delta)**0.5
 
         # Compute Tl & Tr + Phase Space Stepsize
-        NewF = self.F(NewData)
-        Tl = max(abs(direction-.5*(NewF+Fs[0])))
-        Tr = .5*max(abs(NewF+Fs[0]))
+        NewF_data = self.F(NewData)
+        NewF_norm = (np.abs(NewF_data) - Norm)/(Time + Step)
+        Tl_data = abs(direction_data-.5*(NewF_data+Fs_Data[0]))
+        Tl_norm = abs(direction_norm-.5*(NewF_norm+Fs_Norm[0]))
+        Tl = max(Tl_data,Tl_norm)
+        Tr_data = abs(NewF_data+Fs_Data[0])
+        Tr_norm = abs(NewF_norm+Fs_Norm[0])
+        Tr = .5*max(Tr_data,Tr_norm)
         growth_ps = self.PhaseSpaceMultiplier(Tl,Tr)
 
         # Conservative Adjustment
@@ -110,7 +122,8 @@ class HeunEuler(Solver):
 
         # Store Data
         TempData['Data'] = NewData
-        TempData[self.F] = NewF
+        TempData[self.F] = NewF_data
+        TempData['F_Norms'] = NewNorm
         TempData['Step'] = Step
         TempData['F Evaluations'] = 2 + self.TempStorage['F Evaluations'][-1]
         TempData['Projections'] = 2 + self.TempStorage['Projections'][-1]
