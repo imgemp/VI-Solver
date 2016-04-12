@@ -3,9 +3,11 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from VISolver.Domains.PowerIteration import PowerIteration
+from VISolver.Domains.PowerIteration import PowerIteration, Rayleigh
 
 from VISolver.Solvers.Euler import Euler
+from VISolver.Solvers.HeunEuler import HeunEuler
+from VISolver.Solvers.HeunEuler_PhaseSpace import HeunEuler_PhaseSpace
 from VISolver.Solvers.CashKarp import CashKarp
 from VISolver.Solvers.CashKarp_PhaseSpace import CashKarp_PhaseSpace
 
@@ -26,12 +28,14 @@ def Demo():
 
     # Define Domain
     A = np.asarray([[-4,10],[7,5]])
+    A = A.dot(A)  # symmetrize
     # mars = np.load('big_means.npy')
     # A = mars.T.dot(mars)
     eigs = np.linalg.eigvals(A)
     rho = max(eigs)-min(eigs)
     rank = np.count_nonzero(eigs)
-    Domain = PowerIteration(A=A)
+    # Domain = PowerIteration(A=A)
+    Domain = Rayleigh(A=A)
 
     # Set Method
     Method_Standard = Euler(Domain=Domain,FixStep=True,P=NormBallProjection())
@@ -40,8 +44,8 @@ def Demo():
     Start = np.ones(Domain.Dim)
 
     # Set Options
-    Init = Initialization(Step=1.)
-    Term = Termination(MaxIter=100,Tols=[(Domain.res_norm,1e-5)])
+    Init = Initialization(Step=-1e-3)
+    Term = Termination(MaxIter=100,Tols=[(Domain.res_norm,1e-6)])
     Repo = Reporting(Requests=[Domain.res_norm, 'Step', 'F Evaluations',
                                'Projections','Data'])
     Misc = Miscellaneous()
@@ -64,7 +68,8 @@ def Demo():
     res_standard = Results_Standard.PermStorage[Domain.res_norm]
 
     # Set Method
-    Method_CK = CashKarp(Domain=Domain,Delta0=1e-4,P=NormBallProjection())
+    # Method_CK = CashKarp(Domain=Domain,Delta0=1e-4,P=NormBallProjection())
+    Method_CK = HeunEuler(Domain=Domain,Delta0=1e-4,P=NormBallProjection())
 
     # Print Stats
     PrintSimStats(Domain,Method_CK,Options)
@@ -83,8 +88,10 @@ def Demo():
     res_CK = Results_CK.PermStorage[Domain.res_norm]
 
     # Set Method
-    Method_CKPS = CashKarp_PhaseSpace(Domain=Domain,Delta0=1e-4,
-                                      P=NormBallProjection())
+    # Method_CKPS = CashKarp_PhaseSpace(Domain=Domain,Delta0=1e-4,
+    #                                   P=NormBallProjection())
+    Method_CKPS = HeunEuler_PhaseSpace(Domain=Domain,Delta0=1e-1,
+                                       P=NormBallProjection())
 
     # Print Stats
     PrintSimStats(Domain,Method_CKPS,Options)

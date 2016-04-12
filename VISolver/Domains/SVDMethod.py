@@ -29,12 +29,16 @@ class SVDMethod(Domain):
         self.last_F = grad
         return grad.flatten()
 
-    def shrink(self,x,tau,k=125):
+    def shrink(self,x,tau,k=10):
         U, S, Vt = svds(x,k=k)
         # U, S, Vt = np.linalg.svd(x,full_matrices=False)
         # U, S, Vt = np.linalg.svd(x)
-        s = np.clip(S-tau,0.,np.inf)
-        R = U.dot(np.diag(s)).dot(Vt)
+        sub_thresh = (np.abs(S) <= tau)
+        S[sub_thresh] = 0.
+        S[~sub_thresh] = S[~sub_thresh] - np.sign(S[~sub_thresh])*tau
+        # s = np.clip(S-np.sign(S)*tau,0.,np.inf)
+        # R = U.dot(np.diag(s)).dot(Vt)
+        R = U.dot(np.diag(S)).dot(Vt)
         # R = U.dot(diagsvd(s,U.shape[1],Vt.shape[0])).dot(Vt)
         return R
 
