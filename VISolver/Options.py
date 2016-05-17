@@ -14,7 +14,7 @@ class Termination(object):
     def CheckTols(self,PermRequests,TempRequests):
         for tol in self.Tols[1]:
             if (tol[0] not in PermRequests) and (tol[0] not in TempRequests):
-                self.Tols.remove(tol)
+                self.Tols[1].remove(tol)
                 print(repr(tol[0].func_name), 'cannot be used as a',
                       'terminal condition because it is not tracked',
                       'during the descent.')
