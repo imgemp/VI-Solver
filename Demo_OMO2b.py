@@ -1,7 +1,7 @@
 import time
 import numpy as np
 
-from VISolver.Domains.SOI import SOI, CreateRandomNetwork
+from VISolver.Domains.SupplyChain import SupplyChain, CreateRandomNetwork
 from VISolver.Domains.AverageDomains import AverageDomains
 from VISolver.Domains.ContourIntegral import ContourIntegral, LineContour
 
@@ -20,7 +20,7 @@ from IPython import embed
 
 def Demo():
 
-    #__SERVICE_ORIENTED_INTERNET__##############################################
+    #__SUPPLY_CHAIN_NETWORK__###################################################
     N = 10  # number of possible maps
     T = 1000  # number of time steps
     eta = .01  # learning rate
@@ -30,8 +30,8 @@ def Demo():
     X_Stars = []
     for n in range(N):
         # Create Domain
-        Network = CreateRandomNetwork(m=3,n=2,o=2,seed=n)
-        Domain = SOI(Network=Network,alpha=2)
+        Network = CreateRandomNetwork(I=3,Nm=2,Nd=2,Nr=1,seed=n)
+        Domain = SupplyChain(Network=Network,alpha=2)
 
         # Record Domain
         Domains += [Domain]
@@ -47,7 +47,7 @@ def Demo():
 
         # Set Options
         Init = Initialization(Step=-1e-10)
-        Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+        Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
         Repo = Reporting(Requests=[Domain.gap_rplus])
         Misc = Miscellaneous()
         Options = DescentOptions(Init,Term,Repo,Misc)
@@ -57,14 +57,14 @@ def Demo():
 
         # Start Solver
         tic = time.time()
-        SOI_Results = Solve(Start,Method,Domain,Options)
+        SupplyChain_Results = Solve(Start,Method,Domain,Options)
         toc = time.time() - tic
 
         # Print Results
-        PrintSimResults(Options,SOI_Results,Method,toc)
+        PrintSimResults(Options,SupplyChain_Results,Method,toc)
 
         # Record X_Star
-        X_Star = SOI_Results.TempStorage['Data'][-1]
+        X_Star = SupplyChain_Results.TempStorage['Data'][-1]
         X_Stars += [X_Star]
     X_Stars = np.asarray(X_Stars)
 
@@ -82,7 +82,7 @@ def Demo():
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
@@ -92,14 +92,14 @@ def Demo():
 
     # Start Solver
     tic = time.time()
-    SOI_Results = Solve(Start,Method,Domain,Options)
+    SupplyChain_Results = Solve(Start,Method,Domain,Options)
     toc = time.time() - tic
 
     # Print Results
-    PrintSimResults(Options,SOI_Results,Method,toc)
+    PrintSimResults(Options,SupplyChain_Results,Method,toc)
 
     # Record X_Opt
-    X_Opt = SOI_Results.TempStorage['Data'][-1]
+    X_Opt = SupplyChain_Results.TempStorage['Data'][-1]
 
     print('Starting Online Learning')
 
@@ -164,16 +164,16 @@ def Demo():
     plt.xlim([0,T])
     plt.ylim([-250,1000])
     plt.legend()
-    plt.title('Demonstration of No-Regret on MLN')
+    plt.title('Demonstration of No-Regret on Supply Chain Network')
 
-    plt.savefig('NoRegret2')
+    plt.savefig('NoRegret2b')
 
-    data = np.load('NoRegret2.npz')
-    distances_avg = data['d_avg']
-    loss_infs_avg = data['linf_avg']
-    regret_standards_avg = data['rs_avg']
-    regret_news_avg = data['rn_avg']
-    ts = range(len(distances_avg))
+    # data = np.load('NoRegret2b.npz')
+    # distances_avg = data['d_avg']
+    # loss_infs_avg = data['linf_avg']
+    # regret_standards_avg = data['rs_avg']
+    # regret_news_avg = data['rn_avg']
+    # ts = range(len(distances_avg))
 
 
 def infinity_loss(Domain,Start):
@@ -185,18 +185,18 @@ def infinity_loss(Domain,Start):
 
     # Set Options
     Init = Initialization(Step=-1e-10)
-    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-6*gap_0)])
+    Term = Termination(MaxIter=25000,Tols=[(Domain.gap_rplus,1e-3*gap_0)])
     Repo = Reporting(Requests=[Domain.gap_rplus,'Data',Domain.F])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 
     # Start Solver
-    SOI_Results = Solve(Start,Method,Domain,Options)
+    SupplyChain_Results = Solve(Start,Method,Domain,Options)
 
     # Record X_Star
-    Data = SOI_Results.PermStorage['Data']
+    Data = SupplyChain_Results.PermStorage['Data']
     dx = np.diff(Data,axis=0)
-    F = SOI_Results.PermStorage[Domain.F][:-1]
+    F = SupplyChain_Results.PermStorage[Domain.F][:-1]
 
     return -np.sum(F*dx)
 
