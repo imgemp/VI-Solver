@@ -35,7 +35,7 @@ def Demo():
     Strategies = [np.zeros(Domain.Dim)]
     eta = 0.1
 
-    for t in xrange(1000):
+    for t in range(1000):
 
         #__PERFORM_SINGLE_UPDATE
 

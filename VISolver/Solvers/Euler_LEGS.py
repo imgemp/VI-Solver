@@ -1,17 +1,23 @@
+from functools import partial
+
 import numpy as np
 
 from VISolver.Projection import IdentityProjection
 from VISolver.Solver import Solver
-from VISolver.Utilities import GramSchmidt
+from VISolver.Utilities import GramSchmidt, Jv, Jv_num
 
 
 class Euler_LEGS(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection(),FixStep=False):
+    def __init__(self, Domain, P=IdentityProjection(), FixStep=False, 
+                 NTopLEs=None):
 
         self.F = Domain.F
 
-        self.Jac = Domain.Jac
+        try:
+            self.Jv = partial(Jv,Jac=Domain.Jac)
+        except AttributeError:
+            self.Jv = partial(Jv_num,F=self.F)
 
         self.Proj = P
 
@@ -21,16 +27,24 @@ class Euler_LEGS(Solver):
 
         self.TempStorage = {}
 
+        self.NTopLEs = NTopLEs
+
     def InitTempStorage(self,Start,Domain,Options):
 
         self.TempStorage['Data'] = self.StorageSize*[Start]
         self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
 
-        Psi_0 = np.eye(Start.size)
-        dPsi_0 = np.dot(self.Jac(Start),Psi_0)
+        if self.NTopLEs is None:
+            self.NTopLEs = Start.size
+            Psi_0 = np.eye(self.NTopLEs)
+        else:
+            assert self.NTopLEs <= Start.size and self.NTopLEs > 0
+            Psi_0 = np.vstack([np.eye(self.NTopLEs),np.zeros((Start.size-self.NTopLEs,self.NTopLEs))])
+
+        dPsi_0 = self.Jv(Start,Psi_0,F_Data=self.TempStorage[self.F][-1])
         self.TempStorage['Psi'] = self.StorageSize*[Psi_0.flatten()]
         self.TempStorage['dPsi'] = self.StorageSize*[dPsi_0.flatten()]
-        self.TempStorage['Lyapunov'] = self.StorageSize*[0*Start]
+        self.TempStorage['Lyapunov'] = self.StorageSize*[np.zeros(self.NTopLEs)]
         self.TempStorage['T'] = self.StorageSize*[0]
 
         self.TempStorage['scount'] = self.StorageSize*[0]
@@ -87,7 +101,7 @@ class Euler_LEGS(Solver):
         TempData['Data'] = NewData_x
         TempData[self.F] = self.F(NewData_x)
         TempData['Psi'] = NewData_psi.flatten()
-        TempData['dPsi'] = np.dot(self.Jac(NewData_x),NewData_psi).flatten()
+        TempData['dPsi'] = self.Jv(NewData_x,NewData_psi,F_Data=TempData[self.F]).flatten()
         TempData['Lyapunov'] = NewLyapunov
         TempData['T'] = Tnew
         TempData['scount'] = scount

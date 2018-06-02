@@ -26,6 +26,9 @@ class Watson(Domain):
     def F(self,Data):
         return np.dot(self.A,Data)+self.b
 
+    def J(self,Data):
+        return self.A
+
     def gap_simplex(self,Data):
         gap = 0.0
         F = np.ravel(self.F(Data))

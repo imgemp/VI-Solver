@@ -50,7 +50,7 @@ class CloudServices(Domain):
         success = np.zeros(self.nClouds,dtype=bool)
         p = Data[:self.nClouds]
         q = Data[self.nClouds:]
-        for i in xrange(self.nClouds):
+        for i in range(self.nClouds):
             pJ = np.sum(p)-p[i]
             qJ = np.sum(q)-q[i]
             x0 = np.array([p[i], q[i]])

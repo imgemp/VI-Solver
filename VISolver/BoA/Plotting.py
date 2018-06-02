@@ -15,7 +15,7 @@ def onclick(event):
         global coords
         coords = []
     ix, iy = event.xdata, event.ydata
-    print 'x = %g, y = %g' % (ix, iy)
+    print('x = %g, y = %g' % (ix, iy))
     coords.append((ix, iy))
     return
 
@@ -43,7 +43,7 @@ def plotBoA(ref,data,grid,obs=None,consts=None,Neval=500,txt_locs=None,
                              np.linspace(grid[obs[1],0],grid[obs[1],1],Neval))
         padding = np.ones(len(xx.ravel()))
         test = ()
-        for i in xrange(grid.shape[0]):
+        for i in range(grid.shape[0]):
             if i == obs[0]:
                 test += (xx.ravel(),)
             elif i == obs[1]:
@@ -255,8 +255,8 @@ def plotDistribution(p,grid,obs=None,consts=None,saveFig=False):
     else:
         pmap = np.zeros((grid[obs[1],2],grid[obs[0],2]))
         ind_exp = np.array([int(i) for i in (consts-grid[:,0])//grid[:,3]])
-        for ind_x in xrange(int(grid[obs[0],2])):
-            for ind_y in xrange(int(grid[obs[1],2])):
+        for ind_x in range(int(grid[obs[0],2])):
+            for ind_y in range(int(grid[obs[1],2])):
                 ind_exp[obs[0]] = ind_x
                 ind_exp[obs[1]] = ind_y
                 p_id = ind2int(tuple(ind_exp),tuple(grid[:,2]))

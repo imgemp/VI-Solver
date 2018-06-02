@@ -24,7 +24,7 @@ def Demo():
     # Define Hyperplanes
     dim = max(Domain.Dim-1,1)
     N = 3
-    hyps = [np.random.rand(Domain.Dim,dim) for n in xrange(N)]
+    hyps = [np.random.rand(Domain.Dim,dim) for n in range(N)]
 
     # Set Method
     P_random = HyperplaneProjection(hyperplanes=hyps,sequence='random')

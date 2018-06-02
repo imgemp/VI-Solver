@@ -39,7 +39,7 @@ def Demo(small=True,folds=1):
     RMSEs = np.empty((6,folds))
     RMSEs.fill(np.NaN)
     np.random.seed(0)
-    for k in xrange(folds):
+    for k in range(folds):
         # Load Training Data
         data = np.loadtxt(path+str(k+1)+ext,usecols=(0,1,2),delimiter=dlim)
         users = data[:,0] - 1

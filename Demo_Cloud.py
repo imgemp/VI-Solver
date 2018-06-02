@@ -23,7 +23,7 @@ def Demo():
 
     # Set Method
     eps = 1e-2
-    Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0)
+    Method = HeunEuler_LEGS(Domain=Domain,P=BoxProjection(lo=eps),Delta0=1e0,NTopLEs=3)
 
     # Initialize Starting Point
     Start = np.ones(Domain.Dim)

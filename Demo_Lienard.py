@@ -3,7 +3,9 @@ import numpy as np
 
 from VISolver.Domains.Lienard import Lienard
 
+from VISolver.Solvers.Euler_LEGS import Euler_LEGS
 from VISolver.Solvers.HeunEuler_LEGS import HeunEuler_LEGS
+from VISolver.Solvers.CashKarp_LEGS import CashKarp_LEGS
 
 from VISolver.Solver import Solve
 from VISolver.Options import (
@@ -23,15 +25,17 @@ def Demo():
     Domain = Lienard()
 
     # Set Method
-    Method = HeunEuler_LEGS(Domain=Domain,Delta0=1e-5)
+    Method = Euler_LEGS(Domain=Domain,FixStep=True,NTopLEs=2)
+    # Method = HeunEuler_LEGS(Domain=Domain,Delta0=1e-5,NTopLEs=2)
+    # Method = CashKarp_LEGS(Domain=Domain,Delta0=1e-5,NTopLEs=2)
 
     # Initialize Starting Point
-    Start = np.array([-.1,1.0])
+    Start = np.array([1.5,0])
 
     # Set Options
     Init = Initialization(Step=1e-3)
-    Term = Termination(MaxIter=1e4)
-    Repo = Reporting(Requests=['Step','Data','Lyapunov'])
+    Term = Termination(MaxIter=1e5,Tols=[(Domain.gap,1e-3)])
+    Repo = Reporting(Requests=['Step','Data','Lyapunov',Domain.gap])
     Misc = Miscellaneous()
     Options = DescentOptions(Init,Term,Repo,Misc)
 

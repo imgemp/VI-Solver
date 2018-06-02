@@ -37,7 +37,7 @@ def Demo():
     Equilibria = []
     Costs = []
 
-    for t in xrange(1000):
+    for t in range(1000):
 
         #__PERFORM_SINGLE_UPDATE
 

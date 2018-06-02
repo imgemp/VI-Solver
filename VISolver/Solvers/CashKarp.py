@@ -51,7 +51,7 @@ class CashKarp(Solver):
 
         # Retrieve Necessary Data
         Data = Record.TempStorage['Data'][-1]
-        Fs = np.zeros((6,Data.shape[0]))
+        Fs = np.zeros((6,Data.shape[0]),dtype=Data.dtype)
         Fs[0,:] = Record.TempStorage[self.F][-1]
         Step = Record.TempStorage['Step'][-1]
 
@@ -59,7 +59,7 @@ class CashKarp(Solver):
         TempData = {}
 
         # Calculate k values (gradients)
-        for i in xrange(5):
+        for i in range(5):
             direction = np.einsum('i,i...', self.BT[i,:i+1], Fs[:i+1])
             _NewData = self.Proj.P(Data, Step, direction)
             Fs[i+1,:] = self.F(_NewData)

@@ -52,10 +52,14 @@ def Solve(Start,Method,Domain,Options):
     #Begin Solving
     while not Options.Term.IsTerminal(Record):
 
-        #Compute New Data Using Update Method
-        TempStorage = Method.Update(Record)  # should also report projections
+        try:
+            #Compute New Data Using Update Method
+            TempStorage = Method.Update(Record)  # should also report projections
 
-        #Record Update Stats
-        Record.BookKeeping(TempStorage)
+            #Record Update Stats
+            Record.BookKeeping(TempStorage)
+        except Exception as e:
+            print(e)
+            return Record
 
     return Record

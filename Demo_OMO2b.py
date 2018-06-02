@@ -1,5 +1,8 @@
 import time
 import numpy as np
+from scipy.sparse.linalg import svds
+
+from VISolver.Utilities import approx_jacobian
 
 from VISolver.Domains.SupplyChain import SupplyChain, CreateRandomNetwork
 from VISolver.Domains.AverageDomains import AverageDomains
@@ -28,6 +31,7 @@ def Demo():
     # Define Domains and Compute Equilbria
     Domains = []
     X_Stars = []
+    CurlBounds = []
     for n in range(N):
         # Create Domain
         Network = CreateRandomNetwork(I=3,Nm=2,Nd=2,Nr=1,seed=n)
@@ -44,6 +48,12 @@ def Demo():
 
         # Calculate Initial Gap
         gap_0 = Domain.gap_rplus(Start)
+
+        # Calculate Curl Bound
+        J = approx_jacobian(Domain.F,Start)
+        _J = approx_jacobian(Domain.F,Start+0.5)
+        assert np.allclose(J,_J,atol=1e-5)
+        CurlBounds += [np.sqrt(18)*svds(J,k=1,which='LM',return_singular_vectors=False).item()]
 
         # Set Options
         Init = Initialization(Step=-1e-10)
@@ -99,7 +109,8 @@ def Demo():
     PrintSimResults(Options,SupplyChain_Results,Method,toc)
 
     # Record X_Opt
-    X_Opt = SupplyChain_Results.TempStorage['Data'][-1]
+    # X_Opt = SupplyChain_Results.TempStorage['Data'][-1]
+    X_Opt = np.mean(X_Stars,axis=0)
 
     print('Starting Online Learning')
 
@@ -107,12 +118,14 @@ def Demo():
     X = np.zeros(X_Stars.shape[1])
 
     # Select First Domain
-    idx = np.argmax(np.linalg.norm(X_Stars - X,axis=1))
+    # idx = np.argmax(np.linalg.norm(X_Stars - X,axis=1))
+    idx = 0
 
     distances = []
     loss_infs = []
     regret_standards = []
     regret_news = []
+    stokes = []
     ts = range(T)
     for t in ts:
         print('t = '+str(t))
@@ -133,19 +146,26 @@ def Demo():
         # calculate new regret
         ci_new = ContourIntegral(Domain,LineContour(X_Opt,X))
         regret_news += [integral(ci_new)]
+        # calculate bound
+        # area = 0.5*np.prod(np.sort([np.linalg.norm(X_Opt-equi),np.linalg.norm(X-X_Opt),np.linalg.norm(equi-X)])[:2])  # area upper bound
+        area = herons(X_Opt,X,equi)  # exact area
+        stokes += [CurlBounds[idx]*area]
         # update prediction
         X = BoxProjection(lo=0).P(X,-eta,Domain.F(X))
         # update domain
-        idx = np.argmax(np.linalg.norm(X_Stars - X,axis=1))
+        # idx = np.argmax(np.linalg.norm(X_Stars - X,axis=1))
+        idx = (idx+1)%X_Stars.shape[0]
+
     ts_p1 = range(1,T+1)
     distances_avg = np.divide(distances,ts_p1)
     loss_infs_avg = np.divide(loss_infs,ts_p1)
     regret_standards_avg = np.divide(regret_standards,ts_p1)
     regret_news_avg = np.divide(regret_news,ts_p1)
+    stokes = np.asarray(stokes)
 
-    np.savez_compressed('NoRegret2.npz',d_avg=distances_avg,
+    np.savez_compressed('NoRegret_SCN.npz',d_avg=distances_avg,
                         linf_avg=loss_infs_avg,rs_avg=regret_standards_avg,
-                        rn_avg=regret_news_avg)
+                        rn_avg=regret_news_avg,stokes=stokes)
 
     # plt.subplot(2, 1, 1)
     # plt.plot(ts, distances_avg, 'k',label='Average Distance')
@@ -158,6 +178,8 @@ def Demo():
     plt.plot(ts, regret_standards_avg, 'r--o', markevery=T//20,
              label=r'regret$_{s}$')
     plt.plot(ts, regret_news_avg, 'b-', label=r'regret$_{n}$')
+    ax.fill_between(ts, regret_news_avg-stokes, regret_news_avg+stokes,
+                    facecolor='c', alpha=0.2, zorder=0, label='Stokes Bound')
     plt.plot(ts, np.zeros_like(ts), 'w-', lw=1)
     plt.xlabel('Time Step')
     plt.ylabel('Aggregate System-Wide Loss')
@@ -166,7 +188,7 @@ def Demo():
     plt.legend()
     plt.title('Demonstration of No-Regret on Supply Chain Network')
 
-    plt.savefig('NoRegret2b')
+    plt.savefig('NoRegret_SCN')
 
     # data = np.load('NoRegret2b.npz')
     # distances_avg = data['d_avg']
@@ -207,6 +229,12 @@ def integral(Domain,N=100):
     F = np.asarray([Domain.F(t) for t in trange])
 
     return np.sum(F)/N
+
+
+def herons(p1,p2,p3):
+    a,b,c = np.linalg.norm(p2-p1), np.linalg.norm(p3-p2), np.linalg.norm(p1-p3)
+    s = 0.5*(a+b+c)
+    return np.sqrt(s*(s-a)*(s-b)*(s-c))
 
 
 if __name__ == '__main__':

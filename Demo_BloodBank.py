@@ -48,5 +48,9 @@ def Demo():
     # Print Results
     PrintSimResults(Options,BloodBank_Results,Method,toc)
 
+    opt_path_flows = BloodBank_Results.TempStorage['Data'] [-1]
+    f_1C, f_CB, f_BP, f_PS, f_SD, f_DR = Domain.PathFlow2LinkFlow_x2f(Domain.UnpackPathFlows(opt_path_flows))
+    print(f_1C)
+
 if __name__ == '__main__':
     Demo()

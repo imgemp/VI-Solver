@@ -11,16 +11,20 @@ class KojimaShindo(Domain):
         self.L = 10.0
 
     def F(self,Data):
-        F = np.array(Data)
-        x1 = Data[0]
-        x2 = Data[1]
-        x3 = Data[2]
-        x4 = Data[3]
+        F = np.zeros_like(Data)
+        x1, x2, x3, x4 = Data
         F[0] = 3*(x1**2)+2*x1*x2+2*(x2**2)+x3+3*x4-6
         F[1] = 2*(x1**2)+x1+(x2**2)+10*x3+2*x4-2
         F[2] = 3*(x1**2)+x1*x2+2*(x2**2)+2*x3+9*x4-9
         F[3] = (x1**2)+3*(x2**2)+2*x3+3*x4-3
         return F
+
+    def J(self,Data):
+        x1, x2, x3, x4 = Data
+        return np.array([[6*x1+2*x2,2*x1+4*x2,1,3],
+                         [4*x1+1,2*x2,10,2],
+                         [6*x1+x2,x1+4*x2,2,9],
+                         [2*x1,6*x2,2,3]])
 
     def gap_simplex(self,Data):
         gap = 0.0

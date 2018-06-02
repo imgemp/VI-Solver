@@ -31,14 +31,6 @@ class SupplyChain(Domain):
     def F(self,Data):
         return self.F_P2UP(Data)
 
-    def gap_rplus(self, X):
-        dFdX = self.F(X)
-
-        Y = np.maximum(0,X - dFdX/self.alpha)
-        Z = X - Y
-
-        return np.dot(dFdX,Z) - self.alpha/2.*np.dot(Z,Z)
-
     # Functions Used to Animate and Save Network Run to Movie File
 
     def FlowNormalizeColormap(self,Data,cmap):
@@ -82,19 +74,19 @@ class SupplyChain(Domain):
         Rx = np.linspace(mid-(self.Nr-1.)/2.,mid+(self.Nr-1.)/2.,self.Nr)
         Ry = 0.
         od = []
-        for i in xrange(self.I):
-            for m in xrange(self.Nm):
+        for i in range(self.I):
+            for m in range(self.Nm):
                 od.append([(Ix[i],Iy),(Mx[i*self.Nm+m],My)])
-        for i in xrange(self.I):
-            for m in xrange(self.Nm):
-                for d1 in xrange(self.Nd):
+        for i in range(self.I):
+            for m in range(self.Nm):
+                for d1 in range(self.Nd):
                     od.append([(Mx[i*self.Nm+m],My),(D1x[i*self.Nd+d1],D1y)])
-        for i in xrange(self.I):
-            for d1 in xrange(self.Nd):
+        for i in range(self.I):
+            for d1 in range(self.Nd):
                 od.append([(D1x[i*self.Nd+d1],D1y),(D2x[i*self.Nd+d1],D2y)])
-        for i in xrange(self.I):
-            for d2 in xrange(self.Nd):
-                for r in xrange(self.Nr):
+        for i in range(self.I):
+            for d2 in range(self.Nd):
+                for r in range(self.Nr):
                     od.append([(D2x[i*self.Nd+d2],D2y),(Rx[r],Ry)])
 
         lc = mc.LineCollection(od, colors=(0,0,0,0), linewidths=10)
@@ -105,11 +97,11 @@ class SupplyChain(Domain):
 
         # Annotate Plot
         plt.box('off')
-        plt.yticks(xrange(5),['Demand\nMarkets', 'Warehouses',
+        plt.yticks(range(5),['Demand\nMarkets', 'Warehouses',
                               'Transportation', 'Manufacturing\nPlants',
                               'Firms'],
                    rotation=45)
-        plt.xticks(Rx,['Market\n'+str(r+1) for r in xrange(self.Nr)])
+        plt.xticks(Rx,['Market\n'+str(r+1) for r in range(self.Nr)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
 
@@ -131,19 +123,19 @@ class SupplyChain(Domain):
             self.PathFlow2LinkFlow_x2f(self.UnpackData(Data)[0])
 
         colors = []
-        for i in xrange(self.I):
-            for m in xrange(self.Nm):
+        for i in range(self.I):
+            for m in range(self.Nm):
                 colors.append(self.to_rgba[0](f_IM[i,m]))
-        for i in xrange(self.I):
-            for m in xrange(self.Nm):
-                for d1 in xrange(self.Nd):
+        for i in range(self.I):
+            for m in range(self.Nm):
+                for d1 in range(self.Nd):
                     colors.append(self.to_rgba[1](f_MD1[i,m,d1]))
-        for i in xrange(self.I):
-            for d1 in xrange(self.Nd):
+        for i in range(self.I):
+            for d1 in range(self.Nd):
                 colors.append(self.to_rgba[2](f_D1D2[i,d1]))
-        for i in xrange(self.I):
-            for d2 in xrange(self.Nd):
-                for r in xrange(self.Nr):
+        for i in range(self.I):
+            for d2 in range(self.Nd):
+                for r in range(self.Nr):
                     colors.append(self.to_rgba[3](f_D2R[i,d2,r]))
 
         ax.collections[0].set_color(colors)
@@ -194,8 +186,8 @@ class SupplyChain(Domain):
 
     def CalculateNetworkSize(self):
 
-        return self.I*self.Nm*self.Nd*self.Nr * \
-            (1.+2./(self.Nd*self.Nr)+2./self.Nr+2./(self.Nm*self.Nr)+2./self.Nm)
+        return int(self.I*self.Nm*self.Nd*self.Nr * \
+            (1.+2./(self.Nd*self.Nr)+2./self.Nr+2./(self.Nm*self.Nr)+2./self.Nm))
 
     def PathFlow2LinkFlow_x2f(self,x):
 
@@ -755,8 +747,8 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
 
     #Rho's - Demand Functions
     coeff_rho_d = np.zeros((I,Nr,I))
-    for i in xrange(I):
-        for j in xrange(Nr):
+    for i in range(I):
+        for j in range(Nr):
             #self dependence
             coeff_rho_d[i,j,i] = 5.*np.random.rand()
             #external dependence
@@ -764,7 +756,7 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
             amp = 0.4*np.random.rand()+0.1
             ext = amp*coeff_rho_d[i,j,i]*ext/np.sum(ext)
             count = 0
-            for k in xrange(I):
+            for k in range(I):
                 if k != i:
                     coeff_rho_d[i,j,k] = ext[count]
                     count += 1
@@ -779,23 +771,23 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
     coeff_c_pow2_D1D2 = np.zeros((I,Nd))
     coeff_c_pow1_D2R = np.zeros((I,Nd,Nr))
     coeff_c_pow2_D2R = np.zeros((I,Nd,Nr))
-    for i in xrange(I):
-        for j in xrange(Nm):
+    for i in range(I):
+        for j in range(Nm):
             coeff_c_pow1_IM[i,j] = 5.*np.random.rand()+1.
             coeff_c_pow2_IM[i,j] = 6.*np.random.rand()+0.
-    for i in xrange(I):
-        for j in xrange(Nm):
-            for k in xrange(Nd):
+    for i in range(I):
+        for j in range(Nm):
+            for k in range(Nd):
                 #deterministic
                 coeff_c_pow1_MD1[i,j,k] = 10.-8.*(coeff_c_pow2_IM[i,j]/6.)
                 coeff_c_pow2_MD1[i,j,k] = 1.-0.5*(coeff_c_pow2_IM[i,j]/6.)
-    for i in xrange(I):
-        for j in xrange(Nd):
+    for i in range(I):
+        for j in range(Nd):
             coeff_c_pow1_D1D2[i,j] = np.random.rand()+.5
             coeff_c_pow2_D1D2[i,j] = 0.2*np.random.rand()+.4
-    for i in xrange(I):
-        for j in xrange(Nd):
-            for k in xrange(Nr):
+    for i in range(I):
+        for j in range(Nd):
+            for k in range(Nr):
                 coeff_c_pow1_D2R[i,j,k] = np.random.rand()+1.
                 coeff_c_pow2_D2R[i,j,k] = .4*np.random.rand()+.8
 
@@ -808,24 +800,24 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
     coeff_g_pow2_D1D2 = np.zeros((I,Nd))
     coeff_g_pow1_D2R = np.zeros((I,Nd,Nr))
     coeff_g_pow2_D2R = np.zeros((I,Nd,Nr))
-    for i in xrange(I):
-        for j in xrange(Nm):
+    for i in range(I):
+        for j in range(Nm):
             #deterministic
             coeff_g_pow1_IM[i,j] = 2.*(coeff_c_pow2_IM[i,j]/6.)+0.5
             coeff_g_pow2_IM[i,j] = coeff_c_pow2_IM[i,j]/6.+0.3
-    for i in xrange(I):
-        for j in xrange(Nm):
-            for k in xrange(Nd):
+    for i in range(I):
+        for j in range(Nm):
+            for k in range(Nd):
                 #deterministic
                 coeff_g_pow1_MD1[i,j,k] = coeff_g_pow2_IM[i,j]
                 coeff_g_pow2_MD1[i,j,k] = 2.-(coeff_g_pow2_IM[i,j])
-    for i in xrange(I):
-        for j in xrange(Nd):
+    for i in range(I):
+        for j in range(Nd):
             coeff_g_pow1_D1D2[i,j] = np.random.rand()+.25
             coeff_g_pow2_D1D2[i,j] = 0.5*np.random.rand()+.75
-    for i in xrange(I):
-        for j in xrange(Nd):
-            for k in xrange(Nr):
+    for i in range(I):
+        for j in range(Nd):
+            for k in range(Nr):
                 coeff_g_pow1_D2R[i,j,k] = 0.5*np.random.rand()+.75
                 coeff_g_pow2_D2R[i,j,k] = .1*np.random.rand()+.95
 
@@ -834,17 +826,17 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
     u_MD1 = np.zeros((I,Nm,Nd))
     u_D1D2 = np.zeros((I,Nd))
     u_D2R = np.zeros((I,Nd,Nr))
-    for i in xrange(I):
+    for i in range(I):
         u_IM[i,:] = 20.*np.random.rand()+90.
-    for i in xrange(I):
-        for j in xrange(Nm):
+    for i in range(I):
+        for j in range(Nm):
             #deterministic
             u_MD1[i,j,:] = 60.-50.*(coeff_c_pow2_IM[i,j]/6.)
-    for i in xrange(I):
+    for i in range(I):
         #deterministic
         u_D1D2[i,:] = u_IM[i,0]
-    for i in xrange(I):
-        for j in xrange(Nr):
+    for i in range(I):
+        for j in range(Nr):
             u_D2R[i,:,j] = 10.*np.random.rand()+15.
 
     #E's - Emission Costs
@@ -864,28 +856,28 @@ def CreateRandomNetwork(I,Nm,Nd,Nr,seed):
     coeff_e_f_pow2_D2R = np.zeros((I,Nd,Nr))
     coeff_e_g_pow1_D2R = np.zeros((I,Nd,Nr))
     coeff_e_g_pow2_D2R = np.zeros((I,Nd,Nr))
-    for i in xrange(I):
-        for j in xrange(Nm):
+    for i in range(I):
+        for j in range(Nm):
             coeff_e_f_pow1_IM[i,j] = 0.5*np.random.rand()+0.5
             coeff_e_f_pow2_IM[i,j] = 0.1*np.random.rand()+0.05
             coeff_e_g_pow1_IM[i,j] = 1.0*np.random.rand()+1.0
             coeff_e_g_pow2_IM[i,j] = 2.0*np.random.rand()+0.5
-    for i in xrange(I):
-        for j in xrange(Nm):
-            for k in xrange(Nd):
+    for i in range(I):
+        for j in range(Nm):
+            for k in range(Nd):
                 coeff_e_f_pow1_MD1[i,j,k] = 0.5*np.random.rand()+0.5
                 coeff_e_f_pow2_MD1[i,j,k] = 0.05*np.random.rand()+0.05
                 coeff_e_g_pow1_MD1[i,j,k] = 1.0*np.random.rand()+1.0
                 coeff_e_g_pow2_MD1[i,j,k] = 1.0*np.random.rand()+1.0
-    for i in xrange(I):
-        for j in xrange(Nd):
+    for i in range(I):
+        for j in range(Nd):
             coeff_e_f_pow1_D1D2[i,j] = 0.02*np.random.rand()+0.09
             coeff_e_f_pow2_D1D2[i,j] = 0.04*np.random.rand()+0.01
             coeff_e_g_pow1_D1D2[i,j] = 0.1*np.random.rand()+0.1
             coeff_e_g_pow2_D1D2[i,j] = 0.02*np.random.rand()+0.09
-    for i in xrange(I):
-        for j in xrange(Nd):
-            for k in xrange(Nr):
+    for i in range(I):
+        for j in range(Nd):
+            for k in range(Nr):
                 coeff_e_f_pow1_D2R[i,j,k] = 1.0*np.random.rand()+1.0
                 coeff_e_f_pow2_D2R[i,j,k] = 0.1*np.random.rand()+0.1
                 coeff_e_g_pow1_D2R[i,j,k] = 1.0*np.random.rand()+1.0

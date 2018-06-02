@@ -55,6 +55,9 @@ target/
 
 # Figures
 *.png
+*.pdf
+*.jpg
+*.jpeg
 
 # Video Files
 *.mp4

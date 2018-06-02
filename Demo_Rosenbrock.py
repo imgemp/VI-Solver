@@ -10,7 +10,7 @@ from matplotlib import cm
 from VISolver.Domains.Rosenbrock import Rosenbrock
 
 from VISolver.Solvers.Euler import Euler
-# from VISolver.Solvers.HeunEuler_PhaseSpace import HeunEuler_PhaseSpace
+from VISolver.Solvers.HeunEuler_PhaseSpace import HeunEuler_PhaseSpace
 # from VISolver.Solvers.HeunEuler_AdaGrad_PhaseSpace import \
 #     HeunEuler_AdaGrad_PhaseSpace
 
@@ -29,8 +29,9 @@ def Demo():
     Domain = Rosenbrock(Dim=2)
 
     # Set Method
-    Method = Euler(Domain=Domain,FixStep=True)
-    # Method = HeunEuler_PhaseSpace(Domain=Domain,Delta0=1e-1)
+    # Method = Euler(Domain=Domain,FixStep=True)
+    Method = HeunEuler_PhaseSpace(Domain=Domain,Delta0=1e-3,MinStep=-1e-2,MaxStep=0.,DimWise=True)
+    # Method = HeunEuler_PhaseSpace(Domain=Domain,Delta0=1e-1,DimWise=False)
     # Method = HeunEuler_AdaGrad_PhaseSpace(Domain=Domain,Delta0=1e-1)
 
     # Set Options
@@ -53,8 +54,8 @@ def Demo():
     Y = np.arange(-1.5, 3.5, 0.25)
     X, Y = np.meshgrid(X, Y)
     Z = np.zeros_like(X)
-    for i in xrange(Z.shape[0]):
-        for j in xrange(Z.shape[1]):
+    for i in range(Z.shape[0]):
+        for j in range(Z.shape[1]):
             Z[i,j] = Domain.f(np.array([X[i,j],Y[i,j]]))
     ax.plot_surface(X,Y,Z,rstride=1,cstride=1,cmap=cm.coolwarm,
                     linewidth=0,antialiased=False)
@@ -100,7 +101,7 @@ def Demo():
         trajX = []
         trajY = []
         trajZ = []
-        for i in xrange(len(data_SD)):
+        for i in range(len(data_SD)):
             trajX.append(data_SD[i][0])
             trajY.append(data_SD[i][1])
             trajZ.append(res_SD[i])

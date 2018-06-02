@@ -16,5 +16,8 @@ class Sphere(Domain):
     def F(self,Data):
         return 2.0*Data
 
+    def J(self,Data):
+        return 2.0*np.ones((Data.shape[0],Data.shape[0]))
+
     def f_Error(self,Data):
         return self.f(Data) - self.Min

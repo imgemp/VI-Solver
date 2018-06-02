@@ -8,7 +8,7 @@ class AverageDomains(Domain):
         self.Dim = Domains[0].Dim
         assert np.all(Domain.Dim == self.Dim for Domain in Domains)
         if weights is None:
-            self.weights = np.ones(len(Domains))
+            self.weights = np.ones(len(Domains))/len(Domains)
         else:
             assert weights.shape == (len(Domains),)
             self.weights = weights

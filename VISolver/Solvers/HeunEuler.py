@@ -41,7 +41,7 @@ class HeunEuler(Solver):
 
         # Retrieve Necessary Data
         Data = Record.TempStorage['Data'][-1]
-        Fs = np.zeros((2,Data.shape[0]))
+        Fs = np.zeros((2,Data.shape[0]),dtype=Data.dtype)
         Fs[0,:] = Record.TempStorage[self.F][-1]
         Step = Record.TempStorage['Step'][-1]
 

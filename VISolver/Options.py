@@ -7,35 +7,45 @@ class Initialization(object):
 
 class Termination(object):
 
-    def __init__(self,MaxIter=1,Tols=[]):
+    def __init__(self,MaxIter=1,Tols=[],verbose=True):
         self.Tols = [MaxIter]
         self.Tols.append(Tols)
+        self.verbose = verbose
 
     def CheckTols(self,PermRequests,TempRequests):
         for tol in self.Tols[1]:
             if (tol[0] not in PermRequests) and (tol[0] not in TempRequests):
                 self.Tols[1].remove(tol)
-                print(repr(tol[0].func_name), 'cannot be used as a',
+                print(tol[0].__func__.__name__, 'cannot be used as a',
                       'terminal condition because it is not tracked',
-                      'during the descent.')
+                      'during the descent. Add it to the ``Requests'' list',
+                      'for ``Reporting''')
         return self.Tols
 
     def IsTerminal(self,Record):
         if Record.thisPermIndex >= self.Tols[0]:
+            if self.verbose:
+                print('\nIteration limit met.')
             return True
         for tol in self.Tols[1]:
+            tol_str = tol[0].__func__.__name__
             if tol[0] in Record.TempStorage:
                 if Record.TempStorage[tol[0]][-1] <= tol[1]:
+                    if self.verbose:
+                        print('\n'+tol_str+' condition met.')
                     return True
             elif Record.PermStorage[tol[0]][Record.thisPermIndex] <= tol[1]:
+                if self.verbose:
+                    print('\n'+tol_str+' condition met.')
                 return True
         return False
 
 
 class Reporting(object):
 
-    def __init__(self,Requests=[]):
+    def __init__(self,Requests=[],Interval=1):
         self.PermRequests = Requests
+        self.Interval = Interval
 
     def CheckRequests(self,Method,Domain):
         for req in self.PermRequests:
@@ -54,8 +64,9 @@ class Reporting(object):
 
 class Miscellaneous(object):
 
-    def __init__(self,Min=None):
+    def __init__(self,Min=None,Timer=True):
         self.Min = Min
+        self.Timer = Timer
 
 
 class DescentOptions(object):

@@ -70,11 +70,11 @@ class SOI(Domain):
         Ky = 0.
 
         od = []
-        for i in xrange(self.m):
-            for j in xrange(self.n):
+        for i in range(self.m):
+            for j in range(self.n):
                 od.append([(Ix[i],Iy),(Jx[j],Jy)])
-        for j in xrange(self.n):
-            for k in xrange(self.o):
+        for j in range(self.n):
+            for k in range(self.o):
                 od.append([(Jx[j],Jy),(Kx[k],Ky)])
         lc = mc.LineCollection(od, colors=(0,0,0,0), linewidths=10)
         ax.add_collection(lc)
@@ -86,7 +86,7 @@ class SOI(Domain):
         plt.box('off')
         plt.yticks([0,1,2],['Demand\nMarkets', 'Network\nProviders',
                             'Service\nProviders'], rotation=45)
-        plt.xticks(Kx,['Market\n'+str(k+1) for k in xrange(self.o)])
+        plt.xticks(Kx,['Market\n'+str(k+1) for k in range(self.o)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
 
@@ -109,11 +109,11 @@ class SOI(Domain):
         f_Q_bot = f_Q[1]
 
         colors = []
-        for i in xrange(self.m):
-            for j in xrange(self.n):
+        for i in range(self.m):
+            for j in range(self.n):
                 colors.append(self.to_rgba[0](f_Q_top[i,j]))
-        for j in xrange(self.n):
-            for k in xrange(self.o):
+        for j in range(self.n):
+            for k in range(self.o):
                 colors.append(self.to_rgba[1](f_Q_bot[j,k]))
 
         ax.collections[0].set_color(colors)
@@ -134,7 +134,7 @@ class SOI(Domain):
     def UnpackData(self,Data):
 
         return [np.reshape(Data[s:s+self.Dim//3],(self.m,self.n,self.o))
-                for s in xrange(0,self.Dim,self.Dim//3)]
+                for s in range(0,self.Dim,self.Dim//3)]
 
     def CalculateNetworkSize(self):
 
@@ -391,9 +391,9 @@ def CreateRandomNetwork(m,n,o,seed):
     coeff_f_Q = 3.*np.random.rand(m)
 
     coeff_rho_Q = np.zeros((m,n,o,m,n,o))
-    for i in xrange(m):
-        for j in xrange(n):
-            for k in xrange(o):
+    for i in range(m):
+        for j in range(n):
+            for k in range(o):
                 #self dependence
                 coeff_rho_Q[i,j,k,i,j,k] = -5.*np.random.rand()
                 #external dependence

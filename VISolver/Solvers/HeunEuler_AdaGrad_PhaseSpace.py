@@ -77,9 +77,9 @@ class HeunEuler_AdaGrad_PhaseSpace(Solver):
         Time = Record.TempStorage['Time'][-1]
         Data = Record.TempStorage['Data'][-1]
         Norm = Record.TempStorage['Norms'][-1]
-        Fs_Data = np.zeros((2,Data.shape[0]))
+        Fs_Data = np.zeros((2,Data.shape[0]),dtype=Data.dtype)
         Fs_Data[0,:] = Record.TempStorage[self.F][-1]
-        Fs_Norm = np.zeros((2,Data.shape[0]))
+        Fs_Norm = np.zeros((2,Data.shape[0]),dtype=Data.dtype)
         Fs_Norm[0,:] = Record.TempStorage['F_Norms'][-1]
 
         print(Norm)

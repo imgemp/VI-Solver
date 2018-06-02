@@ -196,7 +196,7 @@ def plotFigure5(saveFig=False):
     Q = np.zeros_like(pi)
     Q2 = Q.copy()
     t = np.zeros_like(pi)
-    for p in xrange(len(pi)):
+    for p in range(len(pi)):
         _Q, _t = Domain.Demand_ij(i,j,pi[p],qi,pJ,qJ)
         _Q2, _ = Domain2.Demand_ij(i,j,pi[p],qi,pJ,qJ)
         Q[p] = _Q

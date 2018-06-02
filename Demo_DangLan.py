@@ -55,7 +55,7 @@ def Demo():
     Method = HeunEuler(Domain=Domain,P=EntropicProjection(),Delta0=1e-1)
 
     # Set Options
-    Init = Initialization(Step=-1e-1)
+    Init = Initialization(Step=-1e-3)
     Term = Termination(MaxIter=1000,Tols=[[Domain.gap_simplex,1e-3]])
     Repo = Reporting(Requests=[Domain.gap_simplex])
     Misc = Miscellaneous()
@@ -77,7 +77,7 @@ def Demo():
 
     #__WATSON__##################################################
 
-    trials = xrange(10)
+    trials = range(10)
     WAT_Results = [[] for i in trials]
 
     for p in trials:
@@ -110,7 +110,7 @@ def Demo():
 
     #__SUN__##################################################
 
-    trials = xrange(8000,10000+1,2000)
+    trials = range(8000,10000+1,2000)
     Sun_Results = [[] for i in trials]
 
     for n in trials:
@@ -135,7 +135,7 @@ def Demo():
         PrintSimStats(Domain,Method,Options)
 
         tic = time.time()
-        ind = n/2000-4
+        ind = int(n/2000)-4
         Sun_Results[ind] = Solve(Start,Method,Domain,Options)
         toc = time.time() - tic
 

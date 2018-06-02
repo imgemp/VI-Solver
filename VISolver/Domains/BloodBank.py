@@ -77,20 +77,20 @@ class BloodBank(Domain):
         Ry = 0.
 
         od = []
-        for c in xrange(self.nC):
+        for c in range(self.nC):
             od.append([(Ox,Oy),(Cx[c],Cy)])
-        for c in xrange(self.nC):
-            for b in xrange(self.nB):
+        for c in range(self.nC):
+            for b in range(self.nB):
                 od.append([(Cx[c],Cy),(Bx[b],By)])
-        for b in xrange(self.nB):
+        for b in range(self.nB):
             od.append([(Bx[b],By),(Px[b],Py)])
-        for p in xrange(self.nB):
+        for p in range(self.nB):
             od.append([(Px[p],Py),(Sx[p],Sy)])
-        for s in xrange(self.nB):
-            for d in xrange(self.nD):
+        for s in range(self.nB):
+            for d in range(self.nD):
                 od.append([(Sx[s],Sy),(Dx[d],Dy)])
-        for d in xrange(self.nD):
-            for r in xrange(self.nR):
+        for d in range(self.nD):
+            for r in range(self.nR):
                 od.append([(Dx[d],Dy),(Rx[r],Ry)])
         lc = mc.LineCollection(od, colors=(0,0,0,0), linewidths=10)
         ax.add_collection(lc)
@@ -103,7 +103,7 @@ class BloodBank(Domain):
         plt.yticks([0,1,2,3,4,5,6],['Hospitals', 'Distribution', 'Storage',
                                     'Labs', 'Blood Centers', 'Collection',
                                     'Organization'], rotation=45)
-        plt.xticks(Rx,['Hospital\n'+str(r+1) for r in xrange(self.nR)])
+        plt.xticks(Rx,['Hospital\n'+str(r+1) for r in range(self.nR)])
         plt.tick_params(axis='y',right='off')
         plt.tick_params(axis='x',top='off')
 
@@ -125,20 +125,20 @@ class BloodBank(Domain):
             self.PathFlow2LinkFlow_x2f(self.UnpackPathFlows(Data))
 
         colors = []
-        for c in xrange(self.nC):
+        for c in range(self.nC):
             colors.append(self.to_rgba[0](f_1C[c]))
-        for c in xrange(self.nC):
-            for b in xrange(self.nB):
+        for c in range(self.nC):
+            for b in range(self.nB):
                 colors.append(self.to_rgba[1](f_CB[c,b]))
-        for b in xrange(self.nB):
+        for b in range(self.nB):
             colors.append(self.to_rgba[2](f_BP[b]))
-        for p in xrange(self.nB):
+        for p in range(self.nB):
             colors.append(self.to_rgba[3](f_PS[p]))
-        for s in xrange(self.nB):
-            for d in xrange(self.nD):
+        for s in range(self.nB):
+            for d in range(self.nD):
                 colors.append(self.to_rgba[4](f_SD[s,d]))
-        for d in xrange(self.nD):
-            for r in xrange(self.nR):
+        for d in range(self.nD):
+            for r in range(self.nR):
                 colors.append(self.to_rgba[5](f_DR[d,r]))
 
         ax.collections[0].set_color(colors)

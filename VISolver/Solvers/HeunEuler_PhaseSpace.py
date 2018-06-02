@@ -25,11 +25,17 @@ class HeunEuler_PhaseSpace(Solver):
 
         self.MaxStep = MaxStep
 
+        # self.DimWise = DimWise
+
     def InitTempStorage(self,Start,Domain,Options):
 
         self.TempStorage['Data'] = self.StorageSize*[Start]
         self.TempStorage[self.F] = self.StorageSize*[self.F(Start)]
-        self.TempStorage['Step'] = self.StorageSize*[Options.Init.Step]
+        # if self.DimWise:
+        #     step = Options.Init.Step*np.ones_like(Start)
+        # else:
+        step = Options.Init.Step
+        self.TempStorage['Step'] = self.StorageSize*[step]
         self.TempStorage['F Evaluations'] = self.StorageSize*[1]
         self.TempStorage['Projections'] = self.StorageSize*[0]
 
@@ -66,7 +72,7 @@ class HeunEuler_PhaseSpace(Solver):
 
         # Retrieve Necessary Data
         Data = Record.TempStorage['Data'][-1]
-        Fs = np.zeros((2,Data.shape[0]))
+        Fs = np.zeros((2,Data.shape[0]),dtype=Data.dtype)
         Fs[0,:] = Record.TempStorage[self.F][-1]
         Step = Record.TempStorage['Step'][-1]
 
@@ -81,18 +87,40 @@ class HeunEuler_PhaseSpace(Solver):
         NewData = self.Proj.P(Data,Step,direction)
 
         # Compute Delta + Traditional Stepsize
+        # if self.DimWise:
+        #     Delta = abs(NewData-_NewData)
+        # else:
+        #     Delta = np.array([max(abs(NewData-_NewData))])
         Delta = max(abs(NewData-_NewData))
+        # growth_est = self.GrowthLimit*np.ones_like(Delta)
+        # print('check1')
+        # growth_est[Delta>0.] = (self.Delta0/Delta[Delta>0.])**0.5
+        # print('check2')
         if Delta == 0.:
             growth_est = self.GrowthLimit
         else:
-            growth_est = (self.Delta0/Delta)**0.5
+            growth_est = (self.Delta0/Delta)**0.5  # safety factor, theta, is set to 1
 
+        # http://www.math.mcgill.ca/humphries/index.html
+        # P.59 of Dynamics of Adaptive Time-Stepping ODE Solvers
+        # Sections 7 & 8, P. 15 of Phase Space Error Control for Dynamic Systems
         # Compute Tl & Tr + Phase Space Stepsize
+        # Using L-infinty norm for Tl and Tr
         NewF = self.F(NewData)
+
+        # if self.DimWise:
+        #     Tl = abs(direction-.5*(NewF+Fs[0]))
+        #     Tr = .5*abs(NewF+Fs[0])
+        #     growth_ps = []
+        #     for tl,tr in zip(Tl,Tr):
+        #         growth_ps += [self.PhaseSpaceMultiplier(tl,tr)]
+        #     growth_ps = np.array(growth_ps)
+        #     growth = np.min(np.vstack((growth_est,growth_ps)),axis=0)
+        # else:
+            # growth_est = growth_est[0]
         Tl = max(abs(direction-.5*(NewF+Fs[0])))
         Tr = .5*max(abs(NewF+Fs[0]))
         growth_ps = self.PhaseSpaceMultiplier(Tl,Tr)
-
         # Conservative Adjustment
         growth = min(growth_est,growth_ps)
 

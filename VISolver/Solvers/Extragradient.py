@@ -4,11 +4,13 @@ from VISolver.Solver import Solver
 
 class EG(Solver):
 
-    def __init__(self,Domain,P=IdentityProjection()):
+    def __init__(self,Domain,P=IdentityProjection(),FixStep=False):
 
         self.F = Domain.F
 
         self.Proj = P
+
+        self.FixStep = FixStep
 
         self.StorageSize = 1
 
@@ -38,12 +40,14 @@ class EG(Solver):
         scount = self.TempStorage['scount'][-1]
         s = self.TempStorage['s'][-1]
 
-        # Use Decreasing Step Size Scheme
-        if scount >= s:
-            scount = 0
-            s += 1
-        scount += 1
-        Step = self.InitStep/s
+        if self.FixStep:
+            Step = self.InitStep
+        else:  # Use Decreasing Step Size Scheme
+            if scount >= s:
+                scount = 0
+                s += 1
+            scount += 1
+            Step = self.InitStep/s
 
         # Initialize Storage
         TempData = {}

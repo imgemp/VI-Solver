@@ -14,7 +14,13 @@ class MHPH(Domain):
         self.b = np.random.uniform(low=-500,high=0,size=self.Dim)
 
     def F(self,Data):
-        return np.dot(self.A,Data)+self.b
+        J_now = self.J(Data)
+        F_reg = np.dot(self.A,Data)+self.b
+        F_perp = np.dot(J_now-J_now.T,F_reg)
+        return F_reg - F_perp
+
+    def J(self,Data):
+        return self.A
 
     def gap_simplex(self,Data):
         gap = 0.0
